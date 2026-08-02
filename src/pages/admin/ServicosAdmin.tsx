@@ -1,0 +1,338 @@
+import { useEffect, useState } from "react";
+import { Loader2, Pencil, Plus, Power, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LoadingState, ErrorState } from "@/components/Feedback";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useServicos } from "@/hooks/useServicos";
+import {
+  atualizarServico,
+  criarServico,
+  excluirServico,
+  setServicoAtivo,
+} from "@/services/servicos";
+import { formatBRL, formatMinutes } from "@/utils/format";
+import { isSupabaseConfigured } from "@/services/supabase";
+import type { Servico, ServicoFormData } from "@/types";
+
+const FORM_VAZIO: ServicoFormData = {
+  nome: "",
+  descricao: "",
+  preco: "",
+  duracao_minutos: "",
+};
+
+export function ServicosAdmin() {
+  const { servicos, loading, error, refresh, usandoDemo } = useServicos(false);
+  const [dialogAberto, setDialogAberto] = useState(false);
+  const [editando, setEditando] = useState<Servico | null>(null);
+  const [form, setForm] = useState<ServicoFormData>(FORM_VAZIO);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!dialogAberto) {
+      setEditando(null);
+      setForm(FORM_VAZIO);
+      setErro(null);
+    }
+  }, [dialogAberto]);
+
+  const abrirNovo = () => {
+    setEditando(null);
+    setForm(FORM_VAZIO);
+    setDialogAberto(true);
+  };
+
+  const abrirEdicao = (s: Servico) => {
+    setEditando(s);
+    setForm({
+      nome: s.nome,
+      descricao: s.descricao ?? "",
+      preco: String(s.preco).replace(".", ","),
+      duracao_minutos: String(s.duracao_minutos),
+    });
+    setDialogAberto(true);
+  };
+
+  const salvar = async () => {
+    if (!form.nome.trim() || !form.preco || !form.duracao_minutos) {
+      setErro("Preencha nome, preço e duração.");
+      return;
+    }
+    setSalvando(true);
+    setErro(null);
+    try {
+      if (editando) {
+        await atualizarServico(editando.id, {
+          nome: form.nome.trim(),
+          descricao: form.descricao.trim() || null,
+          preco: Number(form.preco.replace(",", ".")),
+          duracao_minutos: Number(form.duracao_minutos),
+        });
+      } else {
+        await criarServico(form);
+      }
+      setDialogAberto(false);
+      await refresh();
+    } catch (err) {
+      setErro(
+        err instanceof Error ? err.message : "Erro ao salvar o serviço.",
+      );
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const alternarAtivo = async (s: Servico) => {
+    try {
+      await setServicoAtivo(s.id, !s.ativo);
+      await refresh();
+    } catch (err) {
+      setAviso(err instanceof Error ? err.message : "Erro ao atualizar serviço.");
+    }
+  };
+
+  const confirmarExclusao = async (s: Servico) => {
+    if (excluindoId !== s.id) {
+      setExcluindoId(s.id);
+      return;
+    }
+    try {
+      await excluirServico(s.id);
+      setExcluindoId(null);
+      await refresh();
+    } catch (err) {
+      setAviso(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível excluir. Pode haver agendamentos vinculados.",
+      );
+      setExcluindoId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-cream sm:text-3xl">
+            Serviços
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Adicione, edite valores e durações, e ative ou desative serviços.
+          </p>
+        </div>
+        <Button variant="gold" onClick={abrirNovo} disabled={!isSupabaseConfigured}>
+          <Plus className="size-4" />
+          Novo serviço
+        </Button>
+      </div>
+
+      {aviso && (
+        <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {aviso}
+          <button
+            type="button"
+            className="ml-2 font-semibold underline"
+            onClick={() => setAviso(null)}
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {usandoDemo && (
+        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
+          Mostrando serviços de demonstração. Conecte o Supabase para editar os
+          serviços reais.
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+        {loading ? (
+          <LoadingState label="Carregando serviços..." />
+        ) : error ? (
+          <ErrorState message={error} onRetry={refresh} />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Serviço</TableHead>
+                <TableHead>Duração</TableHead>
+                <TableHead className="text-right">Preço</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {servicos.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>
+                    <p className="font-medium text-cream">{s.nome}</p>
+                    <p className="max-w-64 truncate text-xs text-muted-foreground">
+                      {s.descricao ?? ""}
+                    </p>
+                  </TableCell>
+                  <TableCell>{formatMinutes(s.duracao_minutos)}</TableCell>
+                  <TableCell className="text-right font-display text-base font-bold text-gold-light">
+                    {formatBRL(s.preco)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={s.ativo ? "success" : "secondary"}>
+                      {s.ativo ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => abrirEdicao(s)}
+                        aria-label={`Editar ${s.nome}`}
+                        disabled={!isSupabaseConfigured}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void alternarAtivo(s)}
+                        aria-label={s.ativo ? "Desativar" : "Ativar"}
+                        disabled={!isSupabaseConfigured}
+                        className={s.ativo ? "text-gold" : "text-muted-foreground"}
+                      >
+                        <Power className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void confirmarExclusao(s)}
+                        aria-label={`Excluir ${s.nome}`}
+                        disabled={!isSupabaseConfigured}
+                        className={
+                          excluindoId === s.id ? "text-destructive" : "text-muted-foreground"
+                        }
+                      >
+                        {excluindoId === s.id ? (
+                          <span className="text-[10px] font-bold">OK?</span>
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editando ? "Editar serviço" : "Novo serviço"}
+            </DialogTitle>
+            <DialogDescription>
+              {editando
+                ? "Ajuste as informações do serviço."
+                : "Cadastre um novo serviço para seus clientes."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="s-nome">Nome do serviço</Label>
+              <Input
+                id="s-nome"
+                value={form.nome}
+                onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                placeholder="Ex.: Corte Masculino"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="s-desc">Descrição</Label>
+              <Textarea
+                id="s-desc"
+                value={form.descricao}
+                onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+                placeholder="O que está incluso no serviço?"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="s-preco">Preço (R$)</Label>
+                <Input
+                  id="s-preco"
+                  value={form.preco}
+                  onChange={(e) => setForm({ ...form, preco: e.target.value })}
+                  placeholder="45,00"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="s-duracao">Duração (minutos)</Label>
+                <Input
+                  id="s-duracao"
+                  value={form.duracao_minutos}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      duracao_minutos: e.target.value.replace(/\D/g, ""),
+                    })
+                  }
+                  placeholder="40"
+                  inputMode="numeric"
+                />
+              </div>
+            </div>
+            {erro && (
+              <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {erro}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDialogAberto(false)}>
+              Cancelar
+            </Button>
+            <Button variant="gold" onClick={() => void salvar()} disabled={salvando}>
+              {salvando ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
