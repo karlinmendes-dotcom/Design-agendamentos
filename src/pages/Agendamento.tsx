@@ -10,8 +10,8 @@ import {
   Loader2,
   Scissors,
   User,
+  UserRound,
 } from "lucide-react";
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { TimeSlotGrid } from "@/components/TimeSlotGrid";
 import { LoadingState, ErrorState } from "@/components/Feedback";
@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useHorarios } from "@/hooks/useHorarios";
+import { useBarbeiros } from "@/hooks/useBarbeiros";
 import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
 import { isSupabaseConfigured } from "@/services/supabase";
 import { findOrCreateCliente } from "@/services/clientes";
@@ -31,7 +32,8 @@ import { gerarSlots, filtrarSlotsOcupados } from "@/utils/slots";
 import { maskPhone, isValidPhone, onlyDigits } from "@/utils/phone";
 import { cn } from "@/lib/utils";
 
-const PASSOS = ["Serviço", "Data", "Horário", "Seus dados", "Confirmar"];
+const PASSOS_BASE = ["Serviço", "Data", "Horário", "Seus dados", "Confirmar"];
+const PASSOS_BARBEIRO = ["Serviço", "Barbeiro", "Data", "Horário", "Seus dados", "Confirmar"];
 
 export function Agendamento() {
   const navigate = useNavigate();
@@ -41,9 +43,15 @@ export function Agendamento() {
   const { servicos, loading, error, refresh } = useServicos(true);
   const { diasDisponiveis, horarioFuncionamento } = useConfiguracao();
   const { horarios } = useHorarios(true);
+  const { barbeiros } = useBarbeiros();
+
+  // A etapa de barbeiro aparece apenas quando há barbeiros ativos
+  const temBarbeiros = barbeiros.length > 0;
+  const passos = temBarbeiros ? PASSOS_BARBEIRO : PASSOS_BASE;
 
   const [etapa, setEtapa] = useState(0);
   const [servicoId, setServicoId] = useState<string | null>(servicoParam);
+  const [barbeiroId, setBarbeiroId] = useState<string | null>(null);
   const [data, setData] = useState<string | null>(null);
   const [horario, setHorario] = useState<string | null>(null);
   const [nome, setNome] = useState("");
@@ -54,6 +62,10 @@ export function Agendamento() {
   const servico = useMemo(
     () => servicos.find((s) => s.id === servicoId) ?? null,
     [servicos, servicoId],
+  );
+  const barbeiro = useMemo(
+    () => barbeiros.find((b) => b.id === barbeiroId) ?? null,
+    [barbeiros, barbeiroId],
   );
 
   // ===== Próximos dias disponíveis =====
@@ -104,9 +116,10 @@ export function Agendamento() {
   const telefoneValido = isValidPhone(telefone);
   const podeAvancar =
     (etapa === 0 && !!servicoId) ||
-    (etapa === 1 && !!data) ||
-    (etapa === 2 && !!horario) ||
-    (etapa === 3 && nome.trim().length >= 2 && telefoneValido);
+    (etapa === 1 && (!temBarbeiros || !!barbeiroId)) ||
+    (etapa === 2 && !!data) ||
+    (etapa === 3 && !!horario) ||
+    (etapa === 4 && nome.trim().length >= 2 && telefoneValido);
 
   const confirmar = async () => {
     if (!servico || !data || !horario) return;
@@ -123,6 +136,7 @@ export function Agendamento() {
           servico_id: servico.id,
           data,
           horario,
+          barbeiro_id: barbeiroId,
         });
         navigate("/sucesso", { state: { agendamento, demo: false } });
       } else {
@@ -138,12 +152,14 @@ export function Agendamento() {
               horario,
               status: "confirmado",
               created_at: new Date().toISOString(),
+              barbeiro_id: barbeiroId,
               cliente: { nome: nome.trim(), telefone },
               servico: {
                 nome: servico.nome,
                 preco: servico.preco,
                 duracao_minutos: servico.duracao_minutos,
               },
+              barbeiro: barbeiro ? { nome: barbeiro.nome } : null,
             },
           },
         });
@@ -159,28 +175,26 @@ export function Agendamento() {
   };
 
   return (
-    <div className="bg-texture min-h-screen bg-charcoal">
-      <Header />
-
-      <section className="mx-auto max-w-3xl px-4 pt-28 pb-20 sm:px-6">
+    <div className="min-h-screen bg-black">
+      <section className="mx-auto max-w-3xl px-4 pt-14 pb-20 sm:px-6">
         <div className="animate-slide-up mb-8 text-center">
-          <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+          <p className="text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
             Novo agendamento
           </p>
-          <h1 className="font-display mt-3 text-3xl font-black text-cream sm:text-4xl">
-            Reserve sua <span className="text-gradient-gold">cadeira</span>
+          <h1 className="font-display mt-3 text-3xl font-black text-white sm:text-4xl">
+            Reserve sua <span className="text-gradient-red">cadeira</span>
           </h1>
         </div>
 
         {/* Progresso */}
         <div className="animate-slide-up mb-8 flex items-center justify-between gap-1 sm:gap-2" style={{ animationDelay: "0.05s" }}>
-          {PASSOS.map((label, i) => (
+          {passos.map((label, i) => (
             <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
               <div
                 className={cn(
                   "flex size-8 items-center justify-center rounded-full border text-xs font-bold transition-all duration-300",
-                  i < etapa && "border-gold bg-gold text-charcoal",
-                  i === etapa && "border-gold bg-gold/15 text-gold-light",
+                  i < etapa && "border-red-500 bg-red-gradient text-white",
+                  i === etapa && "border-red-500 bg-red-500/15 text-red-300",
                   i > etapa && "border-border bg-card text-muted-foreground",
                 )}
               >
@@ -189,7 +203,7 @@ export function Agendamento() {
               <span
                 className={cn(
                   "hidden text-[10px] font-medium tracking-wide uppercase sm:block",
-                  i <= etapa ? "text-gold-light" : "text-muted-foreground/70",
+                  i <= etapa ? "text-red-300" : "text-muted-foreground/70",
                 )}
               >
                 {label}
@@ -202,7 +216,7 @@ export function Agendamento() {
           {/* ETAPA 1 — Serviço */}
           {etapa === 0 && (
             <div>
-              <h2 className="font-display text-xl font-bold text-cream">
+              <h2 className="font-display text-xl font-bold text-white">
                 Escolha o serviço
               </h2>
               {loading ? (
@@ -217,23 +231,23 @@ export function Agendamento() {
                       type="button"
                       onClick={() => setServicoId(s.id)}
                       className={cn(
-                        "flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all duration-200",
+                        "flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all duration-200 active:scale-[0.98]",
                         servicoId === s.id
-                          ? "border-gold bg-gold/10 shadow-[0_0_0_1px_var(--color-gold)]"
-                          : "border-border bg-background hover:border-gold/40",
+                          ? "border-red-500 bg-red-500/10 shadow-[0_0_0_1px_var(--color-ring)]"
+                          : "border-border bg-background hover:border-red-500/40",
                       )}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-display text-base font-bold text-cream">
+                        <span className="font-display text-base font-bold text-white">
                           {s.nome}
                         </span>
-                        <Scissors className="size-4 text-gold" />
+                        <Scissors className="size-4 text-red-500" />
                       </div>
                       <span className="text-xs text-muted-foreground line-clamp-2">
                         {s.descricao}
                       </span>
                       <div className="mt-1 flex items-center justify-between">
-                        <span className="font-semibold text-gold-light">
+                        <span className="font-semibold text-red-400">
                           {formatBRL(s.preco)}
                         </span>
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -248,10 +262,49 @@ export function Agendamento() {
             </div>
           )}
 
-          {/* ETAPA 2 — Data */}
-          {etapa === 1 && (
+          {/* ETAPA 2 — Barbeiro (estrutura preparada, só aparece com equipe) */}
+          {etapa === 1 && temBarbeiros && (
             <div>
-              <h2 className="font-display text-xl font-bold text-cream">
+              <h2 className="font-display text-xl font-bold text-white">
+                Escolha o barbeiro
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Nossa equipe está pronta para te atender.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {barbeiros.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBarbeiroId(b.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200 active:scale-[0.98]",
+                      barbeiroId === b.id
+                        ? "border-red-500 bg-red-500/10 shadow-[0_0_0_1px_var(--color-ring)]"
+                        : "border-border bg-background hover:border-red-500/40",
+                    )}
+                  >
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
+                      <UserRound className="size-5 text-red-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-display text-base font-bold text-white">
+                        {b.nome}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {b.especialidade ?? "Equipe da casa"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ETAPA 3 — Data */}
+          {etapa === 2 && (
+            <div>
+              <h2 className="font-display text-xl font-bold text-white">
                 Escolha a data
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -273,21 +326,21 @@ export function Agendamento() {
                         setHorario(null);
                       }}
                       className={cn(
-                        "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 transition-all duration-200",
+                        "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 transition-all duration-200 active:scale-[0.97]",
                         data === d.iso
-                          ? "border-gold bg-gold/10 shadow-[0_0_0_1px_var(--color-gold)]"
-                          : "border-border bg-background hover:border-gold/40",
+                          ? "border-red-500 bg-red-500/10 shadow-[0_0_0_1px_var(--color-ring)]"
+                          : "border-border bg-background hover:border-red-500/40",
                       )}
                     >
                       <span
                         className={cn(
                           "text-[11px] font-medium uppercase",
-                          data === d.iso ? "text-gold-light" : "text-muted-foreground",
+                          data === d.iso ? "text-red-300" : "text-muted-foreground",
                         )}
                       >
                         {formatDateWeekday(d.iso).split(",")[0]}
                       </span>
-                      <span className="font-display text-lg font-bold text-cream">
+                      <span className="font-display text-lg font-bold text-white">
                         {d.iso.split("-")[2]}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
@@ -302,10 +355,10 @@ export function Agendamento() {
             </div>
           )}
 
-          {/* ETAPA 3 — Horário */}
-          {etapa === 2 && (
+          {/* ETAPA 4 — Horário */}
+          {etapa === 3 && (
             <div>
-              <h2 className="font-display text-xl font-bold text-cream">
+              <h2 className="font-display text-xl font-bold text-white">
                 Escolha o horário
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -323,10 +376,10 @@ export function Agendamento() {
             </div>
           )}
 
-          {/* ETAPA 4 — Dados */}
-          {etapa === 3 && (
+          {/* ETAPA 5 — Dados */}
+          {etapa === 4 && (
             <div>
-              <h2 className="font-display text-xl font-bold text-cream">
+              <h2 className="font-display text-xl font-bold text-white">
                 Seus dados
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -373,15 +426,15 @@ export function Agendamento() {
             </div>
           )}
 
-          {/* ETAPA 5 — Confirmação */}
-          {etapa === 4 && servico && data && horario && (
+          {/* ETAPA 6 — Confirmação */}
+          {etapa === 5 && servico && data && horario && (
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-full border border-gold/40 bg-gold/10">
-                  <CalendarCheck className="size-5 text-gold" />
+                <div className="flex size-11 items-center justify-center rounded-full border border-red-500/40 bg-red-500/10">
+                  <CalendarCheck className="size-5 text-red-500" />
                 </div>
                 <div>
-                  <h2 className="font-display text-xl font-bold text-cream">
+                  <h2 className="font-display text-xl font-bold text-white">
                     Tudo certo?
                   </h2>
                   <p className="text-sm text-muted-foreground">
@@ -393,30 +446,38 @@ export function Agendamento() {
               <dl className="mt-6 space-y-3 rounded-xl border border-border bg-background p-5 text-sm">
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Serviço</dt>
-                  <dd className="text-right font-semibold text-cream">
+                  <dd className="text-right font-semibold text-white">
                     {servico.nome}
                   </dd>
                 </div>
+                {barbeiro && (
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-muted-foreground">Barbeiro</dt>
+                    <dd className="text-right font-semibold text-white">
+                      {barbeiro.nome}
+                    </dd>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Data</dt>
-                  <dd className="font-semibold text-cream">
+                  <dd className="font-semibold text-white">
                     {formatDateWeekday(data)}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Horário</dt>
-                  <dd className="font-semibold text-cream">{horario}</dd>
+                  <dd className="font-semibold text-white">{horario}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Cliente</dt>
-                  <dd className="text-right font-semibold text-cream">
+                  <dd className="text-right font-semibold text-white">
                     {nome.trim()} · {telefone}
                   </dd>
                 </div>
                 <div className="hairline my-1" />
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Valor</dt>
-                  <dd className="font-display text-lg font-bold text-gradient-gold">
+                  <dd className="font-display text-lg font-bold text-gradient-red">
                     {formatBRL(servico.preco)}
                   </dd>
                 </div>
@@ -467,7 +528,7 @@ export function Agendamento() {
               <ChevronLeft className="size-4" />
               Voltar
             </Button>
-            {etapa < 4 ? (
+            {etapa < passos.length - 1 ? (
               <Button
                 onClick={() => setEtapa((e) => e + 1)}
                 disabled={!podeAvancar}
@@ -485,7 +546,7 @@ export function Agendamento() {
 
         <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <ArrowLeft className="size-4" />
-          <Link to="/" className="transition-colors hover:text-gold-light">
+          <Link to="/" className="transition-colors hover:text-red-300">
             Voltar para o início
           </Link>
         </div>

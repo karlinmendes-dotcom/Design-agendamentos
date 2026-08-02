@@ -40,6 +40,7 @@ const FORM_VAZIO: ServicoFormData = {
   descricao: "",
   preco: "",
   duracao_minutos: "",
+  video_url: "",
 };
 
 export function ServicosAdmin() {
@@ -73,6 +74,7 @@ export function ServicosAdmin() {
       descricao: s.descricao ?? "",
       preco: String(s.preco).replace(".", ","),
       duracao_minutos: String(s.duracao_minutos),
+      video_url: s.video_url ?? "",
     });
     setDialogAberto(true);
   };
@@ -91,6 +93,7 @@ export function ServicosAdmin() {
           descricao: form.descricao.trim() || null,
           preco: Number(form.preco.replace(",", ".")),
           duracao_minutos: Number(form.duracao_minutos),
+          video_url: form.video_url.trim() || null,
         });
         toast("success", "Serviço atualizado com sucesso.");
       } else {
@@ -204,6 +207,12 @@ export function ServicosAdmin() {
                     <p className="max-w-64 truncate text-xs text-muted-foreground">
                       {s.descricao ?? ""}
                     </p>
+                    {s.video_url && (
+                      <p className="mt-0.5 flex items-center gap-1 text-[10px] text-red-400/80">
+                        <span className="size-1.5 rounded-full bg-red-500" />
+                        vídeo personalizado
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell>{formatMinutes(s.duracao_minutos)}</TableCell>
                   <TableCell className="text-right font-display text-base font-bold text-gold-light">
@@ -292,6 +301,19 @@ export function ServicosAdmin() {
                 placeholder="O que está incluso no serviço?"
                 rows={3}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="s-video">Vídeo (URL opcional)</Label>
+              <Input
+                id="s-video"
+                value={form.video_url}
+                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                placeholder="https://... (usado no card do serviço)"
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Deixe vazio para usar o vídeo padrão da biblioteca de mídia.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

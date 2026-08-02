@@ -209,6 +209,7 @@ export function Agenda() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Serviço</TableHead>
+                  <TableHead>Barbeiro</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -226,6 +227,9 @@ export function Agenda() {
                       {a.cliente?.telefone ?? "—"}
                     </TableCell>
                     <TableCell>{a.servico?.nome ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {a.barbeiro?.nome ?? "—"}
+                    </TableCell>
                     <TableCell className="text-right">
                       {formatBRL(a.servico?.preco ?? 0)}
                     </TableCell>

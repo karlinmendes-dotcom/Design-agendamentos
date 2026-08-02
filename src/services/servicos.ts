@@ -1,5 +1,5 @@
 import { requerSupabase } from "@/services/supabase";
-import type { Servico, ServicoFormData } from "@/types";
+import { BARBEARIA_NETO_ID, type Servico, type ServicoFormData } from "@/types";
 
 export async function listServicos(apenasAtivos = false): Promise<Servico[]> {
   const db = requerSupabase();
@@ -22,6 +22,8 @@ export async function criarServico(
       descricao: form.descricao.trim() || null,
       preco: Number(form.preco.replace(",", ".")),
       duracao_minutos: Number(form.duracao_minutos),
+      video_url: form.video_url.trim() || null,
+      barbearia_id: BARBEARIA_NETO_ID,
       ativo: true,
     })
     .select()
@@ -32,7 +34,9 @@ export async function criarServico(
 
 export async function atualizarServico(
   id: string,
-  patch: Partial<Pick<Servico, "nome" | "descricao" | "preco" | "duracao_minutos">>,
+  patch: Partial<
+    Pick<Servico, "nome" | "descricao" | "preco" | "duracao_minutos" | "video_url">
+  >,
 ): Promise<void> {
   const db = requerSupabase();
   const { error } = await db.from("servicos").update(patch).eq("id", id);

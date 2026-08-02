@@ -1,3 +1,47 @@
+// ============================================================
+// Barbearia Neto — Tipos da plataforma SaaS multi-barbearias
+// ============================================================
+
+// ---------- Tenant: Barbearia ----------
+export interface Barbearia {
+  id: string;
+  nome: string;
+  slug: string | null;
+  logo_url: string | null;
+  descricao: string | null;
+  endereco: string | null;
+  telefone: string | null;
+  ativo: boolean;
+  created_at: string;
+}
+
+// ---------- Barbeiro ----------
+export interface Barbeiro {
+  id: string;
+  barbearia_id: string | null;
+  nome: string;
+  especialidade: string | null;
+  avatar_url: string | null;
+  ativo: boolean;
+  created_at: string;
+}
+
+// ---------- Biblioteca de mídia ----------
+export type TipoMidia = "video" | "imagem" | "banner" | "logo";
+
+export interface Midia {
+  id: string;
+  barbearia_id: string | null;
+  tipo: TipoMidia;
+  chave: string; // ex.: 'hero', 'servico-corte', 'logo'
+  url: string;
+  poster_url: string | null;
+  alt: string | null;
+  ordem: number;
+  ativo: boolean;
+  created_at: string;
+}
+
 export interface Servico {
   id: string;
   nome: string;
@@ -6,6 +50,10 @@ export interface Servico {
   duracao_minutos: number;
   ativo: boolean;
   created_at: string;
+  // Tenant / mídia
+  barbearia_id: string | null;
+  midia_id: string | null;
+  video_url: string | null;
 }
 
 export interface Cliente {
@@ -13,6 +61,7 @@ export interface Cliente {
   nome: string;
   telefone: string;
   created_at: string;
+  barbearia_id: string | null;
 }
 
 export type StatusAgendamento = "confirmado" | "concluido" | "cancelado";
@@ -31,9 +80,13 @@ export interface Agendamento {
   horario: string; // HH:mm
   status: StatusAgendamento;
   created_at: string;
+  // Tenant / barbeiro
+  barbearia_id: string | null;
+  barbeiro_id: string | null;
   // Relacionamentos (join do Supabase)
   cliente?: Pick<Cliente, "nome" | "telefone"> | null;
   servico?: Pick<Servico, "nome" | "preco" | "duracao_minutos"> | null;
+  barbeiro?: Pick<Barbeiro, "nome"> | null;
 }
 
 export interface Horario {
@@ -43,6 +96,7 @@ export interface Horario {
   hora_fim: string; // HH:mm
   ativo: boolean;
   created_at: string;
+  barbearia_id: string | null;
 }
 
 export interface Configuracao {
@@ -52,6 +106,7 @@ export interface Configuracao {
   horario_funcionamento: string | null;
   dias_disponiveis: number[];
   updated_at: string;
+  barbearia_id: string | null;
 }
 
 export interface ServicoFormData {
@@ -59,6 +114,7 @@ export interface ServicoFormData {
   descricao: string;
   preco: string;
   duracao_minutos: string;
+  video_url: string;
 }
 
 export interface NovoAgendamento {
@@ -67,4 +123,9 @@ export interface NovoAgendamento {
   horario: string;
   nome: string;
   telefone: string;
+  barbeiro_id?: string | null;
 }
+
+// ---------- Constantes da plataforma ----------
+/** ID fixo da Barbearia Neto (primeira barbearia cadastrada). */
+export const BARBEARIA_NETO_ID = "00000000-0000-0000-0000-000000000001";

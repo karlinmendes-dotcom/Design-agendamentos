@@ -1,5 +1,5 @@
 import { requerSupabase } from "@/services/supabase";
-import type { Cliente } from "@/types";
+import { BARBEARIA_NETO_ID, type Cliente } from "@/types";
 
 export async function findClientePorTelefone(
   telefone: string,
@@ -9,6 +9,7 @@ export async function findClientePorTelefone(
     .from("clientes")
     .select("*")
     .eq("telefone", telefone)
+    .eq("barbearia_id", BARBEARIA_NETO_ID)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return (data as Cliente) ?? null;
@@ -21,7 +22,7 @@ export async function criarCliente(
   const db = requerSupabase();
   const { data, error } = await db
     .from("clientes")
-    .insert({ nome: nome.trim(), telefone })
+    .insert({ nome: nome.trim(), telefone, barbearia_id: BARBEARIA_NETO_ID })
     .select()
     .single();
   if (error) throw new Error(error.message);

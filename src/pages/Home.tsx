@@ -1,130 +1,119 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  Award,
   CalendarCheck,
-  CalendarDays,
   Clock,
+  Flame,
+  MapPin,
+  Quote,
   Scissors,
   Sparkles,
   Star,
-  User,
   Users,
+  Zap,
 } from "lucide-react";
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ServiceCard } from "@/components/ServiceCard";
+import { VideoCover } from "@/components/VideoCover";
+import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { VIDEO_HERO } from "@/utils/videos";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=80";
-
-const PASSOS = [
-  {
-    icon: Scissors,
-    titulo: "Escolha o serviço",
-    descricao: "Corte, barba, pigmentação ou combo completo. Você decide o visual.",
-  },
-  {
-    icon: CalendarDays,
-    titulo: "Escolha data e horário",
-    descricao: "Veja os horários disponíveis em tempo real e escolha o que couber na sua agenda.",
-  },
-  {
-    icon: CalendarCheck,
-    titulo: "Confirme em segundos",
-    descricao: "Informe seu nome e telefone. Pronto: sua cadeira está garantida.",
-  },
+const MARQUEE = [
+  "Corte na régua",
+  "Barba com toalha quente",
+  "Navalha",
+  "Pigmentação",
+  "Estilo premium",
+  "Atendimento de primeira",
 ];
 
-const DIFERENCIAIS = [
+const DESTAQUES = [
+  { nome: "Corte + Barba", descricao: "O combo mais pedido da semana.", badge: "🔥 Popular" },
+  { nome: "Corte Masculino", descricao: "Clássico com finalização premium.", badge: "⭐ Clássico" },
+  { nome: "Barba Completa", descricao: "Toalha quente + navalha + óleo.", badge: "✨ Diferencial" },
+];
+
+const AVALIACOES = [
   {
-    icon: Award,
-    titulo: "Cortes na régua",
-    descricao: "Precisão milimétrica com máquina, tesoura e navalha.",
+    nome: "Rafael Souza",
+    texto:
+      "Melhor corte da região. Ambiente sofisticado e atendimento impecável. Saí renovado!",
+    nota: 5,
   },
   {
-    icon: Clock,
-    titulo: "Pontualidade",
-    descricao: "Respeitamos o seu horário — você nunca espera em vão.",
+    nome: "Marcos Lima",
+    texto:
+      "Agendei pelo site em segundos e fui atendido na hora. A barba com toalha quente é outro nível.",
+    nota: 5,
   },
   {
-    icon: Sparkles,
-    titulo: "Ambiente sofisticado",
-    descricao: "Espaço pensado para você relaxar e sair renovado.",
-  },
-  {
-    icon: Users,
-    titulo: "Profissionais experientes",
-    descricao: "Time qualificado e sempre atualizado nas tendências.",
+    nome: "Pedro Henrique",
+    texto:
+      "Precisão na navalha e atendimento pontual. Virei cliente fiel, recomendo demais.",
+    nota: 5,
   },
 ];
 
 export function Home() {
   const { servicos } = useServicos(true);
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
-  const [ctaVisivel, setCtaVisivel] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setCtaVisivel(window.scrollY > 480);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const procurados = servicos.slice(0, 6);
 
   return (
-    <div className="bg-texture min-h-screen bg-charcoal">
-      <Header />
-
-      {/* ===== HERO ===== */}
-      <section className="relative flex min-h-[92vh] items-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_IMAGE})` }}
-          aria-hidden
+    <div className="min-h-screen bg-black">
+      {/* ===== HERO — vídeo em tela cheia ===== */}
+      <section className="relative flex min-h-[92svh] items-end overflow-hidden sm:items-center">
+        <VideoCover
+          src={VIDEO_HERO.src}
+          poster={VIDEO_HERO.poster}
+          eager
+          className="absolute inset-0 size-full"
+          alt="Barbearia em ação"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal via-charcoal/85 to-charcoal/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-transparent to-charcoal/60" />
+        <div className="video-shade absolute inset-0" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" aria-hidden />
 
-        <div className="relative mx-auto w-full max-w-6xl px-4 pt-28 pb-20 sm:px-6">
+        <div className="relative mx-auto w-full max-w-6xl px-5 pt-28 pb-16 sm:px-6">
           <div className="max-w-2xl">
-            <div className="animate-slide-up inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-gold-light uppercase">
+            <div className="animate-slide-up inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-red-300 uppercase backdrop-blur">
               <Sparkles className="size-3.5" />
-              Agendamento online
+              Agendamento online · sem fila
             </div>
 
             <h1
-              className="animate-slide-up mt-6 font-display text-5xl leading-[1.05] font-black text-cream sm:text-6xl lg:text-7xl"
+              className="animate-slide-up mt-6 font-display text-[2.6rem] leading-[1.04] font-extrabold text-white uppercase sm:text-6xl lg:text-7xl"
               style={{ animationDelay: "0.1s" }}
             >
               {nomeBarbearia.split(" ")[0]}{" "}
-              <span className="text-gradient-gold">
+              <span className="text-gradient-red">
                 {nomeBarbearia.split(" ").slice(1).join(" ") || "Neto"}
               </span>
             </h1>
 
             <p
-              className="animate-slide-up mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground"
+              className="animate-slide-up mt-5 max-w-xl text-lg leading-relaxed text-white/75"
               style={{ animationDelay: "0.2s" }}
             >
-              Estilo, precisão e tradição no mesmo lugar. Agende seu horário em
-              segundos e venha viver a experiência de um corte impecável.
+              Estilo, precisão e tradição no mesmo lugar. Escolha o serviço,
+              reserve sua cadeira em segundos e viva a experiência de um corte
+              impecável.
             </p>
 
             <div
-              className="animate-slide-up mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+              className="animate-slide-up mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
               style={{ animationDelay: "0.3s" }}
             >
               <Button asChild variant="gold" size="lg" className="animate-glow-pulse">
                 <Link to="/agendamento">
                   <CalendarCheck className="size-5" />
-                  Agendar horário
+                  Agendar agora
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="border-white/25 text-white hover:bg-white/10 hover:text-white">
                 <Link to="/servicos">
                   Ver serviços
                   <ArrowRight className="size-4" />
@@ -133,24 +122,20 @@ export function Home() {
             </div>
 
             <div
-              className="animate-slide-up mt-12 flex flex-wrap gap-x-10 gap-y-6"
+              className="animate-slide-up mt-10 flex flex-wrap gap-x-10 gap-y-5"
               style={{ animationDelay: "0.4s" }}
             >
               {[
                 { valor: "10+", rotulo: "Anos de tradição" },
                 { valor: "5k+", rotulo: "Cortes realizados" },
-                {
-                  valor: "4.9",
-                  rotulo: "Avaliação dos clientes",
-                  estrela: true,
-                },
+                { valor: "4.9", rotulo: "Avaliação média", estrela: true },
               ].map((item) => (
                 <div key={item.rotulo}>
-                  <p className="flex items-center gap-1.5 font-display text-3xl font-bold text-gold-light">
+                  <p className="flex items-center gap-1.5 font-display text-3xl font-extrabold text-white">
                     {item.valor}
-                    {item.estrela && <Star className="size-5 fill-gold text-gold" />}
+                    {item.estrela && <Star className="size-5 fill-red-500 text-red-500" />}
                   </p>
-                  <p className="mt-0.5 text-xs tracking-wide text-muted-foreground uppercase">
+                  <p className="mt-0.5 text-xs tracking-wide text-white/60 uppercase">
                     {item.rotulo}
                   </p>
                 </div>
@@ -160,142 +145,213 @@ export function Home() {
         </div>
       </section>
 
-      {/* ===== SERVIÇOS ===== */}
-      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-        <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+      {/* ===== Faixa marquee ===== */}
+      <div className="overflow-hidden border-y border-red-950/60 bg-gradient-to-r from-black via-[#160404] to-black py-4">
+        <div className="animate-marquee flex w-max items-center gap-10">
+          {[...MARQUEE, ...MARQUEE].map((item, i) => (
+            <span
+              key={i}
+              className="flex items-center gap-3 whitespace-nowrap text-xs font-semibold tracking-[0.25em] text-red-300/80 uppercase"
+            >
+              <Scissors className="size-3.5 text-red-500" />
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== Destaques da Semana ===== */}
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+        <Reveal className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
-              Nossos serviços
+            <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+              <Flame className="size-4" /> Destaques da semana
             </p>
-            <h2 className="font-display mt-3 text-3xl font-bold text-cream sm:text-4xl">
-              O cuidado que o seu <span className="text-gradient-gold">visual</span> merece
+            <h2 className="font-display mt-3 text-3xl font-extrabold text-white sm:text-4xl">
+              O que está <span className="text-gradient-red">bombando</span>
             </h2>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="ghost">
             <Link to="/servicos">
-              Ver todos os serviços
+              Ver todos
               <ArrowRight className="size-4" />
             </Link>
           </Button>
-        </div>
+        </Reveal>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {servicos.slice(0, 6).map((servico, i) => (
-            <div
-              key={servico.id}
-              className="animate-slide-up"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              <ServiceCard servico={servico} />
-            </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {DESTAQUES.map((d, i) => (
+            <Reveal key={d.nome} delay={i * 90}>
+              <Link
+                to="/agendamento"
+                className="red-ring-hover group relative block overflow-hidden rounded-2xl border border-border bg-card p-6"
+              >
+                <span className="absolute top-4 right-4 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-[10px] font-bold tracking-wide text-red-300 uppercase">
+                  {d.badge}
+                </span>
+                <div className="flex size-11 items-center justify-center rounded-lg bg-red-500/10 transition-transform duration-300 group-hover:scale-110">
+                  <Zap className="size-5 text-red-500" />
+                </div>
+                <h3 className="font-display mt-4 text-lg font-bold text-white">
+                  {d.nome}
+                </h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{d.descricao}</p>
+                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-red-400">
+                  Reservar agora <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                </p>
+              </Link>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* ===== COMO FUNCIONA ===== */}
-      <section className="border-y border-border/60 bg-coal">
-        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-          <div className="mx-auto mb-14 max-w-2xl text-center">
-            <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
-              Simples assim
+      {/* ===== Serviços mais procurados ===== */}
+      <section className="border-y border-border/60 bg-[#080808]">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+          <Reveal className="mx-auto mb-12 max-w-2xl text-center">
+            <p className="text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+              Nossos serviços
             </p>
-            <h2 className="font-display mt-3 text-3xl font-bold text-cream sm:text-4xl">
-              Agende em <span className="text-gradient-gold">3 passos</span>
+            <h2 className="font-display mt-3 text-3xl font-extrabold text-white sm:text-4xl">
+              Serviços mais <span className="text-gradient-red">procurados</span>
             </h2>
-          </div>
+            <p className="mt-4 text-muted-foreground">
+              Cada serviço com vídeo, descrição, preço e duração — escolha o seu
+              e garanta o horário.
+            </p>
+          </Reveal>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {PASSOS.map((passo, i) => (
-              <div
-                key={passo.titulo}
-                className="animate-slide-up gold-ring-hover relative rounded-xl border border-border/80 bg-card p-7"
-                style={{ animationDelay: `${i * 0.12}s` }}
-              >
-                <span className="absolute top-5 right-6 font-display text-5xl font-black text-gold/10">
-                  0{i + 1}
-                </span>
-                <div className="flex size-12 items-center justify-center rounded-lg border border-gold/30 bg-gold/10">
-                  <passo.icon className="size-5 text-gold" />
-                </div>
-                <h3 className="font-display mt-5 text-xl font-bold text-cream">
-                  {passo.titulo}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {passo.descricao}
-                </p>
-              </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {procurados.map((servico, i) => (
+              <Reveal key={servico.id} delay={(i % 3) * 90}>
+                <ServiceCard servico={servico} />
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== DIFERENCIAIS ===== */}
-      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-        <div className="mx-auto mb-14 max-w-2xl text-center">
-          <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
-            Por que a {nomeBarbearia.split(" ")[0]}?
-          </p>
-          <h2 className="font-display mt-3 text-3xl font-bold text-cream sm:text-4xl">
-            Uma experiência <span className="text-gradient-gold">acima da média</span>
-          </h2>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {DIFERENCIAIS.map((d, i) => (
-            <div
-              key={d.titulo}
-              className="animate-slide-up rounded-xl border border-border/80 bg-card p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-gold/40"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-bronze/40 bg-bronze/10">
-                <d.icon className="size-5 text-[#e0a06e]" />
+      {/* ===== Conheça a Barbearia Neto ===== */}
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-2xl border border-border">
+              <VideoCover
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e9/CUT_%26_SHAVE_%E2%80%A2_Penang%27s_Vintage_Barbershop_%E2%80%A2_George_Town_%E2%80%A2_MALAYSIA.webm"
+                poster="https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=1400&q=70"
+                className="aspect-[4/3] w-full"
+                alt="Ambiente da barbearia"
+              />
+              <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/70 px-4 py-3 backdrop-blur">
+                <MapPin className="size-4 shrink-0 text-red-500" />
+                <p className="text-xs text-white/85">
+                  Ambiente sofisticado, cadeiras premium e produtos de primeira linha.
+                </p>
               </div>
-              <h3 className="font-display mt-4 text-lg font-bold text-cream">
-                {d.titulo}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {d.descricao}
-              </p>
             </div>
-          ))}
+          </Reveal>
+
+          <Reveal delay={120}>
+            <p className="text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+              Conheça a {nomeBarbearia.split(" ")[0]}
+            </p>
+            <h2 className="font-display mt-3 text-3xl font-extrabold text-white sm:text-4xl">
+              Mais que um corte, <span className="text-gradient-red">uma experiência</span>
+            </h2>
+            <p className="mt-5 leading-relaxed text-muted-foreground">
+              Tradição e estilo em cada detalhe. Nosso time une técnica apurada,
+              pontualidade e um ambiente pensado para você relaxar e sair
+              renovado.
+            </p>
+            <ul className="mt-7 space-y-4">
+              {[
+                { icon: Scissors, titulo: "Cortes na régua", texto: "Precisão milimétrica com máquina, tesoura e navalha." },
+                { icon: Clock, titulo: "Pontualidade", texto: "Respeitamos seu horário — você nunca espera em vão." },
+                { icon: Users, titulo: "Profissionais experientes", texto: "Time qualificado e atualizado nas tendências." },
+              ].map((item) => (
+                <li key={item.titulo} className="flex gap-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10">
+                    <item.icon className="size-5 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{item.titulo}</p>
+                    <p className="text-sm text-muted-foreground">{item.texto}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Button asChild variant="gold" className="mt-8">
+              <Link to="/agendamento">
+                <CalendarCheck className="size-4" />
+                Reservar minha cadeira
+              </Link>
+            </Button>
+          </Reveal>
         </div>
       </section>
 
-      {/* ===== CTA FINAL ===== */}
-      <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        <div className="animate-slide-up relative overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-graphite via-coal to-charcoal p-10 text-center sm:p-16">
-          <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[36rem] -translate-x-1/2 rounded-full bg-gold/10 blur-3xl" />
-          <User className="mx-auto size-8 text-gold" />
-          <h2 className="font-display mx-auto mt-5 max-w-2xl text-3xl font-bold text-cream sm:text-4xl">
-            Pronto para elevar o seu visual?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Garanta sua cadeira hoje mesmo. {horarioFuncionamento} — escolha o
-            melhor horário para você.
-          </p>
-          <div className="mt-8 flex justify-center">
-            <Button asChild variant="gold" size="lg">
-              <Link to="/agendamento">
-                <CalendarCheck className="size-5" />
-                Agendar horário
-              </Link>
-            </Button>
+      {/* ===== Avaliações de clientes ===== */}
+      <section className="border-y border-border/60 bg-[#080808]">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+          <Reveal className="mx-auto mb-12 max-w-2xl text-center">
+            <p className="text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+              Avaliações
+            </p>
+            <h2 className="font-display mt-3 text-3xl font-extrabold text-white sm:text-4xl">
+              Quem sentou na cadeira, <span className="text-gradient-red">recomenda</span>
+            </h2>
+          </Reveal>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {AVALIACOES.map((av, i) => (
+              <Reveal key={av.nome} delay={i * 100}>
+                <figure className="red-ring-hover relative h-full rounded-2xl border border-border bg-card p-7">
+                  <Quote className="absolute top-6 right-6 size-8 text-red-500/15" />
+                  <div className="flex gap-1">
+                    {Array.from({ length: av.nota }).map((_, s) => (
+                      <Star key={s} className="size-4 fill-red-500 text-red-500" />
+                    ))}
+                  </div>
+                  <blockquote className="mt-4 text-sm leading-relaxed text-foreground/85">
+                    "{av.texto}"
+                  </blockquote>
+                  <figcaption className="mt-5 flex items-center gap-3">
+                    <div className="flex size-9 items-center justify-center rounded-full bg-red-500/15 font-display text-sm font-bold text-red-400">
+                      {av.nome.charAt(0)}
+                    </div>
+                    <span className="text-sm font-semibold text-white">{av.nome}</span>
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA fixo mobile (aparece ao rolar) */}
-      {ctaVisivel && (
-        <div className="animate-slide-up fixed inset-x-0 bottom-0 z-40 border-t border-gold/25 bg-charcoal/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
-          <Button asChild variant="gold" size="lg" className="w-full">
-            <Link to="/agendamento">
-              <CalendarCheck className="size-5" />
-              Agendar horário
-            </Link>
-          </Button>
-        </div>
-      )}
-      <div className="h-20 md:hidden" aria-hidden />
+      {/* ===== CTA final ===== */}
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-gradient-to-br from-[#1a0505] via-black to-black p-10 text-center sm:p-16">
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[36rem] -translate-x-1/2 rounded-full bg-red-500/15 blur-3xl" />
+            <Sparkles className="mx-auto size-8 text-red-500" />
+            <h2 className="font-display mx-auto mt-5 max-w-2xl text-3xl font-extrabold text-white sm:text-4xl">
+              Pronto para elevar o seu visual?
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Garanta sua cadeira hoje mesmo. {horarioFuncionamento} — escolha o
+              melhor horário para você.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Button asChild variant="gold" size="lg">
+                <Link to="/agendamento">
+                  <CalendarCheck className="size-5" />
+                  Agendar agora
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </Reveal>
+      </section>
 
       <Footer />
     </div>

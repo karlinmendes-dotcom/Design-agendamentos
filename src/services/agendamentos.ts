@@ -1,11 +1,12 @@
 import { requerSupabase } from "@/services/supabase";
-import type {
-  Agendamento,
-  StatusAgendamento,
+import {
+  BARBEARIA_NETO_ID,
+  type Agendamento,
+  type StatusAgendamento,
 } from "@/types";
 
 const SELECT_RELS =
-  "*, cliente:clientes(nome, telefone), servico:servicos(nome, preco, duracao_minutos)";
+  "*, cliente:clientes(nome, telefone), servico:servicos(nome, preco, duracao_minutos), barbeiro:barbeiros(nome)";
 
 export async function listAgendamentos(): Promise<Agendamento[]> {
   const db = requerSupabase();
@@ -56,6 +57,7 @@ export async function criarAgendamento(input: {
   servico_id: string;
   data: string;
   horario: string;
+  barbeiro_id?: string | null;
 }): Promise<Agendamento> {
   const db = requerSupabase();
   const { data, error } = await db
@@ -66,6 +68,8 @@ export async function criarAgendamento(input: {
       data: input.data,
       horario: input.horario,
       status: "confirmado",
+      barbearia_id: BARBEARIA_NETO_ID,
+      barbeiro_id: input.barbeiro_id ?? null,
     })
     .select(SELECT_RELS)
     .single();

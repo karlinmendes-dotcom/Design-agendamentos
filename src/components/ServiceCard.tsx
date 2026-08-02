@@ -1,48 +1,51 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import type { Servico } from "@/types";
-import { serviceIcon } from "@/utils/serviceIcon";
+import { VideoCover } from "@/components/VideoCover";
+import { mediaParaServico } from "@/utils/media";
 
 interface ServiceCardProps {
   servico: Servico;
 }
 
 export function ServiceCard({ servico }: ServiceCardProps) {
-  const Icon = serviceIcon(servico.nome);
+  // Vídeo da biblioteca de mídia (admin pode trocar via video_url no banco)
+  const video = mediaParaServico(servico);
 
   return (
-    <Card className="gold-ring-hover group relative h-full overflow-hidden border-border/80">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-gold/[0.07] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-      <CardContent className="flex h-full flex-col gap-4 pt-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex size-12 items-center justify-center rounded-lg border border-gold/30 bg-gold/10 transition-transform duration-300 group-hover:scale-110">
-            <Icon className="size-5 text-gold" />
-          </div>
-          <Badge variant="gold" className="gap-1">
-            <Clock className="size-3" />
-            {formatMinutes(servico.duracao_minutos)}
-          </Badge>
-        </div>
+    <Card className="red-ring-hover group relative h-full overflow-hidden border-border/80 bg-[#0c0c0c]">
+      {/* Vídeo de capa */}
+      <div className="relative aspect-video overflow-hidden border-b border-border/60">
+        <VideoCover
+          src={video.src}
+          poster={video.poster}
+          alt={servico.nome}
+          className="absolute inset-0 size-full transition-transform duration-700 group-hover:scale-[1.04]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-black/70 px-2.5 py-1 text-[10px] font-bold tracking-wide text-red-300 uppercase backdrop-blur">
+          <Clock className="size-3" />
+          {formatMinutes(servico.duracao_minutos)}
+        </span>
+        <p className="absolute bottom-3 left-4 font-display text-lg font-bold text-white">
+          {servico.nome}
+        </p>
+      </div>
 
-        <div className="space-y-1.5">
-          <h3 className="font-display text-xl font-bold text-cream transition-colors group-hover:text-gold-light">
-            {servico.nome}
-          </h3>
-          <p className="line-clamp-3 min-h-12 text-sm leading-relaxed text-muted-foreground">
-            {servico.descricao ?? "Atendimento com os melhores profissionais."}
-          </p>
-        </div>
+      <CardContent className="flex flex-col gap-3 pt-4">
+        <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
+          {servico.descricao ?? "Atendimento com os melhores profissionais."}
+        </p>
 
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <p className="font-display text-2xl font-bold text-gradient-gold">
+        <div className="mt-auto flex items-center justify-between pt-1">
+          <p className="font-display text-2xl font-extrabold text-gradient-red">
             {formatBRL(servico.preco)}
           </p>
           <Link
             to={`/agendamento?servico=${servico.id}`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-gold/40 px-3 py-1.5 text-xs font-semibold text-gold-light transition-all duration-300 hover:bg-gold hover:text-charcoal"
+            className="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/5 px-3 py-1.5 text-xs font-semibold text-red-300 transition-all duration-300 hover:bg-red-gradient hover:text-white active:scale-95"
           >
             Agendar
             <ArrowRight className="size-3.5" />

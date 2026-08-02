@@ -11,8 +11,8 @@ interface StatCardProps {
 }
 
 const ACCENTS = {
-  gold: "border-gold/30 bg-gold/10 text-gold",
-  bronze: "border-bronze/40 bg-bronze/15 text-[#e0a06e]",
+  gold: "border-red-500/30 bg-red-500/10 text-red-400",
+  bronze: "border-blood/40 bg-blood/15 text-red-300",
   green: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
 };
 

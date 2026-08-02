@@ -1,11 +1,12 @@
 import { requerSupabase } from "@/services/supabase";
-import type { Configuracao } from "@/types";
+import { BARBEARIA_NETO_ID, type Configuracao } from "@/types";
 
 export const CONFIGURACAO_PADRAO: Omit<Configuracao, "id" | "updated_at"> = {
   nome_barbearia: "Barbearia Neto",
   logo_url: null,
   horario_funcionamento: "Terça a Sábado — 09h às 19h",
   dias_disponiveis: [1, 2, 3, 4, 5, 6],
+  barbearia_id: BARBEARIA_NETO_ID,
 };
 
 export async function getConfiguracao(): Promise<Configuracao | null> {

@@ -43,7 +43,7 @@ export function AdminLayout() {
     "Administração";
 
   return (
-    <div className="min-h-screen bg-charcoal">
+    <div className="min-h-screen bg-black">
       {!isSupabaseConfigured && (
         <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-center text-xs text-amber-300 sm:text-sm">
           ⚠️ Banco de dados ainda não configurado. Adicione{" "}
@@ -79,7 +79,7 @@ export function AdminLayout() {
               type="button"
               onClick={() => setColapsado(true)}
               aria-label="Recolher menu"
-              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-gold/10 hover:text-gold"
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
             >
               <PanelLeftClose className="size-4" />
             </button>
@@ -98,8 +98,8 @@ export function AdminLayout() {
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   colapsado && "justify-center px-0",
                   isActive
-                    ? "bg-gold/12 text-gold-light shadow-[inset_2px_0_0_var(--color-gold)]"
-                    : "text-muted-foreground hover:bg-graphite hover:text-cream",
+                    ? "bg-red-500/12 text-red-300 shadow-[inset_2px_0_0_var(--color-ring)]"
+                    : "text-muted-foreground hover:bg-graphite hover:text-white",
                 )
               }
             >
@@ -115,14 +115,14 @@ export function AdminLayout() {
               type="button"
               onClick={() => setColapsado(false)}
               aria-label="Expandir menu"
-              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-graphite hover:text-gold"
+              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-graphite hover:text-red-400"
             >
               <PanelLeftOpen className="size-4" />
             </button>
           ) : (
             <Link
               to="/"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-graphite hover:text-cream"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-graphite hover:text-white"
             >
               <ExternalLink className="size-4" />
               Ver site
@@ -132,13 +132,13 @@ export function AdminLayout() {
       </aside>
 
       {/* Topbar mobile */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-coal/95 px-4 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-black/95 px-4 backdrop-blur lg:hidden">
         <Link to="/" aria-label="Ver site">
           <Logo compact />
         </Link>
         <button
           type="button"
-          className="flex size-9 items-center justify-center rounded-md text-cream transition-colors hover:bg-gold/10"
+          className="flex size-9 items-center justify-center rounded-md text-white transition-colors hover:bg-red-500/10"
           onClick={() => setMenuAberto((v) => !v)}
           aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
         >
@@ -153,15 +153,14 @@ export function AdminLayout() {
               <NavLink
                 key={link.to}
                 to={link.to}
-                end={link.end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-gold/12 text-gold-light"
-                      : "text-muted-foreground hover:bg-graphite hover:text-cream",
-                  )
-                }
+                end={link.end}                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-red-500/12 text-red-300"
+                        : "text-muted-foreground hover:bg-graphite hover:text-white",
+                    )
+                  }
               >
                 <link.icon className="size-4" />
                 {link.label}
@@ -181,8 +180,8 @@ export function AdminLayout() {
         {/* Cabeçalho superior (desktop) */}
         <header className="mb-6 hidden items-center justify-between rounded-xl border border-border/60 bg-coal/60 px-4 py-3 lg:flex">
           <div className="flex items-center gap-2.5">
-            <span className="size-2 rounded-full bg-gold" />
-            <p className="text-sm font-semibold text-cream">{titulo}</p>
+            <span className="size-2 rounded-full bg-red-500" />
+            <p className="text-sm font-semibold text-white">{titulo}</p>
             <span className="text-xs text-muted-foreground">
               / painel de gestão
             </span>
@@ -201,7 +200,7 @@ export function AdminLayout() {
             )}
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-gold/50 hover:text-gold-light"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-red-500/50 hover:text-red-300"
             >
               <ExternalLink className="size-3.5" />
               Ver site

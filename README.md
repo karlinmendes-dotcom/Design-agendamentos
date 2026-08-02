@@ -1,12 +1,14 @@
-# 💈 Barbearia Neto — Agendamento Online
+# 💈 Barbearia Neto — Plataforma de Agendamento para Barbearias
 
 Aplicativo completo de agendamento para a **Barbearia Neto**, com área do cliente
-(sem login) e dashboard administrativo em `/admin`.
+(sem login) e dashboard administrativo em `/admin`. Arquitetura **SaaS
+multi-barbearia**: a Barbearia Neto é a primeira barbearia cadastrada, mas a
+estrutura está pronta para várias barbearias, unidades e profissionais.
 
 ## Stack
 
 - **React 19 + TypeScript + Vite** — SPA rápida e tipada
-- **Tailwind CSS 4** — tema escuro premium (carvão, grafite, dourado e bronze)
+- **Tailwind CSS 4** — tema escuro premium (preto + vermelho)
 - **Shadcn UI** — componentes acessíveis e elegantes
 - **Supabase** — banco de dados PostgreSQL
 - **Netlify** — deploy contínuo (SPA com redirects)
@@ -15,13 +17,15 @@ Aplicativo completo de agendamento para a **Barbearia Neto**, com área do clien
 
 ```
 src/
-├── components/   # Componentes reutilizáveis (Header, ServiceCard, AdminLayout...)
+├── components/   # Componentes reutilizáveis (ServiceCard, BottomNav, VideoCover...)
 │   └── ui/       # Componentes base shadcn/ui
 ├── pages/        # Páginas do cliente + admin/
-├── hooks/        # useServicos, useAgendamentos, useHorarios, useConfiguracao
-├── services/     # Cliente do Supabase + chamadas por entidade
-├── types/        # Interfaces de domínio
-├── utils/        # Formatadores (BRL, datas, telefone, slots de horário)
+├── layouts/      # AdminLayout (menu lateral profissional)
+├── hooks/        # useServicos, useAgendamentos, useHorarios, useConfiguracao, useBarbeiros
+├── contexts/     # ToastContext (notificações)
+├── services/     # Cliente do Supabase + chamadas por entidade (tenant-aware)
+├── types/        # Interfaces de domínio + tipos SaaS (Barbearia, Barbeiro, Midia)
+├── utils/        # Formatadores, slots, biblioteca de mídia (media.ts)
 └── data/         # Dados de demonstração (quando o Supabase não está conectado)
 ```
 
@@ -37,10 +41,15 @@ bun run typecheck  # checagem de tipos (tsc)
 
 1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
 2. Abra **SQL Editor** e execute o conteúdo de
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   Isso cria as tabelas `clientes`, `servicos`, `horarios`, `agendamentos` e
-   `configuracoes`, ativa o Row Level Security (acesso aberto, sem auth) e
-   insere os 6 serviços iniciais + horários padrão.
+   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) e
+   depois [`supabase/migrations/0002_saas_platform.sql`](supabase/migrations/0002_saas_platform.sql).
+   - `0001` cria as tabelas base (`clientes`, `servicos`, `horarios`,
+     `agendamentos`, `configuracoes`), ativa RLS e insere os 6 serviços +
+     horários padrão.
+   - `0002` cria a estrutura SaaS: `barbearias` (tenant), `barbeiros`,
+     `midias` (biblioteca de conteúdo) e colunas `barbearia_id`/`barbeiro_id`/
+     `video_url` nas tabelas existentes, com seeds (Barbearia Neto, 1 barbeiro,
+     vídeos da biblioteca).
 3. Copie as chaves em **Project Settings → API**:
    - `Project URL` → `VITE_SUPABASE_URL`
    - `anon / public key` → `VITE_SUPABASE_ANON_KEY`
@@ -57,28 +66,48 @@ VITE_SUPABASE_ANON_KEY=cole-a-chave-anon
 
 ## Área do cliente (sem login)
 
+Navegação por **bottom navigation** fixa (mobile-first), com splash screen
+animada na abertura.
+
 | Rota           | Descrição                                              |
 | -------------- | ------------------------------------------------------ |
-| `/`            | Landing page premium com CTA de agendamento            |
-| `/servicos`    | Cards de serviços com preço e duração                  |
-| `/agendamento` | Fluxo em 5 etapas: serviço → data → horário → dados → confirmação |
+| `/`            | Hero cinematográfico em vídeo + seções da barbearia    |
+| `/servicos`    | Cards com vídeo em loop, preço e duração               |
+| `/agendamento` | Fluxo em etapas: serviço → barbeiro (se houver) → data → horário → dados → confirmação |
 | `/sucesso`     | Confirmação do agendamento                             |
 
 ## Dashboard admin (`/admin`, sem proteção)
 
 | Rota                      | Descrição                                        |
 | ------------------------- | ------------------------------------------------ |
-| `/admin`                  | Total de agendamentos, clientes do dia, horários marcados e faturamento previsto |
-| `/admin/agenda`           | Agenda do dia com mudança de status (confirmado/concluído/cancelado) |
-| `/admin/servicos`         | CRUD de serviços: adicionar, editar preço/duração, ativar/desativar |
+| `/admin`                  | Indicadores, agenda diária/semanal/mensal, serviços mais vendidos, gráficos |
+| `/admin/agenda`           | Agenda por dia com busca, filtros, paginação e mudança de status |
+| `/admin/servicos`         | CRUD de serviços: preço, duração, vídeo (URL) e ativar/desativar |
 | `/admin/configuracoes`    | Nome da barbearia, logo, horários por dia e dias disponíveis |
+
+## Arquitetura SaaS (preparação)
+
+- **Multi-barbearia**: tabela `barbearias` como tenant; todos os registros têm
+  `barbearia_id`. A constante `BARBEARIA_NETO_ID` define o tenant atual.
+- **Múltiplos barbeiros**: tabela `barbeiros`; o fluxo de agendamento mostra a
+  etapa de escolha do barbeiro assim que houver profissionais ativos.
+- **Biblioteca de conteúdo**: tabela `midias` (vídeos, imagens, banners, logo)
+  + `video_url` por serviço. O admin troca mídias **sem alterar código**;
+  a camada `src/utils/media.ts` resolve a prioridade: vídeo do serviço →
+  biblioteca → fallback local.
+
+## Futuras funcionalidades (estrutura preparada)
+
+WhatsApp automático, pagamentos online (PIX/cartão/Apple Pay/Google Pay),
+programa de fidelidade, cupons, múltiplas unidades, relatórios financeiros,
+PWA, notificações push e integração com redes sociais.
 
 ## Deploy na Netlify
 
 1. Crie o repositório no GitHub (ex.: `barbearia-neto`) e faça o push:
 
 ```bash
-git init && git add . && git commit -m "chore: projeto inicial Barbearia Neto"
+git init && git add . && git commit -m "chore: plataforma Barbearia Neto"
 git remote add origin https://github.com/SEU_USUARIO/barbearia-neto.git
 git push -u origin main
 ```
@@ -91,14 +120,3 @@ git push -u origin main
 4. Em **Site settings → Environment variables**, adicione `VITE_SUPABASE_URL`
    e `VITE_SUPABASE_ANON_KEY`.
 5. Deploy! Cada push na `main` publica automaticamente.
-
-## Próximos passos planejados
-
-- WhatsApp automático (lembrete/confirmação)
-- Pagamento online
-- Múltiplos barbeiros
-- Relatórios financeiros
-
-A arquitetura já está preparada: hooks de notificação reutilizáveis, campos
-opcionais de pagamento no schema de agendamentos e separação por período nos
-dados.

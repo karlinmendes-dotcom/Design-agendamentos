@@ -7,7 +7,7 @@ export function Footer() {
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
 
   return (
-    <footer className="border-t border-border/70 bg-coal">
+    <footer className="border-t border-red-950/50 bg-[#070707]">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-4">
           <Logo nome={nomeBarbearia} />
@@ -19,21 +19,21 @@ export function Footer() {
             <a
               href="#"
               aria-label="Instagram"
-              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-gold/50 hover:text-gold"
+              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <Camera className="size-4" />
             </a>
             <a
               href="#"
               aria-label="E-mail"
-              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-gold/50 hover:text-gold"
+              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <AtSign className="size-4" />
             </a>
             <a
               href="#"
               aria-label="WhatsApp"
-              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-gold/50 hover:text-gold"
+              className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <MessageCircle className="size-4" />
             </a>
@@ -41,7 +41,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="font-display mb-4 text-sm font-bold tracking-widest text-gold uppercase">
+          <h3 className="font-display mb-4 text-sm font-bold tracking-widest text-red-500 uppercase">
             Navegação
           </h3>
           <ul className="space-y-2.5 text-sm text-muted-foreground">
@@ -61,6 +61,16 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/promocoes" className="transition-colors hover:text-gold-light">
+                Promoções
+              </Link>
+            </li>
+            <li>
+              <Link to="/contato" className="transition-colors hover:text-gold-light">
+                Contato
+              </Link>
+            </li>
+            <li>
               <Link to="/admin" className="transition-colors hover:text-gold-light">
                 Área do barbeiro
               </Link>
@@ -69,7 +79,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="font-display mb-4 flex items-center gap-2 text-sm font-bold tracking-widest text-gold uppercase">
+          <h3 className="font-display mb-4 flex items-center gap-2 text-sm font-bold tracking-widest text-red-500 uppercase">
             <Clock className="size-4" /> Horários
           </h3>
           <p className="text-sm leading-relaxed text-muted-foreground">
@@ -80,16 +90,16 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="font-display mb-4 text-sm font-bold tracking-widest text-gold uppercase">
+          <h3 className="font-display mb-4 text-sm font-bold tracking-widest text-red-500 uppercase">
             Contato
           </h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-center gap-2.5">
-              <Phone className="size-4 text-gold/70" />
+              <Phone className="size-4 text-red-500/80" />
               (00) 00000-0000
             </li>
             <li className="flex items-center gap-2.5">
-              <MapPin className="size-4 text-gold/70" />
+              <MapPin className="size-4 text-red-500/80" />
               Rua Exemplo, 123 — Centro
             </li>
           </ul>

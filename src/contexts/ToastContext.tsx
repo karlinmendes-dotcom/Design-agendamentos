@@ -33,7 +33,7 @@ const ICONES: Record<ToastType, typeof CheckCircle2> = {
 const ESTILOS: Record<ToastType, string> = {
   success: "border-emerald-500/40 bg-emerald-950/90 text-emerald-300",
   error: "border-destructive/50 bg-[#2a1210]/95 text-red-300",
-  info: "border-gold/40 bg-[#1c1708]/95 text-amber-200",
+  info: "border-red-500/40 bg-[#1c0505]/95 text-red-200",
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {

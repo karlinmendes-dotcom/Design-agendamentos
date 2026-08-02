@@ -1,4 +1,5 @@
 import type { Agendamento, Configuracao, Horario, Servico } from "@/types";
+import { BARBEARIA_NETO_ID } from "@/types";
 import { addDaysISO, todayISO } from "@/utils/date";
 
 export const DEMO_SERVICOS: Servico[] = [
@@ -11,6 +12,9 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 40,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
   {
     id: "demo-corte-barba",
@@ -21,6 +25,9 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 70,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
   {
     id: "demo-barba",
@@ -31,6 +38,9 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 30,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
   {
     id: "demo-pigmentacao",
@@ -41,6 +51,9 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 25,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
   {
     id: "demo-infantil",
@@ -51,6 +64,9 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 30,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
   {
     id: "demo-pezinho",
@@ -61,16 +77,19 @@ export const DEMO_SERVICOS: Servico[] = [
     duracao_minutos: 15,
     ativo: true,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
   },
 ];
 
 export const DEMO_HORARIOS: Horario[] = [
-  { id: "demo-h1", dia_semana: 1, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "" },
-  { id: "demo-h2", dia_semana: 2, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "" },
-  { id: "demo-h3", dia_semana: 3, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "" },
-  { id: "demo-h4", dia_semana: 4, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "" },
-  { id: "demo-h5", dia_semana: 5, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "" },
-  { id: "demo-h6", dia_semana: 6, hora_inicio: "08:00", hora_fim: "18:00", ativo: true, created_at: "" },
+  { id: "demo-h1", dia_semana: 1, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
+  { id: "demo-h2", dia_semana: 2, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
+  { id: "demo-h3", dia_semana: 3, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
+  { id: "demo-h4", dia_semana: 4, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
+  { id: "demo-h5", dia_semana: 5, hora_inicio: "09:00", hora_fim: "19:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
+  { id: "demo-h6", dia_semana: 6, hora_inicio: "08:00", hora_fim: "18:00", ativo: true, created_at: "", barbearia_id: BARBEARIA_NETO_ID },
 ];
 
 export const DEMO_CONFIG: Configuracao = {
@@ -80,6 +99,7 @@ export const DEMO_CONFIG: Configuracao = {
   horario_funcionamento: "Terça a Sábado — 09h às 19h",
   dias_disponiveis: [1, 2, 3, 4, 5, 6],
   updated_at: new Date().toISOString(),
+  barbearia_id: BARBEARIA_NETO_ID,
 };
 
 function demoAgendamento(
@@ -100,6 +120,9 @@ function demoAgendamento(
     horario,
     status,
     created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    barbeiro_id: null,
+    barbeiro: { nome: "Neto" },
     cliente: { nome, telefone },
     servico: {
       nome: servico.nome,
