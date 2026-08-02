@@ -3,7 +3,8 @@ import { ArrowRight, CalendarCheck, Clock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ServiceCard } from "@/components/ServiceCard";
-import { LoadingState, ErrorState } from "@/components/Feedback";
+import { ErrorState } from "@/components/Feedback";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
@@ -40,7 +41,26 @@ export function Servicos() {
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         {loading ? (
-          <LoadingState label="Carregando serviços..." />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-border/80 bg-card p-6"
+              >
+                <div className="flex items-start justify-between">
+                  <Skeleton className="size-12 rounded-lg" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="mt-4 h-6 w-2/3" />
+                <Skeleton className="mt-2 h-4 w-full" />
+                <Skeleton className="mt-2 h-4 w-4/5" />
+                <div className="mt-6 flex items-center justify-between">
+                  <Skeleton className="h-7 w-20" />
+                  <Skeleton className="h-8 w-24 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <ErrorState message={error} onRetry={refresh} />
         ) : servicos.length === 0 ? (

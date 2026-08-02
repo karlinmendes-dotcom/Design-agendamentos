@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useHorarios } from "@/hooks/useHorarios";
 import { salvarConfiguracao } from "@/services/configuracoes";
 import { upsertHorario } from "@/services/horarios";
+import { useToast } from "@/contexts/ToastContext";
 import { isSupabaseConfigured } from "@/services/supabase";
 import { DIAS_SEMANA } from "@/utils/date";
 
@@ -27,8 +28,7 @@ export function Configuracoes() {
   const [descricaoHorarios, setDescricaoHorarios] = useState("");
   const [dias, setDias] = useState<Record<number, DiaForm>>({});
   const [salvando, setSalvando] = useState(false);
-  const [sucesso, setSucesso] = useState<string | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Inicializa o formulário a partir dos dados carregados
   useEffect(() => {
@@ -66,8 +66,6 @@ export function Configuracoes() {
 
   const salvar = async () => {
     setSalvando(true);
-    setSucesso(null);
-    setErro(null);
     try {
       const diasSelecionados = Object.entries(dias)
         .filter(([, d]) => d.ativo)
@@ -91,9 +89,10 @@ export function Configuracoes() {
       }
 
       await Promise.all([refreshConfig(), refreshHorarios()]);
-      setSucesso("Configurações salvas com sucesso!");
+      toast("success", "Configurações salvas com sucesso!");
     } catch (err) {
-      setErro(
+      toast(
+        "error",
         err instanceof Error ? err.message : "Erro ao salvar as configurações.",
       );
     } finally {
@@ -211,18 +210,6 @@ export function Configuracoes() {
             })}
           </CardContent>
         </Card>
-
-        {sucesso && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-            <CheckCircle2 className="size-4" />
-            {sucesso}
-          </div>
-        )}
-        {erro && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {erro}
-          </div>
-        )}
 
         <Button variant="gold" size="lg" onClick={() => void salvar()} disabled={salvando}>
           {salvando ? (

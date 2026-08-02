@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -65,6 +66,14 @@ const DIFERENCIAIS = [
 export function Home() {
   const { servicos } = useServicos(true);
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
+  const [ctaVisivel, setCtaVisivel] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setCtaVisivel(window.scrollY > 480);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="bg-texture min-h-screen bg-charcoal">
@@ -274,6 +283,19 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* CTA fixo mobile (aparece ao rolar) */}
+      {ctaVisivel && (
+        <div className="animate-slide-up fixed inset-x-0 bottom-0 z-40 border-t border-gold/25 bg-charcoal/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
+          <Button asChild variant="gold" size="lg" className="w-full">
+            <Link to="/agendamento">
+              <CalendarCheck className="size-5" />
+              Agendar horário
+            </Link>
+          </Button>
+        </div>
+      )}
+      <div className="h-20 md:hidden" aria-hidden />
 
       <Footer />
     </div>

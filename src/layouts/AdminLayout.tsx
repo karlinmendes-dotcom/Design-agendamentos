@@ -1,8 +1,11 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   CalendarDays,
+  ExternalLink,
   LayoutDashboard,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Scissors,
   Settings,
   X,
@@ -19,13 +22,25 @@ const ADMIN_LINKS = [
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+const TITULOS: { prefixo: string; titulo: string }[] = [
+  { prefixo: "/admin/agenda", titulo: "Agenda" },
+  { prefixo: "/admin/servicos", titulo: "Serviços" },
+  { prefixo: "/admin/configuracoes", titulo: "Configurações" },
+  { prefixo: "/admin", titulo: "Visão geral" },
+];
+
 export function AdminLayout() {
   const [menuAberto, setMenuAberto] = useState(false);
+  const [colapsado, setColapsado] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     setMenuAberto(false);
   }, [location.pathname]);
+
+  const titulo =
+    TITULOS.find((t) => location.pathname.startsWith(t.prefixo))?.titulo ??
+    "Administração";
 
   return (
     <div className="min-h-screen bg-charcoal">
@@ -44,39 +59,75 @@ export function AdminLayout() {
       )}
 
       {/* Sidebar desktop */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border/70 bg-coal lg:flex">
-        <div className="flex h-16 items-center border-b border-border/60 px-5">
-          <Link to="/" aria-label="Ver site">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border/70 bg-coal transition-[width] duration-300 lg:flex",
+          colapsado ? "w-[76px]" : "w-60",
+        )}
+      >
+        <div
+          className={cn(
+            "flex h-16 items-center border-b border-border/60",
+            colapsado ? "justify-center px-2" : "justify-between px-4",
+          )}
+        >
+          <Link to="/" aria-label="Ver site" className={colapsado ? "mx-auto" : ""}>
             <Logo compact />
           </Link>
+          {!colapsado && (
+            <button
+              type="button"
+              onClick={() => setColapsado(true)}
+              aria-label="Recolher menu"
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-gold/10 hover:text-gold"
+            >
+              <PanelLeftClose className="size-4" />
+            </button>
+          )}
         </div>
+
         <nav className="flex-1 space-y-1 p-3">
           {ADMIN_LINKS.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.end}
+              title={colapsado ? link.label : undefined}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                  colapsado && "justify-center px-0",
                   isActive
                     ? "bg-gold/12 text-gold-light shadow-[inset_2px_0_0_var(--color-gold)]"
                     : "text-muted-foreground hover:bg-graphite hover:text-cream",
                 )
               }
             >
-              <link.icon className="size-4" />
-              {link.label}
+              <link.icon className="size-4 shrink-0" />
+              {!colapsado && link.label}
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-border/60 p-3">
-          <Link
-            to="/"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-graphite hover:text-cream"
-          >
-            ← Ver site
-          </Link>
+
+        <div className={cn("border-t border-border/60 p-3", colapsado && "flex justify-center")}>
+          {colapsado ? (
+            <button
+              type="button"
+              onClick={() => setColapsado(false)}
+              aria-label="Expandir menu"
+              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-graphite hover:text-gold"
+            >
+              <PanelLeftOpen className="size-4" />
+            </button>
+          ) : (
+            <Link
+              to="/"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-graphite hover:text-cream"
+            >
+              <ExternalLink className="size-4" />
+              Ver site
+            </Link>
+          )}
         </div>
       </aside>
 
@@ -121,7 +172,43 @@ export function AdminLayout() {
       )}
 
       {/* Conteúdo */}
-      <main className="px-4 pt-6 pb-16 sm:px-6 lg:ml-60 lg:px-8">
+      <main
+        className={cn(
+          "px-4 pt-6 pb-16 sm:px-6 lg:px-8",
+          colapsado ? "lg:ml-[76px]" : "lg:ml-60",
+        )}
+      >
+        {/* Cabeçalho superior (desktop) */}
+        <header className="mb-6 hidden items-center justify-between rounded-xl border border-border/60 bg-coal/60 px-4 py-3 lg:flex">
+          <div className="flex items-center gap-2.5">
+            <span className="size-2 rounded-full bg-gold" />
+            <p className="text-sm font-semibold text-cream">{titulo}</p>
+            <span className="text-xs text-muted-foreground">
+              / painel de gestão
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {isSupabaseConfigured ? (
+              <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-400" />
+                Conectado
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300">
+                <span className="size-1.5 rounded-full bg-amber-400" />
+                Modo demonstração
+              </span>
+            )}
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-gold/50 hover:text-gold-light"
+            >
+              <ExternalLink className="size-3.5" />
+              Ver site
+            </Link>
+          </div>
+        </header>
+
         <Outlet />
       </main>
     </div>

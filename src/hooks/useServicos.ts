@@ -10,28 +10,31 @@ export function useServicos(apenasAtivos = false) {
   const [error, setError] = useState<string | null>(null);
   const [usandoDemo, setUsandoDemo] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setServicos(
-        apenasAtivos ? DEMO_SERVICOS.filter((s) => s.ativo) : DEMO_SERVICOS,
-      );
-      setUsandoDemo(true);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-    setUsandoDemo(false);
-    setLoading(true);
-    try {
-      const data = await listServicos(apenasAtivos);
-      setServicos(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar serviços");
-    } finally {
-      setLoading(false);
-    }
-  }, [apenasAtivos]);
+  const refresh = useCallback(
+    async (silencioso = false) => {
+      if (!isSupabaseConfigured) {
+        setServicos(
+          apenasAtivos ? DEMO_SERVICOS.filter((s) => s.ativo) : DEMO_SERVICOS,
+        );
+        setUsandoDemo(true);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      setUsandoDemo(false);
+      if (!silencioso) setLoading(true);
+      try {
+        const data = await listServicos(apenasAtivos);
+        setServicos(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao carregar serviços");
+      } finally {
+        if (!silencioso) setLoading(false);
+      }
+    },
+    [apenasAtivos],
+  );
 
   useEffect(() => {
     void refresh();

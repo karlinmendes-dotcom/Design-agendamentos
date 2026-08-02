@@ -14,7 +14,7 @@ export function useAgendamentos() {
   const [error, setError] = useState<string | null>(null);
   const [usandoDemo, setUsandoDemo] = useState(false);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (silencioso = false) => {
     if (!isSupabaseConfigured) {
       setAgendamentos(DEMO_AGENDAMENTOS);
       setUsandoDemo(true);
@@ -23,7 +23,7 @@ export function useAgendamentos() {
       return;
     }
     setUsandoDemo(false);
-    setLoading(true);
+    if (!silencioso) setLoading(true);
     try {
       const data = await listAgendamentos();
       setAgendamentos(data);
@@ -31,12 +31,21 @@ export function useAgendamentos() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar agendamentos");
     } finally {
-      setLoading(false);
+      if (!silencioso) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  // Atualização automática ao retornar para a aba (dados sempre recentes)
+  useEffect(() => {
+    const onFocus = () => {
+      void refresh(true);
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [refresh]);
 
   return { agendamentos, loading, error, refresh, usandoDemo };

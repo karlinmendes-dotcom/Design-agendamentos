@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, Power, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Power, Scissors, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { LoadingState, ErrorState } from "@/components/Feedback";
+import { EmptyState } from "@/components/EmptyState";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ import {
   excluirServico,
   setServicoAtivo,
 } from "@/services/servicos";
+import { useToast } from "@/contexts/ToastContext";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import { isSupabaseConfigured } from "@/services/supabase";
 import type { Servico, ServicoFormData } from "@/types";
@@ -41,14 +43,14 @@ const FORM_VAZIO: ServicoFormData = {
 };
 
 export function ServicosAdmin() {
-  const { servicos, loading, error, refresh, usandoDemo } = useServicos(false);
+  const { servicos, loading, refresh, usandoDemo } = useServicos(false);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editando, setEditando] = useState<Servico | null>(null);
   const [form, setForm] = useState<ServicoFormData>(FORM_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!dialogAberto) {
@@ -90,15 +92,15 @@ export function ServicosAdmin() {
           preco: Number(form.preco.replace(",", ".")),
           duracao_minutos: Number(form.duracao_minutos),
         });
+        toast("success", "Serviço atualizado com sucesso.");
       } else {
         await criarServico(form);
+        toast("success", "Serviço criado com sucesso.");
       }
       setDialogAberto(false);
-      await refresh();
+      await refresh(true);
     } catch (err) {
-      setErro(
-        err instanceof Error ? err.message : "Erro ao salvar o serviço.",
-      );
+      setErro(err instanceof Error ? err.message : "Erro ao salvar o serviço.");
     } finally {
       setSalvando(false);
     }
@@ -107,9 +109,13 @@ export function ServicosAdmin() {
   const alternarAtivo = async (s: Servico) => {
     try {
       await setServicoAtivo(s.id, !s.ativo);
-      await refresh();
+      toast("success", `Serviço ${s.ativo ? "desativado" : "ativado"}.`);
+      await refresh(true);
     } catch (err) {
-      setAviso(err instanceof Error ? err.message : "Erro ao atualizar serviço.");
+      toast(
+        "error",
+        err instanceof Error ? err.message : "Erro ao atualizar serviço.",
+      );
     }
   };
 
@@ -121,14 +127,16 @@ export function ServicosAdmin() {
     try {
       await excluirServico(s.id);
       setExcluindoId(null);
-      await refresh();
+      toast("success", "Serviço excluído.");
+      await refresh(true);
     } catch (err) {
-      setAviso(
+      setExcluindoId(null);
+      toast(
+        "error",
         err instanceof Error
           ? err.message
           : "Não foi possível excluir. Pode haver agendamentos vinculados.",
       );
-      setExcluindoId(null);
     }
   };
 
@@ -149,19 +157,6 @@ export function ServicosAdmin() {
         </Button>
       </div>
 
-      {aviso && (
-        <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {aviso}
-          <button
-            type="button"
-            className="ml-2 font-semibold underline"
-            onClick={() => setAviso(null)}
-          >
-            Fechar
-          </button>
-        </div>
-      )}
-
       {usandoDemo && (
         <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
           Mostrando serviços de demonstração. Conecte o Supabase para editar os
@@ -171,9 +166,25 @@ export function ServicosAdmin() {
 
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
         {loading ? (
-          <LoadingState label="Carregando serviços..." />
-        ) : error ? (
-          <ErrorState message={error} onRetry={refresh} />
+          <div className="space-y-3 p-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : servicos.length === 0 ? (
+          <div className="p-5">
+            <EmptyState
+              icon={Scissors}
+              title="Nenhum serviço cadastrado"
+              description="Crie o primeiro serviço para começar a receber agendamentos."
+              action={
+                <Button variant="gold" size="sm" onClick={abrirNovo}>
+                  <Plus className="size-4" />
+                  Criar serviço
+                </Button>
+              }
+            />
+          </div>
         ) : (
           <Table>
             <TableHeader>
