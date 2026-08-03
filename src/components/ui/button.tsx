@@ -81,15 +81,21 @@ function Button({
       disabled={loading || props.disabled}
       {...props}
     >
-      {loading && (
-        <span
-          aria-hidden
-          className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-        />
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading && (
+            <span
+              aria-hidden
+              className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+            />
+          )}
+          <span className={cn("inline-flex items-center gap-2", loading && "opacity-0")}>
+            {children}
+          </span>
+        </>
       )}
-      <span className={cn("inline-flex items-center gap-2", loading && "opacity-0")}>
-        {children}
-      </span>
     </Comp>
   );
 }
