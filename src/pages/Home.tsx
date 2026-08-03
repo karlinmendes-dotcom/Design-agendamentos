@@ -10,16 +10,18 @@ import {
   Sparkles,
   Star,
   Users,
-  Zap,
 } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { ServiceCard } from "@/components/ServiceCard";
 import { VideoCover } from "@/components/VideoCover";
+import { VideoCarousel } from "@/components/VideoCarousel";
 import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { VIDEO_HERO } from "@/utils/videos";
+import { mediaParaServico } from "@/utils/media";
+import { formatBRL, formatMinutes } from "@/utils/format";
 
 const MARQUEE = [
   "Corte na régua",
@@ -160,7 +162,7 @@ export function Home() {
         </div>
       </div>
 
-      {/* ===== Destaques da Semana ===== */}
+      {/* ===== Destaques da Semana — carrossel de vídeos ===== */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
         <Reveal className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -179,30 +181,23 @@ export function Home() {
           </Button>
         </Reveal>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          {DESTAQUES.map((d, i) => (
-            <Reveal key={d.nome} delay={i * 90}>
-              <Link
-                to="/agendamento"
-                className="red-ring-hover group relative block overflow-hidden rounded-2xl border border-border bg-card p-6"
-              >
-                <span className="absolute top-4 right-4 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-[10px] font-bold tracking-wide text-red-300 uppercase">
-                  {d.badge}
-                </span>
-                <div className="flex size-11 items-center justify-center rounded-lg bg-red-500/10 transition-transform duration-300 group-hover:scale-110">
-                  <Zap className="size-5 text-red-500" />
-                </div>
-                <h3 className="font-display mt-4 text-lg font-bold text-white">
-                  {d.nome}
-                </h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{d.descricao}</p>
-                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-red-400">
-                  Reservar agora <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-                </p>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
+        <VideoCarousel
+          itens={procurados.map((s, i) => {
+            const video = mediaParaServico(s);
+            const destaque = DESTAQUES[i];
+            return {
+              id: s.id,
+              titulo: s.nome,
+              descricao: destaque?.descricao ?? s.descricao ?? "",
+              badge: destaque?.badge,
+              preco: formatBRL(s.preco),
+              duracao: formatMinutes(s.duracao_minutos),
+              src: video.src,
+              poster: video.poster,
+              to: `/agendamento?servico=${s.id}`,
+            };
+          })}
+        />
       </section>
 
       {/* ===== Serviços mais procurados ===== */}

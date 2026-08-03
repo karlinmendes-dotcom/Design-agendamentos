@@ -12,3 +12,23 @@ export async function getBarbeariaAtual(): Promise<Barbearia | null> {
   if (error) throw new Error(error.message);
   return (data as Barbearia) ?? null;
 }
+
+/**
+ * Atualiza dados de contato/locação da barbearia (telefone/WhatsApp,
+ * Instagram e endereço). Usado no painel admin → Configurações.
+ */
+export async function salvarBarbearia(
+  patch: Partial<
+    Pick<Barbearia, "telefone" | "instagram" | "endereco" | "logo_url">
+  >,
+): Promise<Barbearia | null> {
+  const db = requerSupabase();
+  const { data, error } = await db
+    .from("barbearias")
+    .update(patch)
+    .eq("id", BARBEARIA_NETO_ID)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return (data as Barbearia) ?? null;
+}

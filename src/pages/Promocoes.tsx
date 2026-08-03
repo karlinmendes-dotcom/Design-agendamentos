@@ -1,25 +1,19 @@
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarCheck,
-  Crown,
-  Gift,
-  Scissors,
-  Sparkles,
-  Tag,
-  Ticket,
-} from "lucide-react";
+import { ArrowRight, CalendarCheck, Crown, Gift, Tag, Ticket } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { ErrorState, LoadingState } from "@/components/Feedback";
+import { VideoCarousel, type VideoCarouselItem } from "@/components/VideoCarousel";
 import { Button } from "@/components/ui/button";
 import { useServicos } from "@/hooks/useServicos";
+import { mediaParaServico } from "@/utils/media";
 import { formatBRL, formatMinutes } from "@/utils/format";
 
 /**
- * Combos da casa — montados a partir dos serviços reais do banco.
- * Quando o programa de fidelidade/cupons for ativado, esta página passa
- * a consumir a estrutura de promoções (tabela futura).
+ * Combos da casa — montados a partir dos serviços reais do banco (vídeo,
+ * preço e duração vêm direto do cardápio). Quando o programa de
+ * fidelidade/cupons for ativado, esta página passa a consumir a estrutura
+ * de promoções (tabela futura).
  */
 export function Promocoes() {
   const { servicos, loading, error, refresh } = useServicos(true);
@@ -37,7 +31,6 @@ export function Promocoes() {
         "O clássico da casa: corte na régua + barba com toalha quente e navalha.",
       itens: [corte, barba].filter(Boolean),
       badge: "Mais pedido",
-      icon: Scissors,
     },
     {
       nome: "Visual completo",
@@ -45,12 +38,44 @@ export function Promocoes() {
         "Corte + barba + pigmentação para um visual cheio, definido e pronto.",
       itens: [corte, barba, pigmentacao].filter(Boolean),
       badge: "Transformação",
-      icon: Sparkles,
     },
-  ].filter((c) => c.itens.length > 0);
+    {
+      nome: "Corte + Pigmentação",
+      descricao: "Corte impecável com pigmentação para disfarçar falhas e dar densidade.",
+      itens: [corte, pigmentacao].filter(Boolean),
+      badge: "Densidade",
+    },
+    {
+      nome: "Barba + Pigmentação",
+      descricao: "Barba alinhada e preenchida para um visual marcante.",
+      itens: [barba, pigmentacao].filter(Boolean),
+      badge: "Definição",
+    },
+  ]
+    .filter((c) => c.itens.length > 0)
+    .map((c) => ({ ...c, itens: c.itens as NonNullable<typeof corte>[] }));
 
-  const totalCombo = (itens: (typeof corte | null)[]) =>
-    itens.reduce((soma, i) => soma + (i?.preco ?? 0), 0);
+  const totalCombo = (itens: { preco: number }[]) =>
+    itens.reduce((soma, i) => soma + (i.preco ?? 0), 0);
+
+  const carrossel: VideoCarouselItem[] = combos.map((combo) => {
+    const primeiro = combo.itens[0];
+    const video = mediaParaServico(primeiro);
+    return {
+      id: combo.nome,
+      titulo: combo.nome,
+      descricao: combo.descricao,
+      badge: combo.badge,
+      preco: formatBRL(totalCombo(combo.itens)),
+      duracao: formatMinutes(
+        combo.itens.reduce((soma, i) => soma + (i.duracao_minutos ?? 0), 0),
+      ),
+      extra: `Inclui: ${combo.itens.map((i) => i.nome).join(" + ")}`,
+      src: video.src,
+      poster: video.poster,
+      to: "/agendamento",
+    };
+  });
 
   return (
     <div className="min-h-screen bg-black">
@@ -77,72 +102,18 @@ export function Promocoes() {
           <LoadingState label="Carregando ofertas..." />
         ) : error ? (
           <ErrorState message={error} onRetry={refresh} />
-        ) : combos.length === 0 ? (
+        ) : carrossel.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-20 text-center">
             <p className="text-muted-foreground">
               Em breve teremos combos exclusivos para você.
             </p>
           </div>
         ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
-            {combos.map((combo, i) => (
-              <Reveal key={combo.nome} delay={i * 100}>
-                <div className="red-ring-hover group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-7">
-                  <div className="pointer-events-none absolute -top-20 -right-16 size-48 rounded-full bg-red-500/10 blur-3xl transition-opacity group-hover:opacity-100" />
-                  <span className="absolute top-5 right-5 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-[10px] font-bold tracking-wide text-red-300 uppercase">
-                    {combo.badge}
-                  </span>
-
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-red-500/10">
-                    <combo.icon className="size-6 text-red-500" />
-                  </div>
-                  <h2 className="font-display mt-5 text-xl font-bold text-white">
-                    {combo.nome}
-                  </h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {combo.descricao}
-                  </p>
-
-                  <ul className="mt-6 space-y-2.5">
-                    {combo.itens.map((item) => (
-                      <li
-                        key={item!.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-2.5 text-sm"
-                      >
-                        <span className="flex items-center gap-2 text-white">
-                          <span className="size-1.5 rounded-full bg-red-500" />
-                          {item!.nome}
-                        </span>
-                        <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                          {formatMinutes(item!.duracao_minutos)}
-                          <span className="font-semibold text-red-400">
-                            {formatBRL(item!.preco)}
-                          </span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
-                    <div>
-                      <p className="text-[11px] text-muted-foreground uppercase">
-                        Total do combo
-                      </p>
-                      <p className="font-display text-2xl font-extrabold text-gradient-red">
-                        {formatBRL(totalCombo(combo.itens))}
-                      </p>
-                    </div>
-                    <Button asChild variant="gold">
-                      <Link to="/agendamento">
-                        <CalendarCheck className="size-4" />
-                        Agendar
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+          <div>
+            <p className="mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+              <CalendarCheck className="size-4" /> Navegue pelos combos
+            </p>
+            <VideoCarousel itens={carrossel} />
           </div>
         )}
 
@@ -172,6 +143,14 @@ export function Promocoes() {
                   Em breve
                 </span>
               </div>
+            </div>
+            <div className="relative mt-6">
+              <Button asChild variant="outline">
+                <Link to="/servicos">
+                  Ver cardápio completo
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </Reveal>

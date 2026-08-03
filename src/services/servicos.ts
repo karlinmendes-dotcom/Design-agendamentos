@@ -23,6 +23,7 @@ export async function criarServico(
       preco: Number(form.preco.replace(",", ".")),
       duracao_minutos: Number(form.duracao_minutos),
       video_url: form.video_url.trim() || null,
+      poster_url: form.poster_url.trim() || null,
       barbearia_id: BARBEARIA_NETO_ID,
       ativo: true,
     })
@@ -35,7 +36,15 @@ export async function criarServico(
 export async function atualizarServico(
   id: string,
   patch: Partial<
-    Pick<Servico, "nome" | "descricao" | "preco" | "duracao_minutos" | "video_url">
+    Pick<
+      Servico,
+      | "nome"
+      | "descricao"
+      | "preco"
+      | "duracao_minutos"
+      | "video_url"
+      | "poster_url"
+    >
   >,
 ): Promise<void> {
   const db = requerSupabase();

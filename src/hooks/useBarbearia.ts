@@ -11,6 +11,7 @@ const BARBEARIA_DEMO: Barbearia = {
   descricao: "Tradição e estilo em cada corte.",
   endereco: null,
   telefone: "(00) 00000-0000",
+  instagram: null,
   ativo: true,
   created_at: new Date().toISOString(),
 };

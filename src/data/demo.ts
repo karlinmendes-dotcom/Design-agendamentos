@@ -15,6 +15,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
   {
     id: "demo-corte-barba",
@@ -28,6 +29,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
   {
     id: "demo-barba",
@@ -41,6 +43,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
   {
     id: "demo-pigmentacao",
@@ -54,6 +57,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
   {
     id: "demo-infantil",
@@ -67,6 +71,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
   {
     id: "demo-pezinho",
@@ -80,6 +85,7 @@ export const DEMO_SERVICOS: Servico[] = [
     barbearia_id: BARBEARIA_NETO_ID,
     midia_id: null,
     video_url: null,
+    poster_url: null,
   },
 ];
 

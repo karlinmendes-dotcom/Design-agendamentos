@@ -1,10 +1,24 @@
 import { Link } from "react-router-dom";
-import { AtSign, Camera, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
+import { AtSign, Camera, Clock, MapPin, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useBarbearia } from "@/hooks/useBarbearia";
 
 export function Footer() {
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
+  const { barbearia } = useBarbearia();
+
+  const telefone = barbearia?.telefone ?? "(00) 00000-0000";
+  const endereco = barbearia?.endereco ?? "Rua Exemplo, 123 — Centro";
+  const instagram = barbearia?.instagram?.trim();
+  const instagramHref = instagram
+    ? `https://instagram.com/${instagram.replace(/^@/, "")}`
+    : "#";
+
+  const whats =
+    telefone !== "(00) 00000-0000"
+      ? `https://wa.me/55${telefone.replace(/\D/g, "")}`
+      : "#";
 
   return (
     <footer className="border-t border-red-950/50 bg-[#070707]">
@@ -17,22 +31,26 @@ export function Footer() {
           </p>
           <div className="flex gap-3">
             <a
-              href="#"
+              href={instagramHref}
               aria-label="Instagram"
+              target={instagram ? "_blank" : undefined}
+              rel="noopener noreferrer"
               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <Camera className="size-4" />
             </a>
             <a
-              href="#"
+              href="mailto:contato@barbearianeto.com.br"
               aria-label="E-mail"
               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <AtSign className="size-4" />
             </a>
             <a
-              href="#"
+              href={whats}
               aria-label="WhatsApp"
+              target={whats.startsWith("http") ? "_blank" : undefined}
+              rel="noopener noreferrer"
               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all hover:border-red-500/50 hover:text-red-400"
             >
               <MessageCircle className="size-4" />
@@ -95,12 +113,18 @@ export function Footer() {
           </h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-center gap-2.5">
-              <Phone className="size-4 text-red-500/80" />
-              (00) 00000-0000
+              <MessageCircle className="size-4 text-red-500/80" />
+              {telefone}
             </li>
+            {instagram && (
+              <li className="flex items-center gap-2.5">
+                <Camera className="size-4 text-red-500/80" />
+                @{instagram.replace(/^@/, "")}
+              </li>
+            )}
             <li className="flex items-center gap-2.5">
               <MapPin className="size-4 text-red-500/80" />
-              Rua Exemplo, 123 — Centro
+              {endereco}
             </li>
           </ul>
         </div>

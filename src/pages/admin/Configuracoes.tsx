@@ -7,7 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useHorarios } from "@/hooks/useHorarios";
+import { useBarbearia } from "@/hooks/useBarbearia";
 import { salvarConfiguracao } from "@/services/configuracoes";
+import { salvarBarbearia } from "@/services/barbearias";
 import { upsertHorario } from "@/services/horarios";
 import { useToast } from "@/contexts/ToastContext";
 import { isSupabaseConfigured } from "@/services/supabase";
@@ -22,10 +24,14 @@ interface DiaForm {
 export function Configuracoes() {
   const { configuracao, refresh: refreshConfig } = useConfiguracao();
   const { horarios, refresh: refreshHorarios } = useHorarios(false);
+  const { barbearia, refresh: refreshBarbearia } = useBarbearia();
 
   const [nome, setNome] = useState("Barbearia Neto");
   const [logoUrl, setLogoUrl] = useState("");
   const [descricaoHorarios, setDescricaoHorarios] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [endereco, setEndereco] = useState("");
   const [dias, setDias] = useState<Record<number, DiaForm>>({});
   const [salvando, setSalvando] = useState(false);
   const { toast } = useToast();
@@ -36,6 +42,11 @@ export function Configuracoes() {
       setNome(configuracao.nome_barbearia || "Barbearia Neto");
       setLogoUrl(configuracao.logo_url ?? "");
       setDescricaoHorarios(configuracao.horario_funcionamento ?? "");
+    }
+    if (barbearia) {
+      setTelefone(barbearia.telefone ?? "");
+      setInstagram(barbearia.instagram ?? "");
+      setEndereco(barbearia.endereco ?? "");
     }
     if (horarios.length > 0) {
       const next: Record<number, DiaForm> = {};
@@ -78,6 +89,13 @@ export function Configuracoes() {
         dias_disponiveis: diasSelecionados,
       });
 
+      // Contato & localização (tabela barbearias)
+      await salvarBarbearia({
+        telefone: telefone.trim() || null,
+        instagram: instagram.trim() || null,
+        endereco: endereco.trim() || null,
+      });
+
       for (const [diaStr, d] of Object.entries(dias)) {
         const dia = Number(diaStr);
         await upsertHorario({
@@ -88,7 +106,7 @@ export function Configuracoes() {
         });
       }
 
-      await Promise.all([refreshConfig(), refreshHorarios()]);
+      await Promise.all([refreshConfig(), refreshHorarios(), refreshBarbearia()]);
       toast("success", "Configurações salvas com sucesso!");
     } catch (err) {
       toast(
@@ -161,6 +179,45 @@ export function Configuracoes() {
                 value={descricaoHorarios}
                 onChange={(e) => setDescricaoHorarios(e.target.value)}
                 placeholder="Terça a Sábado — 09h às 19h"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Contato &amp; localização</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="c-telefone">Telefone / WhatsApp</Label>
+              <Input
+                id="c-telefone"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                placeholder="(11) 98888-8888"
+                inputMode="tel"
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado no botão flutuante, na página de contato e no rodapé.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-instagram">Instagram</Label>
+              <Input
+                id="c-instagram"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                placeholder="@barbearianeto (sem o @)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-endereco">Endereço</Label>
+              <Input
+                id="c-endereco"
+                value={endereco}
+                onChange={(e) => setEndereco(e.target.value)}
+                placeholder="Rua Exemplo, 123 — Centro"
               />
             </div>
           </CardContent>

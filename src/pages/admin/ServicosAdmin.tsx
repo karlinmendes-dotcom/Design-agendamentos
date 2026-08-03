@@ -41,6 +41,7 @@ const FORM_VAZIO: ServicoFormData = {
   preco: "",
   duracao_minutos: "",
   video_url: "",
+  poster_url: "",
 };
 
 export function ServicosAdmin() {
@@ -75,6 +76,7 @@ export function ServicosAdmin() {
       preco: String(s.preco).replace(".", ","),
       duracao_minutos: String(s.duracao_minutos),
       video_url: s.video_url ?? "",
+      poster_url: s.poster_url ?? "",
     });
     setDialogAberto(true);
   };
@@ -94,6 +96,7 @@ export function ServicosAdmin() {
           preco: Number(form.preco.replace(",", ".")),
           duracao_minutos: Number(form.duracao_minutos),
           video_url: form.video_url.trim() || null,
+          poster_url: form.poster_url.trim() || null,
         });
         toast("success", "Serviço atualizado com sucesso.");
       } else {
@@ -314,6 +317,16 @@ export function ServicosAdmin() {
               <p className="text-xs text-muted-foreground">
                 Deixe vazio para usar o vídeo padrão da biblioteca de mídia.
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="s-foto">Foto de capa (URL opcional)</Label>
+              <Input
+                id="s-foto"
+                value={form.poster_url}
+                onChange={(e) => setForm({ ...form, poster_url: e.target.value })}
+                placeholder="https://... (capa do card enquanto o vídeo carrega)"
+                className="font-mono text-xs"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarCheck,
-  Check,
   ChevronLeft,
   Clock,
   Loader2,
@@ -186,30 +185,40 @@ export function Agendamento() {
           </h1>
         </div>
 
-        {/* Progresso */}
-        <div className="animate-slide-up mb-8 flex items-center justify-between gap-1 sm:gap-2" style={{ animationDelay: "0.05s" }}>
-          {passos.map((label, i) => (
-            <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
-              <div
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full border text-xs font-bold transition-all duration-300",
-                  i < etapa && "border-red-500 bg-red-gradient text-white",
-                  i === etapa && "border-red-500 bg-red-500/15 text-red-300",
-                  i > etapa && "border-border bg-card text-muted-foreground",
-                )}
-              >
-                {i < etapa ? <Check className="size-4" /> : i + 1}
-              </div>
+        {/* Barra de progresso — preenche a cada etapa concluída */}
+        <div className="animate-slide-up mb-8" style={{ animationDelay: "0.05s" }}>
+          <div className="mb-2 flex items-center justify-between text-[11px]">
+            <span className="font-bold tracking-widest text-red-400 uppercase">
+              Passo {etapa + 1} de {passos.length} · {passos[etapa]}
+            </span>
+            <span className="font-semibold text-muted-foreground">
+              {Math.round((etapa / (passos.length - 1)) * 100)}%
+            </span>
+          </div>
+          <div
+            className="h-2.5 overflow-hidden rounded-full border border-border bg-card"
+            role="progressbar"
+            aria-valuenow={Math.round((etapa / (passos.length - 1)) * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Progresso do agendamento"
+          >
+            <div
+              className="h-full rounded-full bg-red-gradient transition-all duration-500 ease-out"
+              style={{ width: `${(etapa / (passos.length - 1)) * 100}%` }}
+            />
+          </div>
+          <div className="mt-2.5 flex items-center justify-between gap-1">
+            {passos.map((label, i) => (
               <span
+                key={label}
                 className={cn(
-                  "hidden text-[10px] font-medium tracking-wide uppercase sm:block",
-                  i <= etapa ? "text-red-300" : "text-muted-foreground/70",
+                  "h-1 flex-1 rounded-full transition-colors duration-300",
+                  i <= etapa ? "bg-red-500/70" : "bg-border/70",
                 )}
-              >
-                {label}
-              </span>
-            </div>
-          ))}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="animate-slide-up rounded-2xl border border-border/80 bg-card p-6 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.8)] sm:p-8" style={{ animationDelay: "0.1s" }}>

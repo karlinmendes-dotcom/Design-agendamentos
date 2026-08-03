@@ -29,13 +29,20 @@ const MIDIA_LOCAL: Record<string, VideoSource> = {
 
 /** Resolve o vídeo de um serviço usando a biblioteca de mídia. */
 export function mediaParaServico(
-  servico: { nome: string; video_url?: string | null } | null | undefined,
+  servico: {
+    nome: string;
+    video_url?: string | null;
+    poster_url?: string | null;
+  } | null | undefined,
 ): MediaSource {
   const fallback = videoParaServico(servico?.nome ?? "corte masculino");
 
-  // 1. Vídeo configurado diretamente no serviço (admin)
-  if (servico?.video_url) {
-    return { src: servico.video_url, poster: fallback.poster };
+  // 1. Vídeo/foto configurados diretamente no serviço (admin)
+  if (servico?.video_url || servico?.poster_url) {
+    return {
+      src: servico?.video_url ?? fallback.src,
+      poster: servico?.poster_url ?? fallback.poster,
+    };
   }
 
   return fallback;

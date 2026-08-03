@@ -11,6 +11,7 @@ export interface Barbearia {
   descricao: string | null;
   endereco: string | null;
   telefone: string | null;
+  instagram: string | null;
   ativo: boolean;
   created_at: string;
 }
@@ -54,6 +55,7 @@ export interface Servico {
   barbearia_id: string | null;
   midia_id: string | null;
   video_url: string | null;
+  poster_url: string | null;
 }
 
 export interface Cliente {
@@ -115,6 +117,7 @@ export interface ServicoFormData {
   preco: string;
   duracao_minutos: string;
   video_url: string;
+  poster_url: string;
 }
 
 export interface NovoAgendamento {
