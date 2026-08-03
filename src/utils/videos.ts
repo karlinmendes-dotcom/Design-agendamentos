@@ -18,36 +18,36 @@ const POSTER_BARBEARIA =
 const POSTER_BARBEIRO =
   "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=70";
 
-/** Vídeo principal do hero (barbearia vintage em ação). */
+/** Vídeo principal do hero (close do barbeiro trabalhando — leve, 360p). */
 export const VIDEO_HERO: VideoSource = {
-  src: "https://upload.wikimedia.org/wikipedia/commons/e/e9/CUT_%26_SHAVE_%E2%80%A2_Penang%27s_Vintage_Barbershop_%E2%80%A2_George_Town_%E2%80%A2_MALAYSIA.webm",
+  src: "https://assets.mixkit.co/videos/43242/43242-360.mp4",
   poster: POSTER_BARBEARIA,
 };
 
 /** Mapa nome → vídeo para os cards de serviço. */
 export const VIDEO_POR_SERVICO: Record<string, VideoSource> = {
   "corte masculino": {
-    src: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Haircut_practice_-_Tokyo_area_-_2013_1_30.webm",
+    src: "https://assets.mixkit.co/videos/43221/43221-360.mp4",
     poster: POSTER_CORTE,
   },
   "corte + barba": {
-    src: "https://upload.wikimedia.org/wikipedia/commons/9/9e/First_Day_Of_Boot_Camp_%E2%80%93_Contraband_Room%2C_Barber_Shop.webm",
+    src: "https://assets.mixkit.co/videos/43222/43222-360.mp4",
     poster: POSTER_BARBA,
   },
   "barba completa": {
-    src: "https://upload.wikimedia.org/wikipedia/commons/0/08/President_Obama_drops_by_his_old_barbershop_for_a_haircut.webm",
+    src: "https://assets.mixkit.co/videos/40130/40130-360.mp4",
     poster: POSTER_BARBA,
   },
   pigmentação: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Haircut_practice_-_Tokyo_area_-_2013_1_30.webm",
+    src: "https://assets.mixkit.co/videos/40120/40120-360.mp4",
     poster: POSTER_BARBEIRO,
   },
   "corte infantil": {
-    src: "https://upload.wikimedia.org/wikipedia/commons/9/9e/First_Day_Of_Boot_Camp_%E2%80%93_Contraband_Room%2C_Barber_Shop.webm",
+    src: "https://assets.mixkit.co/videos/43233/43233-360.mp4",
     poster: POSTER_BARBEIRO,
   },
   pezinho: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/0/08/President_Obama_drops_by_his_old_barbershop_for_a_haircut.webm",
+    src: "https://assets.mixkit.co/videos/40127/40127-360.mp4",
     poster: POSTER_CORTE,
   },
 };

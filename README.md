@@ -96,6 +96,26 @@ animada na abertura.
   a camada `src/utils/media.ts` resolve a prioridade: vídeo do serviço →
   biblioteca → fallback local.
 
+## Biblioteca de vídeos
+
+Vídeos curtos e leves (360p, ~0,5–1,6 MB) do **Mixkit** (licença livre para uso
+comercial), com reprodução automática, sem áudio e em loop. Trocáveis **sem
+código**: painel admin → Serviços → campo de vídeo, ou tabela `midias`.
+
+| Uso | URL | Peso |
+| --- | --- | --- |
+| Banner (hero) | `https://assets.mixkit.co/videos/43242/43242-360.mp4` | 740 KB |
+| Corte Masculino | `https://assets.mixkit.co/videos/43221/43221-360.mp4` | 527 KB |
+| Corte + Barba | `https://assets.mixkit.co/videos/43222/43222-360.mp4` | 1,0 MB |
+| Barba Completa | `https://assets.mixkit.co/videos/40130/40130-360.mp4` | 483 KB |
+| Pigmentação | `https://assets.mixkit.co/videos/40120/40120-360.mp4` | 798 KB |
+| Corte Infantil | `https://assets.mixkit.co/videos/43233/43233-360.mp4` | 733 KB |
+| Pezinho | `https://assets.mixkit.co/videos/40127/40127-360.mp4` | 626 KB |
+| Seção "Conheça a Barbearia" | `https://assets.mixkit.co/videos/43223/43223-360.mp4` | 702 KB |
+
+Trocou a URL? O app usa a prioridade: `video_url` do serviço → biblioteca
+`midias` → fallback local (`src/utils/videos.ts`).
+
 ## Futuras funcionalidades (estrutura preparada)
 
 WhatsApp automático, pagamentos online (PIX/cartão/Apple Pay/Google Pay),

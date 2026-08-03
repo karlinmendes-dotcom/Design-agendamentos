@@ -237,7 +237,7 @@ export function Home() {
           <Reveal>
             <div className="relative overflow-hidden rounded-2xl border border-border">
               <VideoCover
-                src="https://upload.wikimedia.org/wikipedia/commons/e/e9/CUT_%26_SHAVE_%E2%80%A2_Penang%27s_Vintage_Barbershop_%E2%80%A2_George_Town_%E2%80%A2_MALAYSIA.webm"
+                src="https://assets.mixkit.co/videos/43223/43223-360.mp4"
                 poster="https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=1400&q=70"
                 className="aspect-[4/3] w-full"
                 alt="Ambiente da barbearia"
