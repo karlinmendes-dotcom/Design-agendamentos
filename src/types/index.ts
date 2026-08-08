@@ -81,6 +81,7 @@ export interface Agendamento {
   data: string; // YYYY-MM-DD
   horario: string; // HH:mm
   status: StatusAgendamento;
+  duracao_minutos?: number; // duração do serviço gravada na marcação (integridade)
   created_at: string;
   // Tenant / barbeiro
   barbearia_id: string | null;

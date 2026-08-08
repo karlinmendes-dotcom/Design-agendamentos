@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -27,7 +27,11 @@ import { findOrCreateCliente } from "@/services/clientes";
 import { criarAgendamento } from "@/services/agendamentos";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import { formatDateWeekday } from "@/utils/date";
-import { gerarSlots, filtrarSlotsOcupados } from "@/utils/slots";
+import {
+  gerarSlots,
+  filtrarSlotsOcupados,
+  filtrarSlotsPassados,
+} from "@/utils/slots";
 import { maskPhone, isValidPhone, onlyDigits } from "@/utils/phone";
 import { cn } from "@/lib/utils";
 
@@ -95,22 +99,42 @@ export function Agendamento() {
     return horarios.find((h) => h.dia_semana === dia && h.ativo) ?? null;
   }, [data, horarios]);
 
-  const { ocupados } = useAgendamentosPorData(data ?? "");
+  // Os ocupados consideram apenas o barbeiro selecionado (agenda individual)
+  const { ocupados } = useAgendamentosPorData(data ?? "", barbeiroId);
 
   const slots = useMemo(() => {
-    if (!horarioDoDia || !servico) return [];
-    const todos = gerarSlots(
+    if (!horarioDoDia || !servico) return { grade: [], bloqueados: new Set<string>() };
+    // Grade completa (30 em 30 min) para exibição — horários tomados aparecem bloqueados
+    const grade = gerarSlots(
+      horarioDoDia.hora_inicio,
+      horarioDoDia.hora_fim,
+      30,
+    );
+    // Candidatos respeitando a duração do serviço escolhido
+    const candidatos = gerarSlots(
       horarioDoDia.hora_inicio,
       horarioDoDia.hora_fim,
       servico.duracao_minutos,
     );
-    return filtrarSlotsOcupados(todos, ocupados);
-  }, [horarioDoDia, servico, ocupados]);
+    // Mesmo dia: remove horários que já passaram
+    const disponiveis = filtrarSlotsPassados(
+      filtrarSlotsOcupados(candidatos, ocupados),
+      data ?? "",
+    );
+    const livres = new Set(disponiveis);
+    const bloqueados = new Set<string>();
+    for (const s of grade) {
+      if (!livres.has(s)) bloqueados.add(s);
+    }
+    return { grade, bloqueados };
+  }, [horarioDoDia, servico, ocupados, data]);
 
-  const occupiedSet = useMemo(
-    () => new Set(ocupados.map((o) => o.horario)),
-    [ocupados],
-  );
+  // Se o horário selecionado virar bloqueado (ex.: troca de barbeiro), desmarca
+  useEffect(() => {
+    if (horario && slots.bloqueados.has(horario)) {
+      setHorario(null);
+    }
+  }, [horario, slots.bloqueados]);
 
   const telefoneValido = isValidPhone(telefone);
   const podeAvancar =
@@ -135,6 +159,7 @@ export function Agendamento() {
           servico_id: servico.id,
           data,
           horario,
+          duracao_minutos: servico.duracao_minutos,
           barbeiro_id: barbeiroId,
         });
         navigate("/sucesso", { state: { agendamento, demo: false } });
@@ -281,18 +306,24 @@ export function Agendamento() {
                 Nossa equipe está pronta para te atender.
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {barbeiros.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => setBarbeiroId(b.id)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200 active:scale-[0.98]",
-                      barbeiroId === b.id
-                        ? "border-red-500 bg-red-500/10 shadow-[0_0_0_1px_var(--color-ring)]"
-                        : "border-border bg-background hover:border-red-500/40",
-                    )}
-                  >
+                {barbeiros.map((b) => (                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => {
+                        if (barbeiroId !== b.id) {
+                          setBarbeiroId(b.id);
+                          // Cada barbeiro tem sua agenda: redefine data e horário
+                          setData(null);
+                          setHorario(null);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200 active:scale-[0.98]",
+                        barbeiroId === b.id
+                          ? "border-red-500 bg-red-500/10 shadow-[0_0_0_1px_var(--color-ring)]"
+                          : "border-border bg-background hover:border-red-500/40",
+                      )}
+                    >
                     <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
                       <UserRound className="size-5 text-red-400" />
                     </div>
@@ -376,8 +407,8 @@ export function Agendamento() {
               </p>
               <div className="mt-5">
                 <TimeSlotGrid
-                  slots={slots}
-                  occupied={occupiedSet}
+                  slots={slots.grade}
+                  occupied={slots.bloqueados}
                   selected={horario}
                   onSelect={setHorario}
                 />

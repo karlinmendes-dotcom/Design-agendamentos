@@ -51,7 +51,7 @@ export function useAgendamentos() {
   return { agendamentos, loading, error, refresh, usandoDemo };
 }
 
-export function useAgendamentosPorData(data: string) {
+export function useAgendamentosPorData(data: string, barbeiroId?: string | null) {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [ocupados, setOcupados] = useState<
     { horario: string; duracao_minutos: number }[]
@@ -86,7 +86,7 @@ export function useAgendamentosPorData(data: string) {
       try {
         const [rows, ocup] = await Promise.all([
           listAgendamentosPorData(data),
-          listHorariosOcupados(data),
+          listHorariosOcupados(data, barbeiroId),
         ]);
         if (!ativo) return;
         setAgendamentos(rows);
@@ -103,7 +103,7 @@ export function useAgendamentosPorData(data: string) {
     return () => {
       ativo = false;
     };
-  }, [data]);
+  }, [data, barbeiroId]);
 
   return { agendamentos, ocupados, loading };
 }

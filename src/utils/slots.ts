@@ -1,6 +1,6 @@
 import { addDaysISO, todayISO } from "@/utils/date";
 
-function toMinutes(time: string): number {
+export function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 }
@@ -32,23 +32,68 @@ export function gerarSlots(
   return slots;
 }
 
+/** Um agendamento ocupado (início + duração em minutos). */
+export interface Ocupado {
+  horario: string;
+  duracao_minutos: number;
+}
+
+function rangesOcupados(ocupados: Ocupado[]) {
+  return ocupados.map((o) => {
+    const start = toMinutes(o.horario);
+    return { start, end: start + Math.max(o.duracao_minutos, 1) };
+  });
+}
+
 /**
- * Filtra slots já agendados em uma determinada data, considerando também
- * o tempo ocupado pelo serviço do agendamento (do horário até o fim do serviço).
+ * Filtra slots que começam dentro de um intervalo já ocupado — ou seja,
+ * respeita a duração do serviço agendado (ex.: 14h com 40min bloqueia 14h30).
  */
 export function filtrarSlotsOcupados(
   slots: string[],
-  ocupados: { horario: string; duracao_minutos: number }[],
+  ocupados: Ocupado[],
 ): string[] {
-  const ocupadoRanges = ocupados.map((o) => {
-    const start = toMinutes(o.horario);
-    return { start, end: start + o.duracao_minutos };
-  });
-
+  const ranges = rangesOcupados(ocupados);
   return slots.filter((slot) => {
     const t = toMinutes(slot);
-    return !ocupadoRanges.some((r) => t >= r.start && t < r.end);
+    return !ranges.some((r) => t >= r.start && t < r.end);
   });
+}
+
+/**
+ * Conjunto de slots a exibir como bloqueados (começam dentro de um intervalo
+ * já ocupado). Mantém a grade visível para o cliente entender o motivo.
+ */
+export function slotsBloqueados(slots: string[], ocupados: Ocupado[]): Set<string> {
+  const ranges = rangesOcupados(ocupados);
+  const bloqueados = new Set<string>();
+  for (const slot of slots) {
+    const t = toMinutes(slot);
+    if (ranges.some((r) => t >= r.start && t < r.end)) bloqueados.add(slot);
+  }
+  return bloqueados;
+}
+
+/**
+ * Remove horários que já passaram — aplicado apenas no dia de hoje,
+ * permitindo o agendamento para o mesmo dia.
+ */
+export function filtrarSlotsPassados(slots: string[], data: string): string[] {
+  if (data !== todayISO()) return slots;
+  const agora = new Date();
+  const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
+  return slots.filter((s) => toMinutes(s) > minutosAgora);
+}
+
+/** True quando um horário + duração sobrepõe algum agendamento ocupado. */
+export function isSlotOcupado(
+  horario: string,
+  duracaoMinutos: number,
+  ocupados: Ocupado[],
+): boolean {
+  const start = toMinutes(horario);
+  const end = start + Math.max(duracaoMinutos, 1);
+  return rangesOcupados(ocupados).some((r) => start < r.end && end > r.start);
 }
 
 /**
