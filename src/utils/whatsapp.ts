@@ -34,7 +34,8 @@ export function linkConfirmacaoWhatsApp(
 ): string | null {
   const digitos = (agendamento.cliente?.telefone ?? "").replace(/\D/g, "");
   if (digitos.length < 10) return null;
-  const numero = digitos.length >= 11 ? digitos.slice(-11) : `55${digitos}`;
+  // Formato internacional do Brasil: 55 + DDD + número (slice remove um 55 duplicado)
+  const numero = `55${digitos.slice(-11)}`;
   const mensagem = montarConfirmacaoWhatsApp(agendamento);
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 }
