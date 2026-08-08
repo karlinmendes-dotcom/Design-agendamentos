@@ -5,6 +5,10 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import { formatDateWeekday } from "@/utils/date";
+import {
+  linkConfirmacaoWhatsApp,
+  montarConfirmacaoWhatsApp,
+} from "@/utils/whatsapp";
 import type { Agendamento } from "@/types";
 
 interface SucessoState {
@@ -24,10 +28,22 @@ export function Sucesso() {
     }
   }, [agendamento, navigate]);
 
+  // Ao confirmar, abre o WhatsApp do cliente com a confirmação pronta
+  // (se o navegador bloquear, o botão na tela resolve com um toque)
+  useEffect(() => {
+    if (!agendamento) return;
+    const link = linkConfirmacaoWhatsApp(agendamento);
+    if (link) {
+      const janela = window.open(link, "_blank");
+      if (!janela) {
+        // pop-up bloqueado — o botão abaixo continua disponível
+      }
+    }
+  }, [agendamento]);
+
   if (!agendamento) return null;
 
-  const telefoneWhats =
-    agendamento.cliente?.telefone?.replace(/\D/g, "") ?? "";
+  const linkWhats = linkConfirmacaoWhatsApp(agendamento);
 
   return (
     <div className="min-h-screen bg-black">
@@ -104,18 +120,27 @@ export function Sucesso() {
             )}
 
             <div className="flex flex-col gap-3">
-              {telefoneWhats && (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <a href="#" aria-disabled="true">
-                    <MessageCircle className="size-4" />
-                    Lembrete por WhatsApp (em breve)
-                  </a>
-                </Button>
+              {linkWhats && (
+                <>
+                  <Button
+                    asChild
+                    variant="gold"
+                    size="lg"
+                    className="w-full"
+                  >
+                    <a
+                      href={linkWhats}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="size-5" />
+                      Receber confirmação no WhatsApp
+                    </a>
+                  </Button>
+                  <p className="rounded-xl border border-border bg-background px-4 py-3 text-xs leading-relaxed text-muted-foreground whitespace-pre-line">
+                    {montarConfirmacaoWhatsApp(agendamento)}
+                  </p>
+                </>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <Button asChild variant="outline">
