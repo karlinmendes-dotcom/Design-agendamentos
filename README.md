@@ -5,6 +5,17 @@ Aplicativo completo de agendamento para a **Barbearia Neto**, com área do clien
 multi-barbearia**: a Barbearia Neto é a primeira barbearia cadastrada, mas a
 estrutura está pronta para várias barbearias, unidades e profissionais.
 
+> ## 📚 Base reutilizável — leia estes documentos
+>
+> Este repositório é a **BASE ORIGINAL**: ele serve de molde para criar outros
+> apps de agendamento (unhas, pets, clínica, restaurante...) por **cópia
+> independente** no GitHub — nunca modificando esta base.
+>
+> - **`PROJECT_RULES.md`** — regras oficiais da base (o que pode/não pode)
+> - **`ARCHITECTURE.md`** — arquitetura, banco, fluxos e deploy
+> - **`CUSTOMIZATION.md`** — guia para adaptar uma cópia a qualquer segmento
+> - **`CHANGELOG.md`** — histórico de versões
+
 ## Stack
 
 - **React 19 + TypeScript + Vite** — SPA rápida e tipada
