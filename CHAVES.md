@@ -25,6 +25,11 @@
 | JWT — chave atual (ECC P-256) | Key ID `16a2176f-fb2c-4b04-a5de-f2d843e195f2` |
 | JWT — chave anterior (HS256) | Key ID `2f1dde92-99b9-4821-aace-4cb1d1e1db86` |
 
+> 🔄 **Rotação da `service_role`:** só é possível pelo painel (a API do Supabase
+> não cria chaves legadas) — ver **Seção 9**. O projeto também possui chaves do
+> novo modelo (não usadas pelo app): `publishable` (id `fc7b214b-4fdb-40df-97d8-aa2fbb11b9f4`)
+> e `secret` (id `d0e6f4d7-4395-4906-bb7b-ec73db76e2be`).
+
 **Onde está salva:** painel Supabase → projeto → **API Keys** (anon e
 service_role) e **JWT Keys** · `.env.local` do workspace da barbearia ·
 env vars da Vercel (projeto `barbearia-neto`) · API Keys do Freebuff.
@@ -60,6 +65,10 @@ env vars da Vercel (projeto `barbearia-neto`) · API Keys do Freebuff.
 
 **Onde está salva:** painel Vercel → **Account Settings → Tokens** · colado no
 histórico do chat Freebuff (usado para deploys e configurações via API).
+
+> 🔄 **Rotação pendente (só pelo painel — a API recusou com 403):** ver **Seção 9**.
+> O token atual no painel aparece como **"liberado para freebuff asseso total"**
+> (id `IIOlRYZwnTyV6efjQighsFrCLMnYXQxjBPtUcaFbQPToxe33`).
 
 > O projeto do sushi teve a **proteção de login (Vercel Authentication / SSO)
 > desativada** — os dois sites abrem para qualquer visitante.
@@ -136,3 +145,20 @@ histórico do chat Freebuff (usado para deploys e configurações via API).
 3. Toda cópia nova de site deve criar **banco próprio** e trocar as env vars.
 4. Chaves com poder de escrita (`service_role`, token Vercel) → usar só em
    backend/configuração, **nunca** em código de frontend.
+
+---
+
+## 9. 🔄 Rotação de chaves — status (09/08/2026)
+
+| Chave | Status | Como trocar |
+|---|---|---|
+| **Token Vercel** | ⏳ **Pendente — só pelo painel** (API recusou: `403`) | Vercel → **Account Settings → Tokens → Create Token** (nome novo) → copiar o valor → voltar na lista e **Delete** no token antigo ("liberado para freebuff asseso total") → atualizar a Seção 3 |
+| **`service_role`** (legacy) | ⏳ **Pendente — só pelo painel** (API não cria chaves legadas) | Supabase → **API Keys** → chaves legadas → **Reset** ao lado de `service_role` → copiar a nova → substituir na Seção 1 |
+| **`secret`** (modelo novo) | ⏳ Mantida (o valor só é revelado 1x, no painel) | Se quiser trocar: API Keys → revogar `secret` (id `d0e6f4d7-...`) e criar outra |
+| **`anon` / `VITE_SUPABASE_ANON_KEY`** | ✅ Mantida — é a que o site usa | ⚠️ Se trocar, atualizar **Vercel + `.env.local` + redeploy** (o site para de funcionar até isso) |
+
+> **O que foi verificado na prática:** a API do Supabase criou uma chave nova,
+> mas a entrega **mascarada** (`sb_secret_···` — o valor completo nunca é
+> revelado de novo). A chave de teste foi **removida** e o projeto voltou ao
+> estado original (4 chaves: anon, service_role, publishable, secret).
+> Nenhuma chave em uso foi alterada — o site segue funcionando normalmente.
