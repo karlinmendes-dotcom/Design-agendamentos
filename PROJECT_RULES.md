@@ -31,8 +31,9 @@
    `CONVEX_DEPLOY_KEY='dev:hardy-aardvark-221|...' bun convex dev --once`.
 4. **Secrets fora do código e do GitHub.** Única configuração externa:
    `VITE_CONVEX_URL` via `.env` (ignorado pelo git). Nunca commitar `.env*`.
-   Não colar chaves em comentários nem no código. Chaves reais ficam em
-   `CHAVES.md` (documento aberto do dono) e nos painéis.
+   Não colar chaves em comentários nem no código. Chaves reais ficam nos
+   painéis (Vercel, Convex, Supabase, Firebase) e nas notas do dono (fora
+   do repositório).
 5. **Valide antes de entregar:** `bun run typecheck` (e `bun run build`) com
    **zero erros**. Nada de "deve compilar" — compila ou não entrega.
 6. **Mudança de schema/funções Convex** = publicar com `convex dev --once` e

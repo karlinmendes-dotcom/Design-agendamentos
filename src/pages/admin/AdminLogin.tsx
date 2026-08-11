@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useConvex } from "convex/react";
-import { KeyRound, Lock, ShieldCheck, UserRound } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Lock, ShieldCheck, UserRound } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ export function AdminLogin() {
 
   const [usuario, setUsuario] = useState("admin");
   const [senha, setSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -107,13 +108,26 @@ export function AdminLogin() {
                 <KeyRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gold-light/70" />
                 <Input
                   id="senha"
-                  type="password"
+                  type={mostrarSenha ? "text" : "password"}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="••••••••"
-                  className="bg-white/5 pl-9 text-cream placeholder:text-cream/40"
+                  className="bg-white/5 pr-11 pl-9 text-cream placeholder:text-cream/40"
                   autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha((v) => !v)}
+                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={mostrarSenha}
+                  className="absolute top-1/2 right-3 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-gold-light/70 transition-colors hover:bg-white/10 hover:text-gold-light"
+                >
+                  {mostrarSenha ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -134,7 +148,7 @@ export function AdminLogin() {
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-cream/40">
             <Lock className="size-3 shrink-0" />
-            Seus dados de acesso estão anotados no CHAVES.md do projeto.
+            Seus dados de acesso ficam anotados no seu bloco de notas.
           </p>
         </form>
       </div>

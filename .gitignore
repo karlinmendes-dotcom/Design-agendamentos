@@ -29,3 +29,6 @@ yarn-error.log*
 bun-debug.log*
 .vercel
 .env*
+
+# Documento de chaves do dono — guardado fora do repositório (bloco de notas)
+CHAVES.md

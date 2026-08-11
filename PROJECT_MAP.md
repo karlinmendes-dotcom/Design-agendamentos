@@ -20,7 +20,6 @@
 | `convex.json` | Aponta o CLI para `src/convex` (projeto `design-agendamento`) |
 | `vercel.json` | `bun install` + `bun run build` → `dist/`, rewrite SPA |
 | `netlify.toml` · `supabase/` | ⚠️ **LEGADO** (hospedagem/banco antigos) — manter só como histórico |
-| `CHAVES.md` | Credenciais (documento do dono — não colar em código) |
 | `PROJECT_RULES.md` · `ARCHITECTURE.md` · `CUSTOMIZATION.md` · `README.md` | Regras/arquitetura/guia de cópias |
 
 ## 2. Frontend — `src/`
@@ -43,7 +42,7 @@
 | `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `Configuracoes`, **`AdminLogin`** (login do painel) |
 | `utils/` | `slots` (motor de horários), `whatsapp` (confirmação), `date`, `format`, `phone`, `media` (resolução de mídia), `videos` (fallback Mixkit), `serviceIcon` |
 
-**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente entra com nome+WhatsApp (`EntrarCliente`); `/admin*` exige login (`AdminLogin` + mutation `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada no CHAVES.md §10)
+**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente cria conta com nome+WhatsApp (`EntrarCliente`); `/admin*` exige login (`AdminLogin` + action `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada nas notas do dono)
 
 **Push FCM:** `public/firebase-messaging-sw.js` (service worker — recebe o pop até com o app fechado e abre `/reagendar` ao tocar)
 
