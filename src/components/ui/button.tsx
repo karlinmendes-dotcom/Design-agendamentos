@@ -10,16 +10,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-crimson text-white shadow-[0_4px_20px_-6px_rgba(225,6,0,0.6)] hover:bg-[#ff1a12] hover:shadow-[0_8px_28px_-8px_rgba(225,6,0,0.75)] hover:-translate-y-px",
+          "bg-gold-gradient text-cream shadow-[0_4px_20px_-8px_rgba(47,74,62,0.5)] hover:shadow-[0_10px_30px_-10px_rgba(47,74,62,0.55)] hover:-translate-y-px hover:brightness-110",
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90",
         outline:
-          "border border-border bg-transparent shadow-xs hover:border-red-500/60 hover:text-red-400 hover:bg-red-500/5",
+          "border-charcoal/25 bg-transparent text-charcoal shadow-xs hover:border-gold hover:text-charcoal hover:bg-gold/10",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/70 hover:text-red-300",
-        ghost: "hover:bg-red-500/10 hover:text-red-300",
-        link: "text-red-400 underline-offset-4 hover:underline",
-        gold: "bg-red-gradient text-white font-bold shadow-[0_4px_20px_-6px_rgba(225,6,0,0.65)] hover:shadow-[0_8px_30px_-8px_rgba(225,6,0,0.85)] hover:-translate-y-px",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/70",
+        ghost: "hover:bg-charcoal/5 hover:text-charcoal",
+        link: "text-charcoal/70 underline-offset-4 hover:underline",
+        gold: "bg-gold-gradient text-cream font-bold shadow-[0_4px_20px_-8px_rgba(47,74,62,0.5)] ring-1 ring-inset ring-gold/40 hover:shadow-[0_10px_30px_-10px_rgba(47,74,62,0.55)] hover:-translate-y-px hover:brightness-110",
       },
       size: {
         default: "h-10 px-4 py-2 has-[>svg]:px-3",

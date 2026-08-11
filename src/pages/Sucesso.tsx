@@ -1,8 +1,26 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CalendarCheck, CheckCircle2, Home, MessageCircle, PlusCircle } from "lucide-react";
-import { useEffect } from "react";
+import {
+  BellRing,
+  CalendarCheck,
+  CheckCircle2,
+  Home,
+  Loader2,
+  MessageCircle,
+  PlusCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { onlyDigits } from "@/utils/phone";
+import {
+  firebaseDisponivel,
+  obterTokenPush,
+  registrarSW,
+  VAPID_KEY,
+} from "@/lib/firebase";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { useBarbearia } from "@/hooks/useBarbearia";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import { formatDateWeekday } from "@/utils/date";
 import {
@@ -14,11 +32,18 @@ import type { Agendamento } from "@/types";
 interface SucessoState {
   agendamento?: Agendamento;
   demo?: boolean;
+  /** Já pedimos e a cliente permitiu as notificações no momento da confirmação. */
+  avisosAtivados?: boolean;
 }
+
+const isIOS =
+  typeof navigator !== "undefined" &&
+  /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 export function Sucesso() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { barbearia } = useBarbearia();
   const state = (location.state ?? {}) as SucessoState;
   const agendamento = state.agendamento;
 
@@ -28,34 +53,81 @@ export function Sucesso() {
     }
   }, [agendamento, navigate]);
 
-  // Ao confirmar, abre o WhatsApp do cliente com a confirmação pronta
-  // (se o navegador bloquear, o botão na tela resolve com um toque)
-  useEffect(() => {
-    if (!agendamento) return;
-    const link = linkConfirmacaoWhatsApp(agendamento);
-    if (link) {
-      const janela = window.open(link, "_blank");
-      if (!janela) {
-        // pop-up bloqueado — o botão abaixo continua disponível
-      }
-    }
-  }, [agendamento]);
-
   if (!agendamento) return null;
 
   const linkWhats = linkConfirmacaoWhatsApp(agendamento);
 
+  // ===== Avisos por notificação (FCM): oferece logo após a confirmação =====
+  const registrarToken = useMutation(api.pushTokens.registrar);
+  const [avisoStatus, setAvisoStatus] = useState<
+    "idle" | "ativando" | "ok" | "erro"
+  >(state.avisosAtivados ? "ok" : "idle");
+  const [notifDisponivel, setNotifDisponivel] = useState(false);
+
+  useEffect(() => {
+    if (!agendamento) return;
+    let ativo = true;
+    void (async () => {
+      const ok = await firebaseDisponivel();
+      const temPermissao =
+        "Notification" in window && Notification.permission === "granted";
+      if (!ativo) return;
+      setNotifDisponivel(ok && "Notification" in window && VAPID_KEY.length > 0);
+      // Já autorizou antes? Registra o token silenciosamente
+      if (ok && temPermissao && VAPID_KEY) {
+        await registrarSW();
+        const token = await obterTokenPush();
+        if (ativo && token && agendamento.cliente?.telefone) {
+          await registrarToken({
+            token,
+            telefone: onlyDigits(agendamento.cliente.telefone),
+          }).catch(() => {});
+        }
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [agendamento, registrarToken]);
+
+  const ativarAvisos = async () => {
+    setAvisoStatus("ativando");
+    try {
+      const permissao = await Notification.requestPermission();
+      if (permissao !== "granted") {
+        setAvisoStatus("erro");
+        return;
+      }
+      await registrarSW();
+      const token = await obterTokenPush();
+      if (!token || !agendamento.cliente?.telefone) {
+        setAvisoStatus("erro");
+        return;
+      }
+      await registrarToken({
+        token,
+        telefone: onlyDigits(agendamento.cliente.telefone),
+      });
+      setAvisoStatus("ok");
+    } catch {
+      setAvisoStatus("erro");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <section className="mx-auto max-w-xl px-4 pt-16 pb-20 sm:px-6">
-        <div className="animate-scale-in overflow-hidden rounded-2xl border border-red-500/30 bg-card shadow-[0_20px_60px_-20px_rgba(225,6,0,0.3)]">
-          <div className="bg-red-gradient px-6 py-8 text-center text-white">
-            <CheckCircle2 className="mx-auto size-12" />
+        <div className="animate-scale-in overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_70px_-32px_rgba(47,74,62,0.45)]">
+          <div className="bg-gold-gradient px-6 py-8 text-center text-cream">
+            <CheckCircle2 className="mx-auto size-12 text-gold-light" />
             <h1 className="font-display mt-3 text-3xl font-black">
               Agendamento confirmado!
             </h1>
-            <p className="mt-1 text-sm font-medium text-white/85">
-              Sua cadeira está garantida. Te esperamos!
+            <p className="font-script mt-1 text-xl text-gold-light">
+              seu horário está garantido
+            </p>
+            <p className="mt-1 text-sm font-medium text-cream/80">
+              Te esperamos com muito carinho.
             </p>
           </div>
 
@@ -64,37 +136,37 @@ export function Sucesso() {
               <dl className="space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Serviço</dt>
-                  <dd className="text-right font-semibold text-white">
+                  <dd className="text-right font-semibold text-foreground">
                     {agendamento.servico?.nome ?? "Serviço"}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Duração</dt>
-                  <dd className="font-semibold text-white">
+                  <dd className="font-semibold text-foreground">
                     {formatMinutes(agendamento.servico?.duracao_minutos ?? 30)}
                   </dd>
                 </div>
                 {agendamento.barbeiro?.nome && (
                   <div className="flex items-center justify-between gap-4">
-                    <dt className="text-muted-foreground">Barbeiro</dt>
-                    <dd className="font-semibold text-white">
+                    <dt className="text-muted-foreground">Profissional</dt>
+                    <dd className="font-semibold text-foreground">
                       {agendamento.barbeiro.nome}
                     </dd>
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Data</dt>
-                  <dd className="font-semibold text-white">
+                  <dd className="font-semibold text-foreground">
                     {formatDateWeekday(agendamento.data)}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Horário</dt>
-                  <dd className="font-semibold text-white">{agendamento.horario}</dd>
+                  <dd className="font-semibold text-foreground">{agendamento.horario}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">Cliente</dt>
-                  <dd className="text-right font-semibold text-white">
+                  <dd className="text-right font-semibold text-foreground">
                     {agendamento.cliente?.nome}
                     <br />
                     <span className="text-xs font-normal text-muted-foreground">
@@ -112,9 +184,50 @@ export function Sucesso() {
               </dl>
             </div>
 
+            {notifDisponivel && avisoStatus !== "ok" && (
+              <div className="flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 p-4">
+                <BellRing className="mt-0.5 size-5 shrink-0 text-green-800" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Receba avisos do estúdio 💌
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Se o seu horário precisar ser remarcado, avisamos você por
+                    aqui. Sem spam, prometido.
+                  </p>
+                  {avisoStatus === "erro" && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {isIOS
+                        ? "No iPhone, adicione o app à Tela de Início (Compartilhar → Adicionar à Tela de Início) e tente de novo."
+                        : "Não foi possível ativar. Permita as notificações pelo navegador e tente de novo."}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  disabled={avisoStatus === "ativando"}
+                  onClick={() => void ativarAvisos()}
+                >
+                  {avisoStatus === "ativando" && (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  )}
+                  {avisoStatus === "ativando" ? "Ativando..." : "Ativar"}
+                </Button>
+              </div>
+            )}
+            {avisoStatus === "ok" && (
+              <p className="flex items-center gap-2 rounded-xl border border-green-700/30 bg-green-800/10 px-4 py-3 text-xs font-medium text-green-700">
+                <BellRing className="size-4 shrink-0" />
+                ✅ Avisos ativados! Se algo mudar no seu horário, avisamos por
+                aqui.
+              </p>
+            )}
+
             {state.demo && (
-              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
-                ⚠️ Modo demonstração — conecte o Supabase para que os
+              <p className="rounded-lg border border-yellow-600/30 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
+                ⚠️ Modo demonstração — conecte o Convex para que os
                 agendamentos sejam salvos no banco de dados.
               </p>
             )}
@@ -161,8 +274,9 @@ export function Sucesso() {
         </div>
 
         <p className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <CalendarCheck className="size-4 text-red-500" />
-          Dúvidas? Fale conosco no WhatsApp (00) 00000-0000
+          <CalendarCheck className="size-4 text-green-800" />
+          Dúvidas? Fale conosco no WhatsApp{" "}
+          {barbearia?.telefone ?? "(27) 99614-0639"}
         </p>
       </section>
 

@@ -2,23 +2,24 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   CalendarDays,
   ExternalLink,
+  Hand,
   LayoutDashboard,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  Scissors,
   Settings,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
-import { isSupabaseConfigured } from "@/services/supabase";
+import { AssistenteAdmin } from "@/components/admin/AssistenteAdmin";
+import { isConvexConfigured } from "@/lib/convex";
 
 const ADMIN_LINKS = [
   { to: "/admin", label: "Visão geral", icon: LayoutDashboard, end: true },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/admin/servicos", label: "Serviços", icon: Scissors },
+  { to: "/admin/servicos", label: "Serviços", icon: Hand },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 
@@ -43,16 +44,12 @@ export function AdminLayout() {
     "Administração";
 
   return (
-    <div className="min-h-screen bg-black">
-      {!isSupabaseConfigured && (
-        <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-center text-xs text-amber-300 sm:text-sm">
+    <div className="min-h-screen bg-background">
+      {!isConvexConfigured && (
+        <div className="border-b border-yellow-600/40 bg-yellow-500/15 px-4 py-2.5 text-center text-xs text-yellow-700 sm:text-sm">
           ⚠️ Banco de dados ainda não configurado. Adicione{" "}
-          <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono">
-            VITE_SUPABASE_URL
-          </code>{" "}
-          e{" "}
-          <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono">
-            VITE_SUPABASE_ANON_KEY
+          <code className="rounded bg-charcoal/10 px-1.5 py-0.5 font-mono">
+            VITE_CONVEX_URL
           </code>{" "}
           no .env para salvar e consultar dados.
         </div>
@@ -79,7 +76,7 @@ export function AdminLayout() {
               type="button"
               onClick={() => setColapsado(true)}
               aria-label="Recolher menu"
-              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-white/10 hover:text-gold-light"
             >
               <PanelLeftClose className="size-4" />
             </button>
@@ -98,8 +95,8 @@ export function AdminLayout() {
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   colapsado && "justify-center px-0",
                   isActive
-                    ? "bg-red-500/12 text-red-300 shadow-[inset_2px_0_0_var(--color-ring)]"
-                    : "text-muted-foreground hover:bg-graphite hover:text-white",
+                    ? "bg-gold-light/10 text-gold-light shadow-[inset_2px_0_0_var(--color-ring)]"
+                    : "text-muted-foreground hover:bg-white/10 hover:text-cream",
                 )
               }
             >
@@ -115,14 +112,14 @@ export function AdminLayout() {
               type="button"
               onClick={() => setColapsado(false)}
               aria-label="Expandir menu"
-              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-graphite hover:text-red-400"
+              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-gold-light"
             >
               <PanelLeftOpen className="size-4" />
             </button>
           ) : (
             <Link
               to="/"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-graphite hover:text-white"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-cream"
             >
               <ExternalLink className="size-4" />
               Ver site
@@ -132,13 +129,13 @@ export function AdminLayout() {
       </aside>
 
       {/* Topbar mobile */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-black/95 px-4 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gold/20 bg-[#2c3b31]/95 px-4 backdrop-blur lg:hidden">
         <Link to="/" aria-label="Ver site">
           <Logo compact />
         </Link>
         <button
           type="button"
-          className="flex size-9 items-center justify-center rounded-md text-white transition-colors hover:bg-red-500/10"
+          className="flex size-9 items-center justify-center rounded-md text-cream transition-colors hover:bg-white/10"
           onClick={() => setMenuAberto((v) => !v)}
           aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
         >
@@ -157,8 +154,8 @@ export function AdminLayout() {
                     cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-red-500/12 text-red-300"
-                        : "text-muted-foreground hover:bg-graphite hover:text-white",
+                        ? "bg-gold-light/10 text-gold-light"
+                        : "text-muted-foreground hover:bg-white/10 hover:text-cream",
                     )
                   }
               >
@@ -170,6 +167,9 @@ export function AdminLayout() {
         </div>
       )}
 
+      {/* Assistente IA — flutuante, visível apenas no dashboard */}
+      <AssistenteAdmin />
+
       {/* Conteúdo */}
       <main
         className={cn(
@@ -178,29 +178,29 @@ export function AdminLayout() {
         )}
       >
         {/* Cabeçalho superior (desktop) */}
-        <header className="mb-6 hidden items-center justify-between rounded-xl border border-border/60 bg-coal/60 px-4 py-3 lg:flex">
+        <header className="mb-6 hidden items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 lg:flex">
           <div className="flex items-center gap-2.5">
-            <span className="size-2 rounded-full bg-red-500" />
-            <p className="text-sm font-semibold text-white">{titulo}</p>
+            <span className="size-2 rounded-full bg-gold" />
+            <p className="text-sm font-semibold text-foreground">{titulo}</p>
             <span className="text-xs text-muted-foreground">
               / painel de gestão
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {isSupabaseConfigured ? (
-              <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400">
-                <span className="size-1.5 rounded-full bg-emerald-400" />
+            {isConvexConfigured ? (
+              <span className="flex items-center gap-1.5 rounded-full border border-green-600/30 bg-green-500/15 px-3 py-1 text-xs text-green-700">
+                <span className="size-1.5 rounded-full bg-green-600" />
                 Conectado
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300">
-                <span className="size-1.5 rounded-full bg-amber-400" />
+              <span className="flex items-center gap-1.5 rounded-full border border-yellow-600/40 bg-yellow-500/15 px-3 py-1 text-xs text-yellow-700">
+                <span className="size-1.5 rounded-full bg-yellow-500" />
                 Modo demonstração
               </span>
             )}
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-red-500/50 hover:text-red-300"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-charcoal/40 hover:text-charcoal"
             >
               <ExternalLink className="size-3.5" />
               Ver site

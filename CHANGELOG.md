@@ -6,6 +6,45 @@ ganham seu próprio histórico a partir daqui.
 
 ---
 
+## [2.1.0] — Banco Convex + hospedagem própria · 2026-08
+
+**Alterado (infraestrutura do Nail Design Studio):**
+
+- **Banco:** Supabase → **Convex** com deployment próprio e separado
+  (`hardy-aardvark-221` → `https://hardy-aardvark-221.convex.cloud`, projeto
+  "Design agendamentos"). Schema, queries/mutations (incluindo o motor
+  anti-conflito) e seed em `src/convex/`; hooks reescritos com queries
+  reativas (`useQuery`/`useMutation`).
+- **Hospedagem:** projeto Vercel **`design-agendamentos`** →
+  `https://design-agendamentos.vercel.app` (conectado ao GitHub, branch
+  `main`), com `VITE_CONVEX_URL` → `hardy-aardvark-221` configurada
+  (production + preview + development). `vercel.json` define `bun install` +
+  `bun run build` → `dist`.
+- Camada `src/services/` (Supabase) removida; `@supabase/supabase-js`
+  desinstalado; `ConvexProvider` no bootstrap.
+
+---
+
+## [2.0.0] — Transformação Nail Design · 2026-08
+
+**Alterado (aplicação completa re-identificada para nail design):**
+
+- **Identidade:** Barbearia Neto → **Nail Design Studio**; tema visual
+  black + red → **black + rose/rose gold** (paleta `red-*` remapeada para
+  tons de rosa no `src/index.css`, fonte display **Playfair Display**);
+  favicon, título e meta descrição atualizados.
+- **Cardápio:** corte/barba → **Manicure, Pedicure, Esmaltação em Gel,
+  Alongamento em Gel, Nail Art e Spa dos Pés** (dados demo, seeds da
+  migration `0004` e vídeos Mixkit de nail design).
+- **Conteúdo:** hero, destaques, avaliações, promoções/combos, contato,
+  rodapé, WhatsApp, splash screen e painel admin — toda a experiência
+  recriada para o segmento (profissionais, não barbeiros).
+- **Banco:** migration `0004_transformacao_nail_design.sql` atualiza
+  identidade do tenant, desativa serviços antigos, insere o novo cardápio
+  e troca a biblioteca de mídia — sem tocar nas migrations aplicadas.
+
+---
+
 ## [1.1.0] — Base reutilizável (documentação) · 2026-08
 
 **Adicionado (documentação da base — nenhuma funcionalidade alterada):**

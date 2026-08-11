@@ -11,14 +11,14 @@ const badgeVariants = cva(
         default: "border-transparent bg-primary text-primary-foreground",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-white",
-        outline: "text-foreground",
+        outline: "text-charcoal",
         success:
-          "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-        warning: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+          "border-green-600/30 bg-green-500/15 text-green-700",
+        warning: "border-yellow-600/30 bg-yellow-500/15 text-yellow-700",
         bronze:
-          "border-blood/40 bg-blood/15 text-red-300",
-        gold: "border-red-500/40 bg-red-500/15 text-red-300",
-        red: "border-red-500/40 bg-red-500/15 text-red-300",
+          "border-blood/40 bg-blood/12 text-blood",
+        gold: "border-green-700/35 bg-green-800/10 text-green-800",
+        red: "border-blood/35 bg-blood/10 text-blood",
       },
     },
     defaultVariants: {

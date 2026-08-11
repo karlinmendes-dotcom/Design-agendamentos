@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, Power, Scissors, Trash2 } from "lucide-react";
+import { Hand, Loader2, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,15 +24,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useServicos } from "@/hooks/useServicos";
-import {
-  atualizarServico,
-  criarServico,
-  excluirServico,
-  setServicoAtivo,
-} from "@/services/servicos";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { erroMensagem, isConvexConfigured } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL, formatMinutes } from "@/utils/format";
-import { isSupabaseConfigured } from "@/services/supabase";
 import type { Servico, ServicoFormData } from "@/types";
 
 const FORM_VAZIO: ServicoFormData = {
@@ -46,6 +43,10 @@ const FORM_VAZIO: ServicoFormData = {
 
 export function ServicosAdmin() {
   const { servicos, loading, refresh, usandoDemo } = useServicos(false);
+  const criarServico = useMutation(api.servicos.criar);
+  const atualizarServico = useMutation(api.servicos.atualizar);
+  const setServicoAtivo = useMutation(api.servicos.setAtivo);
+  const excluirServico = useMutation(api.servicos.excluir);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editando, setEditando] = useState<Servico | null>(null);
   const [form, setForm] = useState<ServicoFormData>(FORM_VAZIO);
@@ -90,7 +91,8 @@ export function ServicosAdmin() {
     setErro(null);
     try {
       if (editando) {
-        await atualizarServico(editando.id, {
+        await atualizarServico({
+          id: editando.id as Id<"servicos">,
           nome: form.nome.trim(),
           descricao: form.descricao.trim() || null,
           preco: Number(form.preco.replace(",", ".")),
@@ -100,13 +102,20 @@ export function ServicosAdmin() {
         });
         toast("success", "Serviço atualizado com sucesso.");
       } else {
-        await criarServico(form);
+        await criarServico({
+          nome: form.nome.trim(),
+          descricao: form.descricao.trim() || null,
+          preco: Number(form.preco.replace(",", ".")),
+          duracao_minutos: Number(form.duracao_minutos),
+          video_url: form.video_url.trim() || null,
+          poster_url: form.poster_url.trim() || null,
+        });
         toast("success", "Serviço criado com sucesso.");
       }
       setDialogAberto(false);
-      await refresh(true);
+      await refresh();
     } catch (err) {
-      setErro(err instanceof Error ? err.message : "Erro ao salvar o serviço.");
+      setErro(erroMensagem(err, "Erro ao salvar o serviço."));
     } finally {
       setSalvando(false);
     }
@@ -114,14 +123,11 @@ export function ServicosAdmin() {
 
   const alternarAtivo = async (s: Servico) => {
     try {
-      await setServicoAtivo(s.id, !s.ativo);
+      await setServicoAtivo({ id: s.id as Id<"servicos">, ativo: !s.ativo });
       toast("success", `Serviço ${s.ativo ? "desativado" : "ativado"}.`);
-      await refresh(true);
+      await refresh();
     } catch (err) {
-      toast(
-        "error",
-        err instanceof Error ? err.message : "Erro ao atualizar serviço.",
-      );
+      toast("error", erroMensagem(err, "Erro ao atualizar serviço."));
     }
   };
 
@@ -131,17 +137,18 @@ export function ServicosAdmin() {
       return;
     }
     try {
-      await excluirServico(s.id);
+      await excluirServico({ id: s.id as Id<"servicos"> });
       setExcluindoId(null);
       toast("success", "Serviço excluído.");
-      await refresh(true);
+      await refresh();
     } catch (err) {
       setExcluindoId(null);
       toast(
         "error",
-        err instanceof Error
-          ? err.message
-          : "Não foi possível excluir. Pode haver agendamentos vinculados.",
+        erroMensagem(
+          err,
+          "Não foi possível excluir. Pode haver agendamentos vinculados.",
+        ),
       );
     }
   };
@@ -150,22 +157,22 @@ export function ServicosAdmin() {
     <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-cream sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
             Serviços
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Adicione, edite valores e durações, e ative ou desative serviços.
           </p>
         </div>
-        <Button variant="gold" onClick={abrirNovo} disabled={!isSupabaseConfigured}>
+        <Button variant="gold" onClick={abrirNovo} disabled={!isConvexConfigured}>
           <Plus className="size-4" />
           Novo serviço
         </Button>
       </div>
 
       {usandoDemo && (
-        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
-          Mostrando serviços de demonstração. Conecte o Supabase para editar os
+        <div className="mb-4 rounded-lg border border-yellow-600/40 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
+          Mostrando serviços de demonstração. Conecte o Convex para editar os
           serviços reais.
         </div>
       )}
@@ -180,7 +187,7 @@ export function ServicosAdmin() {
         ) : servicos.length === 0 ? (
           <div className="p-5">
             <EmptyState
-              icon={Scissors}
+              icon={Hand}
               title="Nenhum serviço cadastrado"
               description="Crie o primeiro serviço para começar a receber agendamentos."
               action={
@@ -206,19 +213,19 @@ export function ServicosAdmin() {
               {servicos.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>
-                    <p className="font-medium text-cream">{s.nome}</p>
+                    <p className="font-medium text-card-foreground">{s.nome}</p>
                     <p className="max-w-64 truncate text-xs text-muted-foreground">
                       {s.descricao ?? ""}
                     </p>
                     {s.video_url && (
-                      <p className="mt-0.5 flex items-center gap-1 text-[10px] text-red-400/80">
-                        <span className="size-1.5 rounded-full bg-red-500" />
+                      <p className="mt-0.5 flex items-center gap-1 text-[10px] text-blood/80">
+                        <span className="size-1.5 rounded-full bg-blood" />
                         vídeo personalizado
                       </p>
                     )}
                   </TableCell>
                   <TableCell>{formatMinutes(s.duracao_minutos)}</TableCell>
-                  <TableCell className="text-right font-display text-base font-bold text-gold-light">
+                  <TableCell className="text-right font-display text-base font-bold text-gradient-red">
                     {formatBRL(s.preco)}
                   </TableCell>
                   <TableCell>
@@ -233,7 +240,7 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => abrirEdicao(s)}
                         aria-label={`Editar ${s.nome}`}
-                        disabled={!isSupabaseConfigured}
+                        disabled={!isConvexConfigured}
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -242,8 +249,8 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => void alternarAtivo(s)}
                         aria-label={s.ativo ? "Desativar" : "Ativar"}
-                        disabled={!isSupabaseConfigured}
-                        className={s.ativo ? "text-gold" : "text-muted-foreground"}
+                        disabled={!isConvexConfigured}
+                        className={s.ativo ? "text-blood" : "text-muted-foreground"}
                       >
                         <Power className="size-4" />
                       </Button>
@@ -252,7 +259,7 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => void confirmarExclusao(s)}
                         aria-label={`Excluir ${s.nome}`}
-                        disabled={!isSupabaseConfigured}
+                        disabled={!isConvexConfigured}
                         className={
                           excluindoId === s.id ? "text-destructive" : "text-muted-foreground"
                         }
@@ -292,7 +299,7 @@ export function ServicosAdmin() {
                 id="s-nome"
                 value={form.nome}
                 onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                placeholder="Ex.: Corte Masculino"
+                placeholder="Ex.: Manicure"
               />
             </div>
             <div className="space-y-2">

@@ -18,42 +18,48 @@ import { formatBRL, formatMinutes } from "@/utils/format";
 export function Promocoes() {
   const { servicos, loading, error, refresh } = useServicos(true);
 
-  const corte = servicos.find((s) => s.nome.toLowerCase().includes("corte masculino"));
-  const barba = servicos.find((s) => s.nome.toLowerCase().includes("barba completa"));
-  const pigmentacao = servicos.find((s) =>
-    s.nome.toLowerCase().includes("pigment"),
+  const manicure = servicos.find((s) => s.nome.toLowerCase().includes("manicure"));
+  const pedicure = servicos.find((s) => s.nome.toLowerCase().includes("pedicure"));
+  const gel = servicos.find((s) => s.nome.toLowerCase().includes("gel"));
+  const alongamento = servicos.find((s) =>
+    s.nome.toLowerCase().includes("alongamento"),
   );
+  const nailArt = servicos.find((s) => s.nome.toLowerCase().includes("nail art"));
+  const spa = servicos.find((s) => s.nome.toLowerCase().includes("spa"));
 
   const combos = [
     {
-      nome: "Combo Corte + Barba",
+      nome: "Combo Manicure + Pedicure",
       descricao:
-        "O clássico da casa: corte na régua + barba com toalha quente e navalha.",
-      itens: [corte, barba].filter(Boolean),
+        "O clássico da casa: mãos e pés impecáveis no mesmo dia.",
+      itens: [manicure, pedicure].filter(Boolean),
       badge: "Mais pedido",
     },
     {
-      nome: "Visual completo",
+      nome: "Dia de spa completo",
       descricao:
-        "Corte + barba + pigmentação para um visual cheio, definido e pronto.",
-      itens: [corte, barba, pigmentacao].filter(Boolean),
+        "Manicure + pedicure + spa dos pés para renovar corpo e mente.",
+      itens: [manicure, pedicure, spa].filter(Boolean),
       badge: "Transformação",
     },
     {
-      nome: "Corte + Pigmentação",
-      descricao: "Corte impecável com pigmentação para disfarçar falhas e dar densidade.",
-      itens: [corte, pigmentacao].filter(Boolean),
-      badge: "Densidade",
+      nome: "Unhas dos sonhos",
+      descricao: "Alongamento em gel + nail art para um visual marcante e duradouro.",
+      itens: [alongamento, nailArt].filter(Boolean),
+      badge: "Destaque",
     },
     {
-      nome: "Barba + Pigmentação",
-      descricao: "Barba alinhada e preenchida para um visual marcante.",
-      itens: [barba, pigmentacao].filter(Boolean),
-      badge: "Definição",
+      nome: "Brilho que dura",
+      descricao: "Esmaltação em gel + nail art para arrasar por semanas.",
+      itens: [gel, nailArt].filter(Boolean),
+      badge: "Durabilidade",
     },
   ]
     .filter((c) => c.itens.length > 0)
-    .map((c) => ({ ...c, itens: c.itens as NonNullable<typeof corte>[] }));
+    .map((c) => ({
+      ...c,
+      itens: c.itens as NonNullable<(typeof servicos)[number]>[],
+    }));
 
   const totalCombo = (itens: { preco: number }[]) =>
     itens.reduce((soma, i) => soma + (i.preco ?? 0), 0);
@@ -78,20 +84,20 @@ export function Promocoes() {
   });
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       {/* Cabeçalho */}
-      <section className="border-b border-border/60 bg-gradient-to-b from-[#120303] to-black pt-14 pb-10">
+      <section className="border-b border-gold/20 bg-gradient-to-b from-graphite to-onyx pt-14 pb-10">
         <div className="mx-auto max-w-6xl px-5 sm:px-6">
           <div className="animate-slide-up max-w-2xl">
-            <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+            <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-gold-light uppercase">
               <Tag className="size-4" /> Ofertas da casa
             </p>
             <h1 className="font-display mt-3 text-4xl font-extrabold text-white sm:text-5xl">
-              Promoções &amp; <span className="text-gradient-red">combos</span>
+              Promoções &amp; <span className="text-gradient-light">combos</span>
             </h1>
-            <p className="mt-4 text-muted-foreground">
+            <p className="font-serif mt-4 text-xl leading-relaxed text-cream/80 italic">
               Combos pensados para quem quer o melhor da casa em um só
-              atendimento. Preços calculados direto do cardápio.
+              atendimento — com o carinho e a técnica de sempre.
             </p>
           </div>
         </div>
@@ -110,7 +116,7 @@ export function Promocoes() {
           </div>
         ) : (
           <div>
-            <p className="mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+            <p className="mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-foreground uppercase">
               <CalendarCheck className="size-4" /> Navegue pelos combos
             </p>
             <VideoCarousel itens={carrossel} />
@@ -119,26 +125,26 @@ export function Promocoes() {
 
         {/* Programa de fidelidade — estrutura preparada */}
         <Reveal className="mt-14">
-          <div className="relative overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-br from-[#1a0505] via-black to-black p-8 sm:p-10">
-            <div className="pointer-events-none absolute -top-20 left-1/2 h-44 w-[30rem] -translate-x-1/2 rounded-full bg-red-500/12 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-gold/25 bg-gradient-to-br from-graphite via-coal to-onyx p-8 sm:p-10">
+            <div className="pointer-events-none absolute -top-20 left-1/2 h-44 w-[30rem] -translate-x-1/2 rounded-full bg-gold-light/10 blur-3xl" />
             <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10">
-                <Crown className="size-7 text-red-500" />
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-gold-light/30 bg-black/30">
+                <Crown className="size-7 text-gold-light" />
               </div>
               <div className="flex-1">
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-red-500 uppercase">
+                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-gold-light uppercase">
                   <Gift className="size-4" /> Em preparação
                 </p>
                 <h2 className="font-display mt-2 text-2xl font-extrabold text-white">
                   Programa de fidelidade &amp; cupons
                 </h2>
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  Cashback, cortes acumulados e cupons exclusivos. A arquitetura
+                <p className="mt-2 max-w-xl text-sm text-cream/70">
+                  Cashback, visitas acumuladas e cupons exclusivos. A arquitetura
                   já está preparada — em breve você acumula pontos a cada visita.
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <Ticket className="size-5 text-red-400" />
+              <div className="flex shrink-0 items-center gap-2 rounded-xl border border-gold/25 bg-white/10 px-4 py-3">
+                <Ticket className="size-5 text-gold-light" />
                 <span className="text-sm font-semibold text-white">
                   Em breve
                 </span>

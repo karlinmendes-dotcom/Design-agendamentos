@@ -3,23 +3,84 @@
 /* Modo escuro controlado pela classe .dark no <html> */
 @custom-variant dark (&:is(.dark *));
 
-/* ============ Tokens da marca — Black & Red ============ */
+/* ============ Tokens da marca — Studio Natália Braga ============ */
+/* Paleta final (proporção: 50% creme · 25% verde · 10% nude · 7% terracota
+   5% marrom · 3% vinho — dourado só em detalhes finos):
+   - Verde oliva profundo #403501  → cor institucional: cabeçalhos, menu,
+     botões de agendamento, navegação ativa, elementos de identidade
+   - Creme/off-white #F8F3EE       → fundo principal do app
+   - Nude rosado #D9AB91           → cards, áreas de destaque, campos e
+     seções secundárias
+   - Terracota #D97B59             → chamadas, etiquetas, promoções,
+     pequenos destaques
+   - Marrom terroso #8C3926        → títulos secundários, ícones, detalhes
+   - Vinho escuro #400101          → ações especiais, preços importantes,
+     detalhes de maior contraste
+   - Dourado champagne #C9A86A     → apenas em detalhes: bordas finas,
+     ícones premium, separadores
+   Regra: o creme é a base; o verde oliva é a cor primária; sem neon. */
 @theme {
-  --color-charcoal: #000000;
-  --color-coal: #111111;
-  --color-graphite: #1b1b1b;
-  --color-onyx: #232323;
-  --color-crimson: #e10600;
-  --color-blood: #c1121f;
-  --color-red-intense: #c1121f;
-  --color-cream: #ffffff;
-  /* Aliases herdados (novo visual vermelho) */
-  --color-gold: #e10600;
-  --color-gold-light: #ff4d43;
-  --color-bronze: #c1121f;
+  --color-charcoal: #45301f;
+  --color-coal: #2c3b31;
+  --color-graphite: #24352c;
+  --color-onyx: #1e2c24;
+  --color-crimson: #d97b59;
+  --color-blood: #c25f3d;
+  --color-red-intense: #d97b59;
+  --color-cream: #f8f3ee;
+  --color-gold: #c9a86a;
+  --color-gold-light: #d9be8a;
+  --color-silver: #d8d0c0;
+  --color-silver-dark: #a69b8a;
+  --color-bronze: #8a7d6d;
+  --color-nude: #d9ab91;
+  --color-terracota: #d97b59;
+  --color-marrom: #8c3926;
+  --color-vinho: #400101;
 
-  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  /* Escala red-* → família terracota → marrom → vinho
+     (destaque #D97B59 → apoio #8C3926 → contraste #400101) */
+  --color-red-50: #fdf4ef;
+  --color-red-100: #fae7dc;
+  --color-red-200: #f4cdba;
+  --color-red-300: #ebac8f;
+  --color-red-400: #e28f6c;
+  --color-red-500: #d97b59;
+  --color-red-600: #c25f3d;
+  --color-red-700: #a34a2e;
+  --color-red-800: #8c3926;
+  --color-red-900: #6e2d1e;
+  --color-red-950: #400101;
+
+  /* Escala green-* → família verde profundo/sálvia (institucional #2f4a3e) */
+  --color-green-50: #f1f6f2;
+  --color-green-100: #e0ebe3;
+  --color-green-200: #c2d8c9;
+  --color-green-300: #9dbda8;
+  --color-green-400: #7fa890;
+  --color-green-500: #5b8c6b;
+  --color-green-600: #4a7a5c;
+  --color-green-700: #3d654e;
+  --color-green-800: #2f523f;
+  --color-green-900: #244232;
+  --color-green-950: #14281d;
+
+  /* Escala yellow-* → champanhe/ocre (avisos discretos) */
+  --color-yellow-50: #fbf7ec;
+  --color-yellow-100: #f6ecd2;
+  --color-yellow-200: #ecdaa4;
+  --color-yellow-300: #e0c37e;
+  --color-yellow-400: #d3ac52;
+  --color-yellow-500: #c9a227;
+  --color-yellow-600: #b8912f;
+  --color-yellow-700: #8a6d22;
+  --color-yellow-800: #6b521d;
+  --color-yellow-900: #4d3a15;
+
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-script: "Great Vibes", cursive;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
 
   --animate-fade-in: fade-in 0.6s ease-out both;
   --animate-fade-in-slow: fade-in 1.2s ease-out both;
@@ -98,10 +159,10 @@
   @keyframes glow-pulse {
     0%,
     100% {
-      box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.45);
+      box-shadow: 0 0 0 0 rgba(201, 168, 106, 0.5);
     }
     50% {
-      box-shadow: 0 0 0 14px rgba(225, 6, 0, 0);
+      box-shadow: 0 0 0 14px rgba(201, 168, 106, 0);
     }
   }
   @keyframes shimmer {
@@ -204,26 +265,26 @@
 }
 
 :root {
-  --radius: 0.85rem;
-  --background: #000000;
-  --foreground: #f5f5f5;
-  --card: #101010;
-  --card-foreground: #f5f5f5;
-  --popover: #141414;
-  --popover-foreground: #f5f5f5;
-  --primary: #e10600;
-  --primary-foreground: #ffffff;
-  --secondary: #1b1b1b;
-  --secondary-foreground: #e9e9e9;
-  --muted: #161616;
-  --muted-foreground: #8f8f8f;
-  --accent: #c1121f;
-  --accent-foreground: #ffffff;
-  --destructive: #c62828;
-  --destructive-foreground: #fafafa;
-  --border: #232323;
-  --input: #2b2b2b;
-  --ring: #e10600;
+  --radius: 0.9rem;
+  --background: #f8f3ee;
+  --foreground: #3f2c1c;
+  --card: #fbf3ea;
+  --card-foreground: #3f2c1c;
+  --popover: #fbf3ea;
+  --popover-foreground: #3f2c1c;
+  --primary: #2f4a3e;
+  --primary-foreground: #f8f3ee;
+  --secondary: #d9ab91;
+  --secondary-foreground: #452b1b;
+  --muted: #efdfd0;
+  --muted-foreground: #8a6f5c;
+  --accent: #d97b59;
+  --accent-foreground: #fffaf3;
+  --destructive: #a63a2e;
+  --destructive-foreground: #fffaf3;
+  --border: #e7d9c6;
+  --input: #e2d0bc;
+  --ring: #c9a86a;
 }
 
 /* ============ Base ============ */
@@ -247,13 +308,13 @@
 
   /* Foco visível acessível em toda a interface (teclado) */
   :focus-visible {
-    outline: 2px solid var(--color-crimson);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
   ::selection {
-    background-color: var(--color-crimson);
+    background-color: var(--color-gold);
     color: #ffffff;
   }
 
@@ -262,22 +323,40 @@
     height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: #000000;
+    background: #efdfd0;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2c2c2c;
+    background: #cfbd9f;
     border-radius: 8px;
-    border: 2px solid #000000;
+    border: 2px solid #efdfd0;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #e10600;
+    background: #c9a86a;
   }
 }
 
 /* ============ Utilitários da marca ============ */
 @layer utilities {
+  /* Fonte manuscrita — pequenos destaques (taglines, assinaturas) */
+  .font-script {
+    font-family: var(--font-script);
+  }
+
+  /* Fonte serif feminina — parágrafos de apoio e descrições */
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  /* Texto com gradiente champanhe→terracota→vinho — preços importantes
+     e títulos em destaque. Funciona sobre fundos claros E escuros. */
   .text-gradient-red {
-    background: linear-gradient(115deg, #ff4d43 0%, #e10600 45%, #c1121f 100%);
+    background: linear-gradient(
+      115deg,
+      #e2c893 0%,
+      #c9a86a 35%,
+      #d97b59 70%,
+      #400101 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -285,18 +364,37 @@
 
   /* Aliases herdados */
   .text-gradient-gold {
-    background: linear-gradient(115deg, #ff4d43 0%, #e10600 45%, #c1121f 100%);
+    background: linear-gradient(
+      115deg,
+      #e2c893 0%,
+      #c9a86a 35%,
+      #d97b59 70%,
+      #400101 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* Vidro fosco (glassmorphism) — usado em overlays e cards flutuantes */
+  .text-gradient-light {
+    background: linear-gradient(
+      115deg,
+      #e2c893 0%,
+      #c9a86a 35%,
+      #d97b59 70%,
+      #400101 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Vidro fosco (glassmorphism) — creme translúcido, sobre a base clara */
   .glass {
-    background: rgba(17, 17, 17, 0.72);
+    background: rgba(251, 243, 234, 0.82);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(201, 168, 106, 0.25);
   }
 
   /* Respeita usuários que preferem menos movimento */
@@ -311,12 +409,13 @@
     }
   }
 
+  /* Gradiente verde profundo — CTAs, barras de destaque e abas ativas */
   .bg-red-gradient {
-    background: linear-gradient(115deg, #ff3b30 0%, #e10600 50%, #a3001d 100%);
+    background: linear-gradient(115deg, #3a5a4b 0%, #2f4a3e 45%, #22382e 100%);
   }
 
   .bg-gold-gradient {
-    background: linear-gradient(115deg, #ff3b30 0%, #e10600 50%, #a3001d 100%);
+    background: linear-gradient(115deg, #3a5a4b 0%, #2f4a3e 45%, #22382e 100%);
   }
 
   .red-ring-hover {
@@ -326,8 +425,8 @@
       box-shadow 0.3s ease;
   }
   .red-ring-hover:hover {
-    border-color: rgba(225, 6, 0, 0.55);
-    box-shadow: 0 10px 34px -10px rgba(225, 6, 0, 0.4);
+    border-color: rgba(201, 168, 106, 0.55);
+    box-shadow: 0 14px 34px -16px rgba(47, 74, 62, 0.35);
     transform: translateY(-3px);
   }
 
@@ -338,16 +437,17 @@
       box-shadow 0.3s ease;
   }
   .gold-ring-hover:hover {
-    border-color: rgba(225, 6, 0, 0.55);
-    box-shadow: 0 10px 34px -10px rgba(225, 6, 0, 0.4);
+    border-color: rgba(201, 168, 106, 0.55);
+    box-shadow: 0 14px 34px -16px rgba(47, 74, 62, 0.35);
     transform: translateY(-3px);
   }
 
+  /* Hairline champanhe — divisórias premium */
   .hairline {
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(225, 6, 0, 0.65),
+      rgba(201, 168, 106, 0.45),
       transparent
     );
     height: 1px;
@@ -357,12 +457,12 @@
     background-image:
       radial-gradient(
         ellipse at 50% -20%,
-        rgba(225, 6, 0, 0.07),
+        rgba(201, 168, 106, 0.1),
         transparent 55%
       ),
       radial-gradient(
         ellipse at 90% 110%,
-        rgba(176, 0, 32, 0.06),
+        rgba(217, 123, 89, 0.08),
         transparent 50%
       );
   }
@@ -371,7 +471,7 @@
     background: linear-gradient(
       100deg,
       transparent 20%,
-      rgba(225, 6, 0, 0.25) 50%,
+      rgba(201, 168, 106, 0.35) 50%,
       transparent 80%
     );
     background-size: 200% 100%;
@@ -408,7 +508,7 @@
     transform: translateY(0);
   }
 
-  /* Máscara de gradiente para seções com vídeo */
+  /* Máscara de gradiente para seções com vídeo (permanece escura) */
   .video-shade {
     background: linear-gradient(
       to bottom,

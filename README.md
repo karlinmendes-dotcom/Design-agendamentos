@@ -1,15 +1,16 @@
-# 💈 Barbearia Neto — Plataforma de Agendamento para Barbearias
+# 💅 Nail Design Studio — Plataforma de Agendamento para Estúdios de Unhas
 
-Aplicativo completo de agendamento para a **Barbearia Neto**, com área do cliente
-(sem login) e dashboard administrativo em `/admin`. Arquitetura **SaaS
-multi-barbearia**: a Barbearia Neto é a primeira barbearia cadastrada, mas a
-estrutura está pronta para várias barbearias, unidades e profissionais.
+Aplicativo completo de agendamento para o **Nail Design Studio**, com área do
+cliente (sem login) e dashboard administrativo em `/admin`. Arquitetura **SaaS
+multi-negócio**: o estúdio é o primeiro tenant cadastrado, mas a estrutura está
+pronta para várias unidades e profissionais.
 
 > ## 📚 Base reutilizável — leia estes documentos
 >
-> Este repositório é a **BASE ORIGINAL**: ele serve de molde para criar outros
-> apps de agendamento (unhas, pets, clínica, restaurante...) por **cópia
-> independente** no GitHub — nunca modificando esta base.
+> Este repositório é a **BASE ORIGINAL** (transformada de barbearia para nail
+> design): ele serve de molde para criar outros apps de agendamento (unhas,
+> pets, clínica, restaurante...) por **cópia independente** no GitHub — nunca
+> modificando esta base.
 >
 > - **`PROJECT_RULES.md`** — regras oficiais da base (o que pode/não pode)
 > - **`ARCHITECTURE.md`** — arquitetura, banco, fluxos e deploy
@@ -19,10 +20,10 @@ estrutura está pronta para várias barbearias, unidades e profissionais.
 ## Stack
 
 - **React 19 + TypeScript + Vite** — SPA rápida e tipada
-- **Tailwind CSS 4** — tema escuro premium (preto + vermelho)
+- **Tailwind CSS 4** — tema claro premium (creme + verde oliva + dourado, tokens em `src/index.css`)
 - **Shadcn UI** — componentes acessíveis e elegantes
-- **Supabase** — banco de dados PostgreSQL
-- **Netlify** — deploy contínuo (SPA com redirects)
+- **Convex** — banco de dados reativo (queries/mutations em `src/convex/`)
+- **Vercel** — deploy contínuo (SPA com rewrite)
 
 ## Estrutura
 
@@ -30,14 +31,15 @@ estrutura está pronta para várias barbearias, unidades e profissionais.
 src/
 ├── components/   # Componentes reutilizáveis (ServiceCard, BottomNav, VideoCover...)
 │   └── ui/       # Componentes base shadcn/ui
+├── convex/       # Backend: schema + queries/mutations + seed (src/convex/)
 ├── pages/        # Páginas do cliente + admin/
 ├── layouts/      # AdminLayout (menu lateral profissional)
 ├── hooks/        # useServicos, useAgendamentos, useHorarios, useConfiguracao, useBarbeiros
 ├── contexts/     # ToastContext (notificações)
-├── services/     # Cliente do Supabase + chamadas por entidade (tenant-aware)
-├── types/        # Interfaces de domínio + tipos SaaS (Barbearia, Barbeiro, Midia)
+├── lib/          # Cliente Convex + utilitários (convex.ts)
+├── types/        # Interfaces de domínio + tipos SaaS
 ├── utils/        # Formatadores, slots, biblioteca de mídia (media.ts)
-└── data/         # Dados de demonstração (quando o Supabase não está conectado)
+└── data/         # Dados de demonstração (quando o Convex não está conectado)
 ```
 
 ## Como rodar
@@ -48,32 +50,30 @@ bun run dev        # ambiente de desenvolvimento
 bun run typecheck  # checagem de tipos (tsc)
 ```
 
-## Configurando o Supabase
+## Configurando o Convex
 
-1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
-2. Abra **SQL Editor** e execute o conteúdo de
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) e
-   depois [`supabase/migrations/0002_saas_platform.sql`](supabase/migrations/0002_saas_platform.sql).
-   - `0001` cria as tabelas base (`clientes`, `servicos`, `horarios`,
-     `agendamentos`, `configuracoes`), ativa RLS e insere os 6 serviços +
-     horários padrão.
-   - `0002` cria a estrutura SaaS: `barbearias` (tenant), `barbeiros`,
-     `midias` (biblioteca de conteúdo) e colunas `barbearia_id`/`barbeiro_id`/
-     `video_url` nas tabelas existentes, com seeds (Barbearia Neto, 1 barbeiro,
-     vídeos da biblioteca).
-3. Copie as chaves em **Project Settings → API**:
-   - `Project URL` → `VITE_SUPABASE_URL`
-   - `anon / public key` → `VITE_SUPABASE_ANON_KEY`
-4. Crie o arquivo `.env` na raiz:
+1. Crie um projeto em [convex.dev](https://convex.dev) (ou use o deployment
+   existente).
+2. O schema e as funções vivem em `src/convex/` (`convex.json` aponta o CLI
+   para lá). Para publicar:
+
+```bash
+CONVEX_DEPLOY_KEY=dev:<sua-chave> bun convex dev --once
+CONVEX_DEPLOY_KEY=dev:<sua-chave> bun convex run seed:inicial   # dados iniciais
+```
+
+3. Configure a URL pública do deployment no `.env`:
 
 ```bash
 # .env
-VITE_SUPABASE_URL=cole-a-url-do-projeto
-VITE_SUPABASE_ANON_KEY=cole-a-chave-anon
+VITE_CONVEX_URL=https://seu-deployment.convex.cloud
 ```
 
-> Sem as chaves, o app roda em **modo demonstração** com dados de exemplo e
-> exibe um aviso amarelo no painel admin.
+> Sem `VITE_CONVEX_URL`, o app roda em **modo demonstração** com dados de
+> exemplo e exibe um aviso amarelo no painel admin.
+
+> As migrations SQL em `supabase/migrations/` são do banco antigo (Supabase)
+> — mantidas apenas como histórico da base. O banco ativo é o Convex.
 
 ## Área do cliente (sem login)
 
@@ -82,9 +82,11 @@ animada na abertura.
 
 | Rota           | Descrição                                              |
 | -------------- | ------------------------------------------------------ |
-| `/`            | Hero cinematográfico em vídeo + seções da barbearia    |
+| `/`            | Hero com foto da marca + seções do estúdio (pilares, conheça o studio) |
 | `/servicos`    | Cards com vídeo em loop, preço e duração               |
-| `/agendamento` | Fluxo em etapas: serviço → barbeiro (se houver) → data → horário → dados → confirmação |
+| `/agendamento` | Fluxo em etapas: serviço → profissional (se houver) → data → horário → dados → confirmação |
+| `/promocoes`   | Combos e ofertas do estúdio                            |
+| `/contato`     | Endereço, WhatsApp, Instagram e localização            |
 | `/sucesso`     | Confirmação do agendamento                             |
 
 ## Dashboard admin (`/admin`, sem proteção)
@@ -94,35 +96,37 @@ animada na abertura.
 | `/admin`                  | Indicadores, agenda diária/semanal/mensal, serviços mais vendidos, gráficos |
 | `/admin/agenda`           | Agenda por dia com busca, filtros, paginação e mudança de status |
 | `/admin/servicos`         | CRUD de serviços: preço, duração, vídeo (URL) e ativar/desativar |
-| `/admin/configuracoes`    | Nome da barbearia, logo, horários por dia e dias disponíveis |
+| `/admin/configuracoes`    | Nome do estúdio, logo, horários por dia e dias disponíveis |
 
 ## Arquitetura SaaS (preparação)
 
-- **Multi-barbearia**: tabela `barbearias` como tenant; todos os registros têm
+- **Multi-negócio**: tabela `barbearias` como tenant; todos os registros têm
   `barbearia_id`. A constante `BARBEARIA_NETO_ID` define o tenant atual.
-- **Múltiplos barbeiros**: tabela `barbeiros`; o fluxo de agendamento mostra a
-  etapa de escolha do barbeiro assim que houver profissionais ativos.
+- **Múltiplos profissionais**: tabela `barbeiros`; o fluxo de agendamento mostra
+  a etapa de escolha da profissional assim que houver profissionais ativos.
 - **Biblioteca de conteúdo**: tabela `midias` (vídeos, imagens, banners, logo)
-  + `video_url` por serviço. O admin troca mídias **sem alterar código**;
-  a camada `src/utils/media.ts` resolve a prioridade: vídeo do serviço →
-  biblioteca → fallback local.
+  + `video_url` por serviço. O admin troca mídias **sem alterar código**.
+
+> Os nomes das tabelas (`barbearias`, `barbeiros`...) preservam o schema
+> original da base por compatibilidade — o conteúdo é 100% nail design.
 
 ## Biblioteca de vídeos
 
-Vídeos curtos e leves (360p, ~0,5–1,6 MB) do **Mixkit** (licença livre para uso
-comercial), com reprodução automática, sem áudio e em loop. Trocáveis **sem
-código**: painel admin → Serviços → campo de vídeo, ou tabela `midias`.
+Vídeos curtos e leves (360p) de manicure/nail design do **Mixkit** (licença
+livre para uso comercial), com reprodução automática, sem áudio e em loop.
+Trocáveis **sem código**: painel admin → Serviços → campo de vídeo, ou tabela
+`midias`.
 
-| Uso | URL | Peso |
+| Uso | URL | Peso aprox. |
 | --- | --- | --- |
-| Banner (hero) | `https://assets.mixkit.co/videos/43242/43242-360.mp4` | 740 KB |
-| Corte Masculino | `https://assets.mixkit.co/videos/43221/43221-360.mp4` | 527 KB |
-| Corte + Barba | `https://assets.mixkit.co/videos/43222/43222-360.mp4` | 1,0 MB |
-| Barba Completa | `https://assets.mixkit.co/videos/40130/40130-360.mp4` | 483 KB |
-| Pigmentação | `https://assets.mixkit.co/videos/40120/40120-360.mp4` | 798 KB |
-| Corte Infantil | `https://assets.mixkit.co/videos/43233/43233-360.mp4` | 733 KB |
-| Pezinho | `https://assets.mixkit.co/videos/40127/40127-360.mp4` | 626 KB |
-| Seção "Conheça a Barbearia" | `https://assets.mixkit.co/videos/43223/43223-360.mp4` | 702 KB |
+| Hero (manicure) | `https://assets.mixkit.co/videos/15125/15125-360.mp4` | ~500 KB |
+| Manicure | `https://assets.mixkit.co/videos/15806/15806-360.mp4` | ~500 KB |
+| Pedicure | `https://assets.mixkit.co/videos/27906/27906-360.mp4` | ~600 KB |
+| Esmaltação em Gel | `https://assets.mixkit.co/videos/13084/13084-360.mp4` | ~600 KB |
+| Alongamento | `https://assets.mixkit.co/videos/24817/24817-360.mp4` | ~700 KB |
+| Nail Art | `https://assets.mixkit.co/videos/36905/36905-360.mp4` | ~700 KB |
+| Spa dos Pés | `https://assets.mixkit.co/videos/21970/21970-360.mp4` | ~600 KB |
+| Seção "Conheça o estúdio" | `https://assets.mixkit.co/videos/36905/36905-360.mp4` | ~700 KB |
 
 Trocou a URL? O app usa a prioridade: `video_url` do serviço → biblioteca
 `midias` → fallback local (`src/utils/videos.ts`).
@@ -133,21 +137,14 @@ WhatsApp automático, pagamentos online (PIX/cartão/Apple Pay/Google Pay),
 programa de fidelidade, cupons, múltiplas unidades, relatórios financeiros,
 PWA, notificações push e integração com redes sociais.
 
-## Deploy na Netlify
+## Deploy na Vercel
 
-1. Crie o repositório no GitHub (ex.: `barbearia-neto`) e faça o push:
-
-```bash
-git init && git add . && git commit -m "chore: plataforma Barbearia Neto"
-git remote add origin https://github.com/SEU_USUARIO/barbearia-neto.git
-git push -u origin main
-```
-
-2. Em [app.netlify.com](https://app.netlify.com) → **Add new site → Import an
-   existing project** → escolha o repositório.
-3. O Netlify detecta o `netlify.toml` automaticamente (`npm run build` →
-   pasta `dist`). O redirect SPA já está configurado para `/admin` e demais
-   rotas.
-4. Em **Site settings → Environment variables**, adicione `VITE_SUPABASE_URL`
-   e `VITE_SUPABASE_ANON_KEY`.
-5. Deploy! Cada push na `main` publica automaticamente.
+- **Produção atual:** `https://design-agendamentos.vercel.app` (projeto
+  `design-agendamentos` — conectado ao GitHub `karlinmendes-dotcom/Design-agendamentos`,
+  branch `main`; deploy automático por push).
+- Config no `vercel.json`: `bun install` + `bun run build` → `dist`, com
+  rewrite SPA (todas as rotas para `index.html`).
+- Env var obrigatória: `VITE_CONVEX_URL` → `https://hardy-aardvark-221.convex.cloud`
+  (configurada em production + preview + development).
+- ⚠️ Banco e hospedagem são **separados** dos outros projetos (barbearia e
+  sushi) — não reutilizar deployment Convex de outro projeto.

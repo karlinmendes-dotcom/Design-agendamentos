@@ -12,7 +12,44 @@
 
 ---
 
-## 1. 🗄️ Supabase — Projeto **"Barbearia neto"** (banco DO SITE DA BARBEARIA) ✅ EM USO
+## 0. 💅 Nail Design Studio — **BANCO ATUAL** (Convex) ✅ EM USO
+
+> Este app (repositório `Design-agendamentos`) usa **Convex com deployment
+> próprio e separado** de todos os outros projetos. ⚠️ **Nunca usar o
+> `original-quail-840`** — ele é do projeto do sushi (foi usado por engano no
+> passado).
+
+| Item | Valor |
+|---|---|
+| **`VITE_CONVEX_URL`** (pública, para o app) | `https://hardy-aardvark-221.convex.cloud` |
+| Deployment | `hardy-aardvark-221` |
+| Projeto (dashboard) | **Design agendamentos** (slug `design-agendamento`, team `karlinmendes`) |
+| Dashboard | https://dashboard.convex.dev/t/karlinmendes/design-agendamento/hardy-aardvark-221 |
+| **Deploy Key** (dev — para publicar funções/seed) | `dev:hardy-aardvark-221|eyJ2MiI6Ijc0MTU3ZDNjY2IzMDRlZjk5NjU2YmM2YWU0MTQ1YjQ2In0=` ⚠️ **ATUALIZADA 2026-08-11** (chave anterior rotacionada — as conexões voltaram com esta) |
+| **`GEMINI_API_KEY`** (env do Convex — assistente do dashboard) | Configurada em **Convex → Project Settings → Environment Variables** (ou `bun convex env set GEMINI_API_KEY <valor>`). Modelo: `GEMINI_MODEL` (padrão `gemini-3.1-flash-lite`) |
+| **`FIREBASE_SERVICE_ACCOUNT`** (env do Convex — envio de notificação push FCM) | ✅ Configurada 2026-08-11 (validada: o FCM respondeu e rejeitou token fake — auth OK). JSON do SDK Admin do projeto Firebase `poupaps-cancelar`. Em Convex → Project Settings → Environment Variables |
+| **`VITE_FIREBASE_*`** (públicas — web config do Firebase `poupaps-cancelar`) | Embutidas como fallback no código (`src/lib/firebase.ts`): apiKey `AIzaSyBoGKjUODcSC7DpeSMNW_ZWRp7uLKSzuuc` · authDomain `poupaps-cancelar.firebaseapp.com` · projectId `poupaps-cancelar` · messagingSenderId `66548106345` · appId `1:66548106345:web:008a42ef4cd41e5acecef8` |
+| **`VITE_FIREBASE_VAPID_KEY`** (chave pública Web Push — necessária para o navegador gerar o token FCM) | ⏳ **PENDENTE** — Firebase → Configurações do projeto → **Cloud Messaging** → **Certificados Web Push** → copiar a chave. Colar na Vercel (projeto `design-agendamentos`, prod/preview/dev) e/ou `.env.local` |
+
+**Como publicar funções / rodar a seed:**
+
+```bash
+CONVEX_DEPLOY_KEY='dev:hardy-aardvark-221|...' bun convex dev --once
+CONVEX_DEPLOY_KEY='dev:hardy-aardvark-221|...' bun convex run seed:inicial
+```
+
+**Onde está salva:** `.env.local` (workspace) · painel Convex → Project
+Settings → Deploy Keys · env var `VITE_CONVEX_URL` na Vercel (projeto
+`design-agendamentos`, prod/preview/dev).
+
+> As migrations em `supabase/migrations/` e a Seção 1 abaixo são do **banco
+> antigo (Supabase)** — mantidas como histórico da base; o app não as usa mais.
+> O `convex.json` deste repo aponta para o projeto `design-agendamento` —
+> nunca trocar para outro projeto.
+
+---
+
+## 1. 🗄️ Supabase — Projeto **"Barbearia neto"** (banco DO SITE DA BARBEARIA) 📦 HISTÓRICO
 
 | Item | Valor |
 |---|---|
@@ -53,7 +90,7 @@ env vars da Vercel (projeto `barbearia-neto`) · API Keys do Freebuff.
 
 | Item | Valor |
 |---|---|
-| **Token (account)** | `vcp_60X87p1beAsmaSs7enMiuVh0PSAmbdDCIRNsqPMUWyvfVLHY7V1pi0vq` |
+| **Token (account)** | ⛔ **Removido do git (proteção do GitHub contra vazamento de segredo)** — o valor real fica em Vercel → Account Settings → Tokens (token atualizado 2026-08-11, id `IIOlRYZwnTyV6efjQighsFrCLMnYXQxjBPtUcaFbQPToxe33`) |
 | Conta | `karlinmendes-dotcom` |
 
 ### Projetos da conta
@@ -62,6 +99,12 @@ env vars da Vercel (projeto `barbearia-neto`) · API Keys do Freebuff.
 |---|---|---|---|
 | **barbearia-neto** (🪒 Barbearia) | `prj_fBaZ1Yak8BqrG5F2kfXlKIN94nm3` | `https://barbearia-neto.vercel.app` | `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` (production + preview + development) |
 | **hitiko-sushi** (🍣 Sushi — ex. `sushi-menu-app`) | `prj_Ci1hrfuEoHm15pTNJ3koMq5lTF29` | `https://sushi-menu-app-five.vercel.app` | `CONVEX_SITE_URL` (o `VITE_CONVEX_URL` foi gravado no build publicado) |
+
+> ⚠️ **Sushi usa o Convex `original-quail-840`** (além do `ideal-lobster-748`
+> antigo). As funções dele foram sobrescritas por engano em 2026-08 e precisam
+> ser re-publicadas a partir do workspace do sushi (repo `sushi-menu-app`):
+> `CONVEX_DEPLOY_KEY='dev:original-quail-840|...' bun convex dev --once`.
+| **design-agendamentos** (💅 Nail Design) | `prj_X4bNLFWwfEz7eTQVemdMSIaUbvZL` | `https://design-agendamentos.vercel.app` | `VITE_CONVEX_URL` → `https://hardy-aardvark-221.convex.cloud` (production + preview + development) |
 
 **Onde está salva:** painel Vercel → **Account Settings → Tokens** · colado no
 histórico do chat Freebuff (usado para deploys e configurações via API).
@@ -125,13 +168,13 @@ histórico do chat Freebuff (usado para deploys e configurações via API).
 
 | Onde | O que tem |
 |---|---|
-| **Freebuff → API Keys** (workspace da barbearia) | `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` do projeto certo |
-| **`.env.local`** (local, ignorado pelo git) | Mesmas 2 chaves do Supabase correto (gravadas pelo `vercel link`) |
+| **`.env.local`** (local, ignorado pelo git) | `VITE_CONVEX_URL` do deployment `hardy-aardvark-221` (nail design) — atualizado pelo `vercel link` |
+| **Convex → convex.dev** | Deploy Keys: `hardy-aardvark-221` (nail design) · `original-quail-840` (sushi ⚠️) · `ideal-lobster-748` (sushi antigo) |
 | **Vercel → projeto barbearia-neto** | `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (prod/preview/dev) |
 | **Vercel → projeto hitiko-sushi** | `CONVEX_SITE_URL` (e `VITE_CONVEX_URL` usado no build) |
+| **Vercel → projeto design-agendamentos** | `VITE_CONVEX_URL` → `https://hardy-aardvark-221.convex.cloud` (prod/preview/dev) |
 | **Supabase → API Keys** | anon + service_role + JWT do projeto `czyfsdbmxdyvmqrdvaiw` |
 | **Supabase → API Keys** (outro projeto) | anon do projeto antigo `rwnansfmtsvjueuxtnyx` (⛔) |
-| **Convex → convex.dev** | Deploy Keys do deployment `ideal-lobster-748` |
 | **Vercel → Account Tokens** | Token da conta (deploys/configurações) |
 | **GitHub** | Repos e acesso automático via GitHub App do Freebuff |
 
@@ -139,12 +182,14 @@ histórico do chat Freebuff (usado para deploys e configurações via API).
 
 ## 8. ✅ Regra de uso (resumo)
 
-1. **Barbearia** usa **Supabase `czyfsdbmxdyvmqrdvaiw`** — nunca apontar para o
+1. **Nail Design Studio** usa **Convex `hardy-aardvark-221`** (projeto "Design
+   agendamentos") — banco separado; **nunca** usar o `original-quail-840` (sushi).
+2. **Barbearia** usa **Supabase `czyfsdbmxdyvmqrdvaiw`** — nunca apontar para o
    projeto antigo `rwnansfmtsvjueuxtnyx`.
-2. **Sushi** usa **Convex `ideal-lobster-748`** — não misturar com o Supabase.
-3. Toda cópia nova de site deve criar **banco próprio** e trocar as env vars.
-4. Chaves com poder de escrita (`service_role`, token Vercel) → usar só em
-   backend/configuração, **nunca** em código de frontend.
+3. **Sushi** usa **Convex `ideal-lobster-748`** — não misturar com o Supabase.
+4. Toda cópia nova de site deve criar **banco próprio** e trocar as env vars.
+5. Chaves com poder de escrita (`service_role`, deploy keys, token Vercel) →
+   usar só em backend/configuração, **nunca** em código de frontend.
 
 ---
 

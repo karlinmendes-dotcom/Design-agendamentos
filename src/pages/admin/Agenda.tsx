@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import {
+  CalendarX,
   ChevronLeft,
   ChevronRight,
+  Hand,
   Loader2,
-  Scissors,
   Search,
 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -27,7 +28,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
-import { atualizarStatusAgendamento } from "@/services/agendamentos";
+import { useAction, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { erroMensagem } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL } from "@/utils/format";
 import { addDaysISO, formatDateLong, formatDateShort, todayISO } from "@/utils/date";
@@ -41,8 +45,12 @@ export function Agenda() {
   const [filtroStatus, setFiltroStatus] = useState<"todos" | StatusAgendamento>("todos");
   const [pagina, setPagina] = useState(1);
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
+  const [cancelandoDia, setCancelandoDia] = useState(false);
   const { toast } = useToast();
   const { agendamentos, loading } = useAgendamentosPorData(data);
+  const atualizarStatus = useMutation(api.agendamentos.atualizarStatus);
+  const enviarAviso = useAction(api.push.enviarParaTelefones);
+  const cancelarDiaCompleto = useAction(api.push.cancelarDiaCompleto);
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -74,24 +82,59 @@ export function Agenda() {
   const mudarStatus = async (id: string, status: StatusAgendamento) => {
     setSalvandoId(id);
     try {
-      await atualizarStatusAgendamento(id, status);
+      await atualizarStatus({ id: id as Id<"agendamentos">, status });
       toast("success", `Agendamento atualizado para "${STATUS_AGENDAMENTO[status]}".`);
+      // Cancelou um horário individual → avisa a cliente por notificação
+      if (status === "cancelado") {
+        const ag = agendamentos.find((a) => a.id === id);
+        if (ag?.cliente?.telefone) {
+          void enviarAviso({ telefones: [ag.cliente.telefone], data }).catch(
+            () => {},
+          );
+        }
+      }
     } catch (err) {
       toast(
         "error",
-        err instanceof Error
-          ? err.message
-          : "Não foi possível atualizar o status.",
+        erroMensagem(err, "Não foi possível atualizar o status."),
       );
     } finally {
       setSalvandoId(null);
     }
   };
 
+  const cancelarDiaInteiro = async () => {
+    if (
+      !window.confirm(
+        `Cancelar TODOS os agendamentos de ${formatDateLong(data)}?\n\nAs clientes afetadas serão avisadas por notificação.`,
+      )
+    )
+      return;
+    setCancelandoDia(true);
+    try {
+      const resultado = await cancelarDiaCompleto({ data });
+      if (resultado.push?.sem_configuracao) {
+        toast(
+          "success",
+          `${resultado.cancelados} agendamento(s) cancelado(s). ⚠️ Notificação ainda não configurada (FIREBASE_SERVICE_ACCOUNT).`,
+        );
+      } else {
+        toast(
+          "success",
+          `${resultado.cancelados} agendamento(s) cancelado(s) · ${resultado.push?.enviados ?? 0} cliente(s) avisado(s) por notificação.`,
+        );
+      }
+    } catch (err) {
+      toast("error", erroMensagem(err, "Não foi possível cancelar o dia."));
+    } finally {
+      setCancelandoDia(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-cream sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
           Agenda
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -137,6 +180,21 @@ export function Agenda() {
             </Button>
           </div>
 
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={cancelandoDia}
+            onClick={() => void cancelarDiaInteiro()}
+            aria-label="Cancelar todos os agendamentos do dia"
+          >
+            {cancelandoDia ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <CalendarX className="size-3.5" />
+            )}
+            Cancelar dia
+          </Button>
+
           <div className="relative min-w-0">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -170,7 +228,7 @@ export function Agenda() {
         </div>
 
         <div className="text-sm lg:text-right">
-          <p className="font-semibold text-cream">{formatDateLong(data)}</p>
+          <p className="font-semibold text-foreground">{formatDateLong(data)}</p>
           <p className="text-xs text-muted-foreground">
             {formatDateShort(data)} · {filtrados.length} agendamento(s)
           </p>
@@ -187,7 +245,7 @@ export function Agenda() {
         ) : filtrados.length === 0 ? (
           <div className="p-5">
             <EmptyState
-              icon={Scissors}
+              icon={Hand}
               title={
                 busca || filtroStatus !== "todos"
                   ? "Nenhum resultado encontrado"
@@ -209,7 +267,7 @@ export function Agenda() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Serviço</TableHead>
-                  <TableHead>Barbeiro</TableHead>
+                  <TableHead>Profissional</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -217,10 +275,10 @@ export function Agenda() {
               <TableBody>
                 {visiveis.map((a) => (
                   <TableRow key={a.id}>
-                    <TableCell className="font-display text-base font-bold text-gold-light tabular-nums">
+                    <TableCell className="font-display text-base font-bold text-green-800 tabular-nums">
                       {a.horario}
                     </TableCell>
-                    <TableCell className="font-medium text-cream">
+                    <TableCell className="font-medium text-card-foreground">
                       {a.cliente?.nome ?? "—"}
                     </TableCell>
                     <TableCell className="tabular-nums">

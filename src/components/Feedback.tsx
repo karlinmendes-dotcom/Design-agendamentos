@@ -1,12 +1,12 @@
-import { AlertTriangle, Scissors } from "lucide-react";
+import { AlertTriangle, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function LoadingState({ label = "Carregando..." }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20">
       <div className="relative">
-        <div className="size-12 animate-spin rounded-full border-2 border-border border-t-red-500" />
-        <Scissors className="absolute inset-0 m-auto size-5 animate-pulse text-red-500" />
+        <div className="size-12 animate-spin rounded-full border-2 border-border border-t-green-700" />
+        <Gem className="absolute inset-0 m-auto size-5 animate-pulse text-gold" />
       </div>
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>

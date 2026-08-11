@@ -1,5 +1,5 @@
 // ============================================================
-// Barbearia Neto — Tipos da plataforma SaaS multi-barbearias
+// Nail Design Studio — Tipos da plataforma SaaS de agendamento
 // ============================================================
 
 // ---------- Tenant: Barbearia ----------
@@ -131,5 +131,5 @@ export interface NovoAgendamento {
 }
 
 // ---------- Constantes da plataforma ----------
-/** ID fixo da Barbearia Neto (primeira barbearia cadastrada). */
+/** ID fixo do estúdio (primeiro tenant cadastrado). */
 export const BARBEARIA_NETO_ID = "00000000-0000-0000-0000-000000000001";

@@ -1,33 +1,26 @@
-import { useCallback, useEffect, useState } from "react";
-import { CONFIGURACAO_PADRAO, getConfiguracao } from "@/services/configuracoes";
-import { isSupabaseConfigured } from "@/services/supabase";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { isConvexConfigured } from "@/lib/convex";
 import { DEMO_CONFIG } from "@/data/demo";
 import type { Configuracao } from "@/types";
 
+export const CONFIGURACAO_PADRAO: Pick<
+  Configuracao,
+  "nome_barbearia" | "logo_url" | "horario_funcionamento" | "dias_disponiveis"
+> = {
+  nome_barbearia: "Studio Natália Braga – Nail Design",
+  logo_url: null,
+  horario_funcionamento: "Terça a Sábado — 09h às 19h",
+  dias_disponiveis: [1, 2, 3, 4, 5, 6],
+};
+
 export function useConfiguracao() {
-  const [configuracao, setConfiguracao] = useState<Configuracao | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dados = useQuery(api.configuracoes.get);
+  const usandoDemo = !isConvexConfigured;
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setConfiguracao(DEMO_CONFIG);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await getConfiguracao();
-      setConfiguracao(data);
-    } catch {
-      setConfiguracao(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const configuracao: Configuracao | null = usandoDemo
+    ? DEMO_CONFIG
+    : (dados ?? null);
 
   const nomeBarbearia =
     configuracao?.nome_barbearia ?? CONFIGURACAO_PADRAO.nome_barbearia;
@@ -40,8 +33,8 @@ export function useConfiguracao() {
 
   return {
     configuracao,
-    loading,
-    refresh,
+    loading: !usandoDemo && dados === undefined,
+    refresh: () => Promise.resolve(),
     nomeBarbearia,
     logoUrl,
     horarioFuncionamento,

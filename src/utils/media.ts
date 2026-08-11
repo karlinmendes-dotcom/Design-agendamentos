@@ -18,12 +18,13 @@ export interface MediaSource {
 
 /** Mapa estático chave → vídeo usado como fallback da biblioteca local. */
 const MIDIA_LOCAL: Record<string, VideoSource> = {
-  hero: videoParaServico("corte masculino"),
-  "servico-corte": videoParaServico("corte masculino"),
-  "servico-barba": videoParaServico("barba completa"),
+  hero: videoParaServico("manicure"),
+  "servico-manicure": videoParaServico("manicure"),
+  "servico-pedicure": videoParaServico("pedicure"),
+  "servico-gel": videoParaServico("esmaltacao em gel"),
   logo: {
-    src: videoParaServico("corte masculino").src,
-    poster: videoParaServico("corte masculino").poster,
+    src: videoParaServico("manicure").src,
+    poster: videoParaServico("manicure").poster,
   },
 };
 
@@ -35,7 +36,7 @@ export function mediaParaServico(
     poster_url?: string | null;
   } | null | undefined,
 ): MediaSource {
-  const fallback = videoParaServico(servico?.nome ?? "corte masculino");
+  const fallback = videoParaServico(servico?.nome ?? "manicure");
 
   // 1. Vídeo/foto configurados diretamente no serviço (admin)
   if (servico?.video_url || servico?.poster_url) {
@@ -50,5 +51,5 @@ export function mediaParaServico(
 
 /** Resolve um item da biblioteca (hero, banner, logo) pela chave. */
 export function mediaPorChave(chave: string): MediaSource {
-  return MIDIA_LOCAL[chave] ?? videoParaServico("corte masculino");
+  return MIDIA_LOCAL[chave] ?? videoParaServico("manicure");
 }

@@ -38,9 +38,9 @@ export function TimeSlotGrid({
                 "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/40 line-through",
               !isOccupied &&
                 !isSelected &&
-                "border-border bg-card text-foreground hover:border-red-500/60 hover:bg-red-500/10 hover:text-red-300",
+                "border-border bg-card text-card-foreground hover:border-green-700/60 hover:bg-green-800/10 hover:text-green-800",
               isSelected &&
-                "border-red-500 bg-red-gradient font-bold text-white shadow-[0_6px_20px_-6px_rgba(225,6,0,0.7)]",
+                "border-green-800 bg-gold-gradient font-bold text-cream shadow-[0_6px_20px_-8px_rgba(47,74,62,0.6)]",
             )}
           >
             {slot}

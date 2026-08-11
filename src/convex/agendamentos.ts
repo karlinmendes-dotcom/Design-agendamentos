@@ -1,0 +1,262 @@
+import { mutation, query, type QueryCtx } from "./_generated/server";
+import { v, ConvexError } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
+
+type AgendamentoDoc = Doc<"agendamentos">;
+
+/** Mensagem amigável quando o horário já foi reservado. */
+const ERRO_HORARIO_OCUPADO =
+  "Esse horário acabou de ser reservado por outra pessoa. Escolha outro horário.";
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+interface Ocupado {
+  horario: string;
+  duracao_minutos: number;
+}
+
+/** True quando um horário + duração sobrepõe algum agendamento ocupado. */
+function isSlotOcupado(
+  horario: string,
+  duracaoMinutos: number,
+  ocupados: Ocupado[],
+): boolean {
+  const start = toMinutes(horario);
+  const end = start + Math.max(duracaoMinutos, 1);
+  return ocupados.some((o) => {
+    const s = toMinutes(o.horario);
+    const e = s + Math.max(o.duracao_minutos, 1);
+    return start < e && end > s;
+  });
+}
+
+async function mapAgendamento(ctx: QueryCtx, doc: AgendamentoDoc) {
+  const cliente = doc.cliente_id ? await ctx.db.get(doc.cliente_id) : null;
+  const servico = doc.servico_id ? await ctx.db.get(doc.servico_id) : null;
+  const barbeiro = doc.barbeiro_id ? await ctx.db.get(doc.barbeiro_id) : null;
+  return {
+    id: doc._id,
+    cliente_id: doc.cliente_id,
+    servico_id: doc.servico_id,
+    data: doc.data,
+    horario: doc.horario,
+    status: doc.status,
+    duracao_minutos: doc.duracao_minutos,
+    created_at: new Date(doc._creationTime).toISOString(),
+    barbearia_id: doc.barbearia_id ?? null,
+    barbeiro_id: doc.barbeiro_id ?? null,
+    cliente: cliente ? { nome: cliente.nome, telefone: cliente.telefone } : null,
+    servico: servico
+      ? {
+          nome: servico.nome,
+          preco: servico.preco,
+          duracao_minutos: servico.duracao_minutos,
+        }
+      : null,
+    barbeiro: barbeiro ? { nome: barbeiro.nome } : null,
+  };
+}
+
+/** Todos os agendamentos (dashboard). */
+export const list = query({
+  handler: async (ctx) => {
+    const docs = await ctx.db.query("agendamentos").collect();
+    const items = await Promise.all(docs.map((d) => mapAgendamento(ctx, d)));
+    return items.sort((a, b) =>
+      `${a.data}${a.horario}`.localeCompare(`${b.data}${b.horario}`),
+    );
+  },
+});
+
+/** Agendamentos de uma data específica (agenda do dia). */
+export const listPorData = query({
+  args: { data: v.string() },
+  handler: async (ctx, { data }) => {
+    const docs = await ctx.db
+      .query("agendamentos")
+      .withIndex("por_data", (q) => q.eq("data", data))
+      .collect();
+    const items = await Promise.all(docs.map((d) => mapAgendamento(ctx, d)));
+    return items.sort((a, b) => a.horario.localeCompare(b.horario));
+  },
+});
+
+/** Horários ocupados de uma data (e barbeiro) — usado na grade de slots. */
+export const listOcupados = query({
+  args: { data: v.string(), barbeiroId: v.union(v.id("barbeiros"), v.null()) },
+  handler: async (ctx, { data, barbeiroId }) => {
+    const docs = await ctx.db
+      .query("agendamentos")
+      .withIndex("por_data", (q) => q.eq("data", data))
+      .collect();
+    return docs
+      .filter((a) => a.status !== "cancelado")
+      .filter((a) => (barbeiroId ? a.barbeiro_id === barbeiroId : true))
+      .map((a) => ({
+        horario: a.horario,
+        duracao_minutos: a.duracao_minutos,
+      }));
+  },
+});
+
+/**
+ * Cria um agendamento com checagem anti-conflito dentro da mutation
+ * (atômica no Convex — não há corrida entre dois clientes simultâneos).
+ */
+/** Dia da semana (0=Dom) de uma data YYYY-MM-DD — sem efeito de fuso. */
+function diaDaSemana(data: string): number {
+  return new Date(`${data}T12:00:00`).getDay();
+}
+
+/** Erro amigável quando o dia está desativado ou bloqueado. */
+const ERRO_DIA_INDISPONIVEL =
+  "Este dia não está disponível para agendamento. Escolha outro dia.";
+
+/**
+ * Valida a data/horário contra o expediente (horarios.ativo) e as datas
+ * bloqueadas (feriados/folgas) ANTES de gravar — o dashboard manda de
+ * verdade, não só o visual do site.
+ */
+async function validarDisponibilidade(
+  ctx: QueryCtx,
+  data: string,
+  horario: string,
+  duracaoMinutos: number,
+): Promise<void> {
+  // 1. Dia da semana precisa ter expediente ATIVO
+  const horarios = await ctx.db.query("horarios").collect();
+  const expediente = horarios.find(
+    (h) => h.dia_semana === diaDaSemana(data) && h.ativo,
+  );
+  if (!expediente) throw new ConvexError(ERRO_DIA_INDISPONIVEL);
+
+  // 2. Data não pode estar bloqueada (feriado / dia sem atendimento)
+  const bloqueada = await ctx.db
+    .query("datasBloqueadas")
+    .withIndex("por_data", (q) => q.eq("data", data))
+    .first();
+  if (bloqueada) {
+    throw new ConvexError(
+      bloqueada.motivo
+        ? `Indisponível neste dia: ${bloqueada.motivo}.`
+        : "Este dia está bloqueado (feriado/folga). Escolha outro dia.",
+    );
+  }
+
+  // 3. Horário precisa caber dentro do expediente do dia
+  const inicio = toMinutes(expediente.hora_inicio);
+  const fim = toMinutes(expediente.hora_fim);
+  const slot = toMinutes(horario);
+  if (slot < inicio || slot + Math.max(duracaoMinutos, 1) > fim) {
+    throw new ConvexError(
+      `Atendemos das ${expediente.hora_inicio} às ${expediente.hora_fim} neste dia. Escolha um horário dentro do expediente.`,
+    );
+  }
+}
+
+export const criar = mutation({
+  args: {
+    cliente_id: v.id("clientes"),
+    servico_id: v.id("servicos"),
+    data: v.string(),
+    horario: v.string(),
+    duracao_minutos: v.number(),
+    barbeiro_id: v.optional(v.union(v.id("barbeiros"), v.null())),
+  },
+  handler: async (ctx, args) => {
+    // Fonte da verdade: o dashboard controla os dias — recusa fora do expediente
+    await validarDisponibilidade(
+      ctx,
+      args.data,
+      args.horario,
+      args.duracao_minutos,
+    );
+
+    const existentes = await ctx.db
+      .query("agendamentos")
+      .withIndex("por_data", (q) => q.eq("data", args.data))
+      .collect();
+
+    const ocupados = existentes
+      .filter((a) => a.status !== "cancelado")
+      .filter((a) => (args.barbeiro_id ? a.barbeiro_id === args.barbeiro_id : true))
+      .map((a) => ({
+        horario: a.horario,
+        duracao_minutos: a.duracao_minutos,
+      }));
+
+    if (isSlotOcupado(args.horario, args.duracao_minutos, ocupados)) {
+      throw new ConvexError(ERRO_HORARIO_OCUPADO);
+    }
+
+    const id = await ctx.db.insert("agendamentos", {
+      cliente_id: args.cliente_id,
+      servico_id: args.servico_id,
+      barbeiro_id: args.barbeiro_id ?? undefined,
+      data: args.data,
+      horario: args.horario,
+      status: "confirmado",
+      duracao_minutos: args.duracao_minutos,
+    });
+
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Erro ao criar agendamento.");
+    return mapAgendamento(ctx, doc);
+  },
+});
+
+/**
+ * Cancela TODOS os agendamentos ativos de um dia inteiro (usado pela dona no
+ * dashboard ou pela Gemini). Retorna quantos foram cancelados e os telefones
+ * dos clientes afetados para o disparo de notificação push (FCM).
+ */
+export const cancelarDia = mutation({
+  args: { data: v.string() },
+  handler: async (ctx, { data }) => {
+    // Segurança: nunca cancela dias no passado
+    const agora = new Date();
+    const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
+    if (data < hoje) {
+      throw new ConvexError("Não é possível cancelar um dia que já passou.");
+    }
+
+    const docs = await ctx.db
+      .query("agendamentos")
+      .withIndex("por_data", (q) => q.eq("data", data))
+      .collect();
+    const afetados = docs.filter((a) => a.status !== "cancelado");
+
+    for (const a of afetados) {
+      await ctx.db.patch(a._id, { status: "cancelado" });
+    }
+
+    const clientes = await Promise.all(afetados.map((a) => ctx.db.get(a.cliente_id)));
+    const telefones = [
+      ...new Set(
+        clientes
+          .filter((c) => c !== null)
+          .map((c) => (c as { telefone: string }).telefone),
+      ),
+    ];
+
+    return { data, cancelados: afetados.length, telefones };
+  },
+});
+
+/** Atualiza o status (confirmado → concluído / cancelado). */
+export const atualizarStatus = mutation({
+  args: {
+    id: v.id("agendamentos"),
+    status: v.union(
+      v.literal("confirmado"),
+      v.literal("concluido"),
+      v.literal("cancelado"),
+    ),
+  },
+  handler: async (ctx, { id, status }) => {
+    await ctx.db.patch(id, { status });
+  },
+});

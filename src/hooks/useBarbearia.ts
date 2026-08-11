@@ -1,45 +1,32 @@
-import { useCallback, useEffect, useState } from "react";
-import { getBarbeariaAtual } from "@/services/barbearias";
-import { isSupabaseConfigured } from "@/services/supabase";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { isConvexConfigured } from "@/lib/convex";
 import type { Barbearia } from "@/types";
 
 const BARBEARIA_DEMO: Barbearia = {
   id: "00000000-0000-0000-0000-000000000001",
-  nome: "Barbearia Neto",
-  slug: "barbearia-neto",
+  nome: "Studio Natália Braga – Nail Design",
+  slug: "studio-natalia-braga",
   logo_url: null,
-  descricao: "Tradição e estilo em cada corte.",
-  endereco: null,
-  telefone: "(00) 00000-0000",
-  instagram: null,
+  descricao: "Unhas de alto padrão, sofisticação e naturalidade.",
+  endereco: "R. Expedicionário Abílio dos Santos, 0184, Sala 209, Centro, Colatina – ES, 29700-070",
+  telefone: "(27) 99614-0639",
+  instagram: "nataliabraga_nail",
   ativo: true,
   created_at: new Date().toISOString(),
 };
 
 export function useBarbearia() {
-  const [barbearia, setBarbearia] = useState<Barbearia | null>(BARBEARIA_DEMO);
-  const [loading, setLoading] = useState(true);
+  const dados = useQuery(api.barbearias.getAtual);
+  const usandoDemo = !isConvexConfigured;
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setBarbearia(BARBEARIA_DEMO);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await getBarbeariaAtual();
-      setBarbearia(data ?? BARBEARIA_DEMO);
-    } catch {
-      setBarbearia(BARBEARIA_DEMO);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const barbearia: Barbearia = usandoDemo
+    ? BARBEARIA_DEMO
+    : (dados ?? BARBEARIA_DEMO);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { barbearia, loading, refresh };
+  return {
+    barbearia,
+    loading: !usandoDemo && dados === undefined,
+    refresh: () => Promise.resolve(),
+  };
 }

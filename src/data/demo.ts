@@ -4,12 +4,12 @@ import { addDaysISO, todayISO } from "@/utils/date";
 
 export const DEMO_SERVICOS: Servico[] = [
   {
-    id: "demo-corte",
-    nome: "Corte Masculino",
+    id: "demo-manicure",
+    nome: "Manicure",
     descricao:
-      "Corte moderno com máquina e tesoura, finalização com pomada e consultoria de estilo.",
-    preco: 45,
-    duracao_minutos: 40,
+      "Cuidados com as cutículas, lixação, formato dos seus sonhos e esmaltação na cor da sua escolha.",
+    preco: 40,
+    duracao_minutos: 45,
     ativo: true,
     created_at: new Date().toISOString(),
     barbearia_id: BARBEARIA_NETO_ID,
@@ -18,12 +18,26 @@ export const DEMO_SERVICOS: Servico[] = [
     poster_url: null,
   },
   {
-    id: "demo-corte-barba",
-    nome: "Corte + Barba",
+    id: "demo-pedicure",
+    nome: "Pedicure",
     descricao:
-      "Pacote completo: corte na régua e barba alinhada com toalha quente e navalha.",
+      "Pés renovados: banho relaxante, cutículas, esfoliação leve e esmaltação impecável.",
+    preco: 50,
+    duracao_minutos: 60,
+    ativo: true,
+    created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
+    poster_url: null,
+  },
+  {
+    id: "demo-gel",
+    nome: "Esmaltação em Gel",
+    descricao:
+      "Brilho intenso e durabilidade de até 3 semanas com esmalte em gel.",
     preco: 70,
-    duracao_minutos: 70,
+    duracao_minutos: 60,
     ativo: true,
     created_at: new Date().toISOString(),
     barbearia_id: BARBEARIA_NETO_ID,
@@ -32,10 +46,24 @@ export const DEMO_SERVICOS: Servico[] = [
     poster_url: null,
   },
   {
-    id: "demo-barba",
-    nome: "Barba Completa",
+    id: "demo-alongamento",
+    nome: "Alongamento em Gel",
     descricao:
-      "Modelagem da barba com toalha quente, navalha e finalização com óleo de barba.",
+      "Unhas alongadas, leves e resistentes, modeladas no formato ideal para você.",
+    preco: 120,
+    duracao_minutos: 90,
+    ativo: true,
+    created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
+    poster_url: null,
+  },
+  {
+    id: "demo-nail-art",
+    nome: "Nail Art",
+    descricao:
+      "Designs exclusivos: francesinha, degradê, desenhos personalizados e brilhos.",
     preco: 35,
     duracao_minutos: 30,
     ativo: true,
@@ -46,40 +74,12 @@ export const DEMO_SERVICOS: Servico[] = [
     poster_url: null,
   },
   {
-    id: "demo-pigmentacao",
-    nome: "Pigmentação",
+    id: "demo-spa",
+    nome: "Spa dos Pés",
     descricao:
-      "Preenchimento de falhas na barba ou cabelo para um visual cheio e definido.",
-    preco: 30,
-    duracao_minutos: 25,
-    ativo: true,
-    created_at: new Date().toISOString(),
-    barbearia_id: BARBEARIA_NETO_ID,
-    midia_id: null,
-    video_url: null,
-    poster_url: null,
-  },
-  {
-    id: "demo-infantil",
-    nome: "Corte Infantil",
-    descricao:
-      "Corte para a criançada com paciência e cuidado, deixando o pequeno estiloso.",
-    preco: 35,
-    duracao_minutos: 30,
-    ativo: true,
-    created_at: new Date().toISOString(),
-    barbearia_id: BARBEARIA_NETO_ID,
-    midia_id: null,
-    video_url: null,
-    poster_url: null,
-  },
-  {
-    id: "demo-pezinho",
-    nome: "Pezinho",
-    descricao:
-      "Acabamento rápido do contorno e pezinho do cabelo para manter o corte sempre alinhado.",
-    preco: 15,
-    duracao_minutos: 15,
+      "Hidratação profunda, esfoliação e massagem relaxante para os pés.",
+    preco: 85,
+    duracao_minutos: 75,
     ativo: true,
     created_at: new Date().toISOString(),
     barbearia_id: BARBEARIA_NETO_ID,
@@ -100,7 +100,7 @@ export const DEMO_HORARIOS: Horario[] = [
 
 export const DEMO_CONFIG: Configuracao = {
   id: "demo-config",
-  nome_barbearia: "Barbearia Neto",
+  nome_barbearia: "Studio Natália Braga – Nail Design",
   logo_url: null,
   horario_funcionamento: "Terça a Sábado — 09h às 19h",
   dias_disponiveis: [1, 2, 3, 4, 5, 6],
@@ -128,7 +128,7 @@ function demoAgendamento(
     created_at: new Date().toISOString(),
     barbearia_id: BARBEARIA_NETO_ID,
     barbeiro_id: null,
-    barbeiro: { nome: "Neto" },
+    barbeiro: { nome: "Natália Braga" },
     cliente: { nome, telefone },
     servico: {
       nome: servico.nome,
@@ -139,12 +139,12 @@ function demoAgendamento(
 }
 
 export const DEMO_AGENDAMENTOS: Agendamento[] = [
-  demoAgendamento("demo-a1", 0, "09:00", "Rafael Souza", "(11) 98877-1234", "demo-corte-barba", "confirmado"),
-  demoAgendamento("demo-a2", 0, "10:30", "Marcos Lima", "(11) 97766-4321", "demo-corte", "confirmado"),
-  demoAgendamento("demo-a3", 0, "14:00", "Pedro Henrique", "(21) 96655-7788", "demo-barba", "confirmado"),
-  demoAgendamento("demo-a4", 1, "09:30", "João Carlos", "(31) 95544-1122", "demo-pigmentacao", "confirmado"),
-  demoAgendamento("demo-a5", 1, "11:00", "Bruno Ferreira", "(41) 94433-5566", "demo-infantil", "cancelado"),
-  demoAgendamento("demo-a6", 2, "16:30", "Diego Alves", "(11) 93322-8899", "demo-corte-barba", "confirmado"),
+  demoAgendamento("demo-a1", 0, "09:00", "Ana Souza", "(11) 98877-1234", "demo-alongamento", "confirmado"),
+  demoAgendamento("demo-a2", 0, "10:30", "Marina Lima", "(11) 97766-4321", "demo-manicure", "confirmado"),
+  demoAgendamento("demo-a3", 0, "14:00", "Juliana Castro", "(21) 96655-7788", "demo-pedicure", "confirmado"),
+  demoAgendamento("demo-a4", 1, "09:30", "Juliana Castro", "(31) 95544-1122", "demo-gel", "confirmado"),
+  demoAgendamento("demo-a5", 1, "11:00", "Beatriz Ferreira", "(41) 94433-5566", "demo-nail-art", "cancelado"),
+  demoAgendamento("demo-a6", 2, "16:30", "Larissa Alves", "(11) 93322-8899", "demo-spa", "confirmado"),
 ];
 
 export const hojeISODemo = todayISO();

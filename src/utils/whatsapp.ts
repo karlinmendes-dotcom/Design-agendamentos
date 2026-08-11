@@ -4,23 +4,30 @@ import { formatDateWeekday } from "@/utils/date";
 
 /**
  * Monta a mensagem de confirmação do agendamento com todos os dados
- * escolhidos pelo cliente (serviço, valor, barbeiro, data, horário).
+ * escolhidos pelo cliente (serviço, valor, profissional, data, horário)
+ * em um formato bonito, com emojis e divisores.
  */
 export function montarConfirmacaoWhatsApp(agendamento: Agendamento): string {
   const linhas: (string | null)[] = [
-    "✅ *Agendamento confirmado*",
-    "",
-    `🪒 Serviço: ${agendamento.servico?.nome ?? "—"}`,
+    "💅 *Studio Natália Braga – Nail Design — Agendamento Confirmado* 💅",
+    "━━━━━━━━━━━━━━━━━",
+    `✨ *Serviço:* ${agendamento.servico?.nome ?? "—"}`,
     agendamento.servico?.preco != null
-      ? `💰 Valor: ${formatBRL(agendamento.servico.preco)}`
+      ? `💰 *Valor:* ${formatBRL(agendamento.servico.preco)}`
       : null,
     agendamento.barbeiro?.nome
-      ? `✂️ Barbeiro: ${agendamento.barbeiro.nome}`
+      ? `👩‍🎨 *Profissional:* ${agendamento.barbeiro.nome}`
       : null,
-    `📅 Data: ${formatDateWeekday(agendamento.data)}`,
-    `⏰ Horário: ${agendamento.horario}`,
-    "",
-    "Sua cadeira está garantida. Te esperamos! 🪒",
+    `📅 *Data:* ${formatDateWeekday(agendamento.data)}`,
+    `⏰ *Horário:* ${agendamento.horario}`,
+    "━━━━━━━━━━━━━━━━━",
+    `👤 *Cliente:* ${agendamento.cliente?.nome ?? "—"}`,
+    agendamento.cliente?.telefone
+      ? `📞 *WhatsApp:* ${agendamento.cliente.telefone}`
+      : null,
+    "━━━━━━━━━━━━━━━━━",
+    "✅ Seu horário está garantido!",
+    "Te esperamos com muito carinho. 💖",
   ];
   return linhas.filter(Boolean).join("\n");
 }

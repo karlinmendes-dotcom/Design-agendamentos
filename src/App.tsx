@@ -1,11 +1,19 @@
-import { lazy, Suspense, useState } from "react";
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { Home } from "@/pages/Home";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { LoadingState } from "@/components/Feedback";
 import { BottomNav } from "@/components/BottomNav";
 import { SplashScreen } from "@/components/SplashScreen";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { PushListener } from "@/components/PushListener";
 
 // Carregamento sob demanda — reduz o bundle inicial
 const Servicos = lazy(() =>
@@ -42,26 +50,42 @@ const Promocoes = lazy(() =>
 const Contato = lazy(() =>
   import("@/pages/Contato").then((m) => ({ default: m.Contato })),
 );
+const Reagendar = lazy(() =>
+  import("@/pages/Reagendar").then((m) => ({ default: m.Reagendar })),
+);
 
 /** Layout da área do cliente: BottomNav fixa + WhatsApp flutuante. */
 function ClientLayout() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <main className="pb-24 md:pb-24">
         <Outlet />
       </main>
       <BottomNav />
       <WhatsAppFloat />
+      <PushListener />
     </div>
   );
 }
 
 function PageLoader() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <LoadingState label="Carregando..." />
     </div>
   );
+}
+
+/**
+ * Rola para o topo a cada troca de rota — ao clicar no menu, a página
+ * sempre começa pelo início (comportamento esperado em celulares).
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+  return null;
 }
 
 export default function App() {
@@ -71,6 +95,7 @@ export default function App() {
     <ToastProvider>
       {!splashOk && <SplashScreen onFinish={() => setSplashOk(true)} />}
       <BrowserRouter>
+        <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Área do cliente — sem menu superior, com bottom nav */}
@@ -81,6 +106,7 @@ export default function App() {
               <Route path="/promocoes" element={<Promocoes />} />
               <Route path="/contato" element={<Contato />} />
               <Route path="/sucesso" element={<Sucesso />} />
+              <Route path="/reagendar" element={<Reagendar />} />
             </Route>
 
             {/* Dashboard administrativo */}

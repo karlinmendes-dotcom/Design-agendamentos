@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
-import { listBarbeirosAtivos } from "@/services/barbeiros";
-import { isSupabaseConfigured } from "@/services/supabase";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { isConvexConfigured } from "@/lib/convex";
 import type { Barbeiro } from "@/types";
 
-/** Barbeiro demo usado quando o Supabase não está configurado. */
+/** Profissional demo usado quando o Convex não está configurado. */
 const DEMO_BARBEIROS: Barbeiro[] = [
   {
     id: "demo-barbeiro-1",
     barbearia_id: null,
-    nome: "Neto",
-    especialidade: "Cortes clássicos e degradê",
+    nome: "Natália Braga",
+    especialidade: "Nail Designer · unhas de alto padrão",
     avatar_url: null,
     ativo: true,
     created_at: new Date().toISOString(),
@@ -17,33 +17,15 @@ const DEMO_BARBEIROS: Barbeiro[] = [
 ];
 
 export function useBarbeiros() {
-  const [barbeiros, setBarbeiros] = useState<Barbeiro[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dados = useQuery(api.barbeiros.listAtivos);
+  const usandoDemo = !isConvexConfigured;
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setBarbeiros(DEMO_BARBEIROS);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await listBarbeirosAtivos();
-      setBarbeiros(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar barbeiros");
-      setBarbeiros([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const barbeiros: Barbeiro[] = usandoDemo ? DEMO_BARBEIROS : (dados ?? []);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { barbeiros, loading, error, refresh };
+  return {
+    barbeiros,
+    loading: !usandoDemo && dados === undefined,
+    error: null,
+    refresh: () => Promise.resolve(),
+  };
 }

@@ -1,5 +1,5 @@
 /**
- * Vídeos curtos de barbearia (Wikimedia Commons — hotlink estável).
+ * Vídeos curtos de nail design (Mixkit — hotlink estável, licença livre).
  * Usados no hero e nos cards de serviços com reprodução automática,
  * sem áudio e em loop. Cada vídeo tem um poster de fallback.
  */
@@ -9,46 +9,48 @@ export interface VideoSource {
   poster: string;
 }
 
-const POSTER_CORTE =
-  "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=70";
-const POSTER_BARBA =
-  "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=70";
-const POSTER_BARBEARIA =
-  "https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=1600&q=70";
-const POSTER_BARBEIRO =
-  "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=70";
+const POSTER_MANICURE =
+  "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=1200&q=70";
+const POSTER_NAIL_ART =
+  "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=1200&q=70";
+const POSTER_PEDICURE =
+  "https://images.unsplash.com/photo-1599553478940-d7d2d66cf9af?auto=format&fit=crop&w=1200&q=70";
+const POSTER_ESTUDIO =
+  "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1600&q=70";
+const POSTER_ESMALTES =
+  "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=70";
 
-/** Vídeo principal do hero (close do barbeiro trabalhando — leve, 360p). */
+/** Vídeo principal do hero (manicure em ação — leve, 360p). */
 export const VIDEO_HERO: VideoSource = {
-  src: "https://assets.mixkit.co/videos/43242/43242-360.mp4",
-  poster: POSTER_BARBEARIA,
+  src: "https://assets.mixkit.co/videos/15125/15125-360.mp4",
+  poster: POSTER_ESTUDIO,
 };
 
 /** Mapa nome → vídeo para os cards de serviço. */
 export const VIDEO_POR_SERVICO: Record<string, VideoSource> = {
-  "corte masculino": {
-    src: "https://assets.mixkit.co/videos/43221/43221-360.mp4",
-    poster: POSTER_CORTE,
+  manicure: {
+    src: "https://assets.mixkit.co/videos/15806/15806-360.mp4",
+    poster: POSTER_MANICURE,
   },
-  "corte + barba": {
-    src: "https://assets.mixkit.co/videos/43222/43222-360.mp4",
-    poster: POSTER_BARBA,
+  pedicure: {
+    src: "https://assets.mixkit.co/videos/27906/27906-360.mp4",
+    poster: POSTER_PEDICURE,
   },
-  "barba completa": {
-    src: "https://assets.mixkit.co/videos/40130/40130-360.mp4",
-    poster: POSTER_BARBA,
+  esmaltacao: {
+    src: "https://assets.mixkit.co/videos/13084/13084-360.mp4",
+    poster: POSTER_ESMALTES,
   },
-  pigmentação: {
-    src: "https://assets.mixkit.co/videos/40120/40120-360.mp4",
-    poster: POSTER_BARBEIRO,
+  alongamento: {
+    src: "https://assets.mixkit.co/videos/24817/24817-360.mp4",
+    poster: POSTER_NAIL_ART,
   },
-  "corte infantil": {
-    src: "https://assets.mixkit.co/videos/43233/43233-360.mp4",
-    poster: POSTER_BARBEIRO,
+  "nail art": {
+    src: "https://assets.mixkit.co/videos/36905/36905-360.mp4",
+    poster: POSTER_NAIL_ART,
   },
-  pezinho: {
-    src: "https://assets.mixkit.co/videos/40127/40127-360.mp4",
-    poster: POSTER_CORTE,
+  spa: {
+    src: "https://assets.mixkit.co/videos/21970/21970-360.mp4",
+    poster: POSTER_PEDICURE,
   },
 };
 
@@ -62,6 +64,6 @@ export function videoParaServico(nome: string): VideoSource {
     n.includes(k.replace(/\+/g, " ")),
   );
   return (
-    VIDEO_POR_SERVICO[chave ?? "corte masculino"] ?? VIDEO_POR_SERVICO["corte masculino"]
+    VIDEO_POR_SERVICO[chave ?? "manicure"] ?? VIDEO_POR_SERVICO["manicure"]
   );
 }

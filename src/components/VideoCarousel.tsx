@@ -72,7 +72,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
             key={item.id}
             data-card
             to={item.to}
-            className="red-ring-hover group w-[68vw] max-w-72 shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-red-500/50 active:scale-[0.98] sm:w-64"
+            className="red-ring-hover group w-[68vw] max-w-72 shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-gold/50 active:scale-[0.98] sm:w-64"
           >
             <div className="relative aspect-[4/3] overflow-hidden border-b border-border/60">
               <VideoCover
@@ -83,7 +83,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
               {item.badge && (
-                <span className="absolute top-2.5 left-2.5 rounded-full border border-red-500/40 bg-black/70 px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-red-300 uppercase backdrop-blur">
+                <span className="absolute top-2.5 left-2.5 rounded-full border border-white/30 bg-black/60 px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white/90 uppercase backdrop-blur">
                   {item.badge}
                 </span>
               )}
@@ -105,7 +105,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
                 </p>
               )}
               {item.extra && (
-                <p className="text-[11px] font-medium text-red-300/90">{item.extra}</p>
+                <p className="text-[11px] font-medium text-green-800/70">{item.extra}</p>
               )}
               <div className="mt-auto flex items-center justify-between pt-1">
                 {item.preco ? (
@@ -115,7 +115,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
                 ) : (
                   <span className="text-xs text-muted-foreground">Ver detalhes</span>
                 )}
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 transition-transform duration-300 group-hover:translate-x-0.5">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-800/80 transition-transform duration-300 group-hover:translate-x-0.5">
                   Reservar <ArrowRight className="size-3" />
                 </span>
               </div>
@@ -131,7 +131,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
             type="button"
             onClick={() => rolar(-1)}
             aria-label="Anterior"
-            className="absolute top-1/2 -left-2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-black/80 text-white shadow-lg backdrop-blur transition-all hover:border-red-500/60 hover:text-red-400 active:scale-90 md:flex"
+            className="absolute top-1/2 -left-2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-black/80 text-white shadow-lg backdrop-blur transition-all hover:border-gold-light/70 hover:text-gold-light active:scale-90 md:flex"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -139,7 +139,7 @@ export function VideoCarousel({ itens, autoPlayMs = 5000 }: VideoCarouselProps) 
             type="button"
             onClick={() => rolar(1)}
             aria-label="Próximo"
-            className="absolute top-1/2 -right-2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-black/80 text-white shadow-lg backdrop-blur transition-all hover:border-red-500/60 hover:text-red-400 active:scale-90 md:flex"
+            className="absolute top-1/2 -right-2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-black/80 text-white shadow-lg backdrop-blur transition-all hover:border-gold-light/70 hover:text-gold-light active:scale-90 md:flex"
           >
             <ChevronRight className="size-4" />
           </button>
