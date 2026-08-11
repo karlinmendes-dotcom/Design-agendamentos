@@ -1,21 +1,26 @@
+"use node";
+
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
  * Acesso do painel administrativo (/admin).
  *
- * A senha vive AQUI no backend do Convex — nunca vai para o navegador,
- * então não dá para "ver" no código do site. Para trocar a senha, edite a
- * constante abaixo e publique as funções (bun convex dev --once).
+ * A senha vive no backend do Convex — nunca vai para o navegador, então
+ * não dá para "ver" no código do site.
  *
- * Em produção, o ideal é mover para a variável de ambiente ADMIN_SENHA
- * (Convex → Project Settings → Environment Variables) — se ela existir,
- * tem prioridade sobre este valor.
+ * Para trocar a senha sem tocar no código: defina a variável de ambiente
+ * ADMIN_SENHA (Convex → Project Settings → Environment Variables) — ela
+ * tem prioridade sobre o padrão abaixo. Se quiser trocar no código, edite
+ * SENHA_PADRAO e publique as funções (bun convex dev --once).
  */
-const SENHA_ADMIN = "natali2026";
+const SENHA_PADRAO = "natali2026";
 
 /** Confere a senha digitada no login do painel. Retorna true/false. */
 export const verificarSenha = mutation({
   args: { senha: v.string() },
-  handler: async (_ctx, { senha }) => senha === SENHA_ADMIN,
+  handler: async (_ctx, { senha }) => {
+    const esperada = process.env.ADMIN_SENHA ?? SENHA_PADRAO;
+    return senha === esperada;
+  },
 });
