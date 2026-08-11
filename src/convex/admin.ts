@@ -1,6 +1,6 @@
 "use node";
 
-import { mutation } from "./_generated/server";
+import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -17,7 +17,7 @@ import { v } from "convex/values";
 const SENHA_PADRAO = "natali2026";
 
 /** Confere a senha digitada no login do painel. Retorna true/false. */
-export const verificarSenha = mutation({
+export const verificarSenha = action({
   args: { senha: v.string() },
   handler: async (_ctx, { senha }) => {
     const esperada = process.env.ADMIN_SENHA ?? SENHA_PADRAO;

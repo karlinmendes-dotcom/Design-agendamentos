@@ -19,6 +19,10 @@ export function AdminLogin() {
   // Chamada pelo caminho da função ("admin:verificarSenha") para o build
   // não depender dos tipos gerados — a função vive no backend do Convex.
   const convex = useConvex();
+  const verificarSenha = convex.action as (
+    name: string,
+    args: { senha: string },
+  ) => Promise<boolean>;
 
   const [usuario, setUsuario] = useState("admin");
   const [senha, setSenha] = useState("");
@@ -34,12 +38,9 @@ export function AdminLogin() {
     setEnviando(true);
     setErro(null);
     try {
-      const ok: boolean = await convex.mutation(
-        "admin:verificarSenha" as unknown as Parameters<
-          typeof convex.mutation
-        >[0],
-        { senha },
-      );
+      const ok: boolean = await verificarSenha("admin:verificarSenha", {
+        senha,
+      });
       if (ok) {
         entrar();
         navigate(destino, { replace: true });
