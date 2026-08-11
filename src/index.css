@@ -298,6 +298,21 @@
     scroll-behavior: smooth;
   }
 
+  /* Nunca deixa a página rolar de lado: qualquer barra/texto que estoure
+     a largura da tela é cortado na borda em vez de empurrar o conteúdo
+     ("barras que vão até a lateral e continuam até o fim"). `clip` não
+     quebra o sticky (diferente de `hidden`). */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  /* Itens de grid encolhem em vez de estourar a largura da tela (nomes
+     longos, tabelas e barras de gráfico ficam contidos no card). */
+  .grid > * {
+    min-width: 0;
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);

@@ -14,6 +14,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { SplashScreen } from "@/components/SplashScreen";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { PushListener } from "@/components/PushListener";
+import { EntrarCliente } from "@/components/EntrarCliente";
+import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 // Carregamento sob demanda — reduz o bundle inicial
 const Servicos = lazy(() =>
@@ -44,6 +47,9 @@ const Configuracoes = lazy(() =>
     default: m.Configuracoes,
   })),
 );
+const AdminLogin = lazy(() =>
+  import("@/pages/admin/AdminLogin").then((m) => ({ default: m.AdminLogin })),
+);
 const Promocoes = lazy(() =>
   import("@/pages/Promocoes").then((m) => ({ default: m.Promocoes })),
 );
@@ -53,6 +59,22 @@ const Contato = lazy(() =>
 const Reagendar = lazy(() =>
   import("@/pages/Reagendar").then((m) => ({ default: m.Reagendar })),
 );
+
+/**
+ * Porta de entrada da cliente: pede nome + WhatsApp (e autoriza os avisos)
+ * antes de deixar navegar. A tela de /reagendar fica aberta de propósito —
+ * quem tocou na notificação de cancelamento precisa remarcar mesmo sem ter
+ * "entrado" antes.
+ */
+function GateCliente() {
+  const { identidade, salvar } = useIdentidadeCliente();
+  const location = useLocation();
+
+  if (!identidade && !location.pathname.startsWith("/reagendar")) {
+    return <EntrarCliente onEntrar={(d) => salvar(d.nome, d.telefone)} />;
+  }
+  return <Outlet />;
+}
 
 /** Layout da área do cliente: BottomNav fixa + WhatsApp flutuante. */
 function ClientLayout() {
@@ -66,6 +88,22 @@ function ClientLayout() {
       <PushListener />
     </div>
   );
+}
+
+/** Protege o painel: sem login, manda para /admin/entrar. */
+function ExigirAdmin() {
+  const { autenticado } = useAdminAuth();
+  const location = useLocation();
+  if (!autenticado) {
+    return (
+      <Navigate
+        to="/admin/entrar"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
+  return <Outlet />;
 }
 
 function PageLoader() {
@@ -99,22 +137,29 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Área do cliente — sem menu superior, com bottom nav */}
-            <Route element={<ClientLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/servicos" element={<Servicos />} />
-              <Route path="/agendamento" element={<Agendamento />} />
-              <Route path="/promocoes" element={<Promocoes />} />
-              <Route path="/contato" element={<Contato />} />
-              <Route path="/sucesso" element={<Sucesso />} />
-              <Route path="/reagendar" element={<Reagendar />} />
+            <Route element={<GateCliente />}>
+              <Route element={<ClientLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/servicos" element={<Servicos />} />
+                <Route path="/agendamento" element={<Agendamento />} />
+                <Route path="/promocoes" element={<Promocoes />} />
+                <Route path="/contato" element={<Contato />} />
+                <Route path="/sucesso" element={<Sucesso />} />
+                <Route path="/reagendar" element={<Reagendar />} />
+              </Route>
             </Route>
 
-            {/* Dashboard administrativo */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="servicos" element={<ServicosAdmin />} />
-              <Route path="configuracoes" element={<Configuracoes />} />
+            {/* Login do painel — aberto, para a dona entrar */}
+            <Route path="/admin/entrar" element={<AdminLogin />} />
+
+            {/* Dashboard administrativo — protegido por login */}
+            <Route path="/admin" element={<ExigirAdmin />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="servicos" element={<ServicosAdmin />} />
+                <Route path="configuracoes" element={<Configuracoes />} />
+              </Route>
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

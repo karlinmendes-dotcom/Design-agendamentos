@@ -22,6 +22,7 @@ import { useHorarios } from "@/hooks/useHorarios";
 import { useDatasBloqueadas } from "@/hooks/useDatasBloqueadas";
 import { useBarbeiros } from "@/hooks/useBarbeiros";
 import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
+import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -68,13 +69,18 @@ export function Agendamento() {
   const indiceHorario = temBarbeiros ? 3 : 2;
   const indiceDados = temBarbeiros ? 4 : 3;
 
+  // Quem já entrou no app não precisa digitar os dados de novo
+  const { identidade } = useIdentidadeCliente();
+
   const [etapa, setEtapa] = useState(0);
   const [servicoId, setServicoId] = useState<string | null>(servicoParam);
   const [barbeiroId, setBarbeiroId] = useState<string | null>(null);
   const [data, setData] = useState<string | null>(null);
   const [horario, setHorario] = useState<string | null>(null);
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
+  const [nome, setNome] = useState(identidade?.nome ?? "");
+  const [telefone, setTelefone] = useState(
+    identidade?.telefone ? maskPhone(identidade.telefone) : "",
+  );
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
   const dadosAvancouRef = useRef(false);

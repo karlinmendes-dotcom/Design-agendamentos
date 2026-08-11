@@ -21,7 +21,9 @@ export function BarChart({
     <div className="flex flex-col gap-2.5">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-3">
-          <span className={`${maxLabelWidth} shrink-0 text-right text-xs text-muted-foreground`}>
+          <span
+            className={`${maxLabelWidth} shrink-0 truncate text-right text-xs text-muted-foreground`}
+          >
             {item.label}
           </span>
           <div className="h-5 flex-1 overflow-hidden rounded-md bg-muted/40">
@@ -187,7 +189,7 @@ export function BarChartVertical({
   return (
     <div className="group flex h-44 items-end gap-1 sm:gap-2">
       {items.map((item) => (
-        <div key={item.label} className="flex h-full flex-1 flex-col items-center gap-1">
+        <div key={item.label} className="flex h-full min-w-0 flex-1 flex-col items-center gap-1">
           <span className="flex h-4 items-center text-[10px] font-semibold text-muted-foreground tabular-nums opacity-0 transition-opacity group-hover:opacity-100">
             {item.value > 0 ? compactar(item.value) : ""}
           </span>
@@ -206,7 +208,7 @@ export function BarChartVertical({
               }}
             />
           </div>
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="w-full max-w-full shrink-0 truncate text-center text-[10px] text-muted-foreground">
             {item.label}
           </span>
         </div>

@@ -207,3 +207,28 @@ do Freebuff.
 > revelado de novo). A chave de teste foi **removida** e o projeto voltou ao
 > estado original (4 chaves: anon, service_role, publishable, secret).
 > Nenhuma chave em uso foi alterada — o site segue funcionando normalmente.
+
+---
+
+## 10. 🔐 Acessos do app (login e senha)
+
+> Criados em **11/08/2026** — a porta de entrada do cliente (nome + WhatsApp)
+> e o cadeado do painel administrativo. **Trocar a senha do painel = editar
+> `src/convex/admin.ts`** (constante `SENHA_ADMIN`) e publicar as funções
+> (`bun convex dev --once`).
+
+| Acesso | Usuário | Senha / dados |
+|---|---|---|
+| **Painel admin** (`/admin`) | `admin` | Senha: `natali2026` |
+| **Cliente de teste** (para o teste de push) | Nome: `Ana Paula Teste` | WhatsApp: `(11) 98888-7766` |
+
+**Como funciona:**
+
+- **Cliente:** ao abrir o site, a pessoa digita nome + WhatsApp uma vez (fica
+  salvo no aparelho dela). No mesmo toque, o navegador pede "Permitir
+  notificações" e o token FCM é salvo no banco vinculado ao telefone.
+- **Admin:** `/admin` agora pede usuário e senha (conferidos no backend
+  Convex — a senha não fica no código do site). Depois de entrar, o painel
+  fica liberado no aparelho; o botão **Sair** fica no menu lateral.
+- A senha do painel é a mesma para o app todo (por enquanto) — quem tem a
+  senha abre o painel de qualquer aparelho.

@@ -34,16 +34,16 @@
 | `lib/utils.ts` | `cn()` (clsx + tailwind-merge) |
 | `types/index.ts` | Tipos de domínio + `BARBEARIA_NETO_ID` (tenant fixo) |
 | `data/demo.ts` | Dados de demonstração (fallback sem Convex) |
-| `hooks/` | `useServicos`, `useHorarios`, `useConfiguracao`, `useDatasBloqueadas`, `useAgendamentos`, `useBarbearia`, `useBarbeiros`, `useClientes` (queries reativas + fallback demo) |
+| `hooks/` | `useServicos`, `useHorarios`, `useConfiguracao`, `useDatasBloqueadas`, `useAgendamentos`, `useBarbearia`, `useBarbeiros`, `useClientes` (queries reativas + fallback demo) · `useIdentidadeCliente` (nome+WhatsApp da cliente no aparelho) · `useAdminAuth` (sessão do painel) |
 | `contexts/ToastContext.tsx` | Notificações |
 | `layouts/AdminLayout.tsx` | Sidebar + topbar do painel `/admin` |
-| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar) |
+| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar), **`EntrarCliente`** (porta de entrada: nome+WhatsApp+permissão de notificação) |
 | `components/ui/` | shadcn/ui: button, card, dialog, input, label, select, switch, table, textarea, badge, skeleton |
 | `pages/` | Cliente: `Home`, `Servicos`, `Agendamento`, `Promocoes`, `Contato`, `Sucesso`, `Reagendar` (rota aberta ao tocar na notificação) |
-| `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `Configuracoes` |
+| `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `Configuracoes`, **`AdminLogin`** (login do painel) |
 | `utils/` | `slots` (motor de horários), `whatsapp` (confirmação), `date`, `format`, `phone`, `media` (resolução de mídia), `videos` (fallback Mixkit), `serviceIcon` |
 
-**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes`
+**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente entra com nome+WhatsApp (`EntrarCliente`); `/admin*` exige login (`AdminLogin` + mutation `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada no CHAVES.md §10)
 
 **Push FCM:** `public/firebase-messaging-sw.js` (service worker — recebe o pop até com o app fechado e abre `/reagendar` ao tocar)
 
@@ -54,6 +54,7 @@
 | `schema.ts` | Tabelas: `barbearias`, `configuracoes`, `servicos`, `barbeiros`, `horarios`, `clientes`, `midias`, `datasBloqueadas`, `agendamentos`, `pushTokens` |
 | `agendamentos.ts` | `list`, `listPorData`, `listOcupados`, **`criar`** (valida dia ativo + data bloqueada + expediente + anti-sobreposição), `atualizarStatus`, **`cancelarDia`** (cancela o dia inteiro + retorna telefones dos afetados) |
 | `pushTokens.ts` | `registrar`, `remover`, `listarPorTelefones` (tokens FCM por telefone) |
+| `admin.ts` | **`verificarSenha`** (login do painel `/admin` — senha no backend, nunca no navegador) |
 | `push.ts` | **"use node"** (runtime Node): `enviarParaTelefones` (envio FCM em lote com `FIREBASE_SERVICE_ACCOUNT`), `cancelarDiaCompleto` (cancela + notifica) |
 | `barbearias.ts` | `getAtual`, `salvar` (nome/contato/Instagram/endereço) |
 | `barbeiros.ts` | `listAtivos` (profissional do estúdio) |

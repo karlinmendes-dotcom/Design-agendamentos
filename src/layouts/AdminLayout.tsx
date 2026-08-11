@@ -1,9 +1,10 @@
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ExternalLink,
   Hand,
   LayoutDashboard,
+  LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { AssistenteAdmin } from "@/components/admin/AssistenteAdmin";
 import { isConvexConfigured } from "@/lib/convex";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const ADMIN_LINKS = [
   { to: "/admin", label: "Visão geral", icon: LayoutDashboard, end: true },
@@ -34,6 +36,13 @@ export function AdminLayout() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [colapsado, setColapsado] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { sair } = useAdminAuth();
+
+  const handleSair = () => {
+    sair();
+    navigate("/", { replace: true });
+  };
 
   useEffect(() => {
     setMenuAberto(false);
@@ -106,24 +115,45 @@ export function AdminLayout() {
           ))}
         </nav>
 
-        <div className={cn("border-t border-border/60 p-3", colapsado && "flex justify-center")}>
+        <div className={cn("border-t border-border/60 p-3", colapsado && "flex flex-col items-center gap-1")}>
           {colapsado ? (
-            <button
-              type="button"
-              onClick={() => setColapsado(false)}
-              aria-label="Expandir menu"
-              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-gold-light"
-            >
-              <PanelLeftOpen className="size-4" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setColapsado(false)}
+                aria-label="Expandir menu"
+                className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-gold-light"
+              >
+                <PanelLeftOpen className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleSair}
+                aria-label="Sair do painel"
+                title="Sair"
+                className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </>
           ) : (
-            <Link
-              to="/"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-cream"
-            >
-              <ExternalLink className="size-4" />
-              Ver site
-            </Link>
+            <div className="space-y-1">
+              <Link
+                to="/"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-cream"
+              >
+                <ExternalLink className="size-4" />
+                Ver site
+              </Link>
+              <button
+                type="button"
+                onClick={handleSair}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+              >
+                <LogOut className="size-4" />
+                Sair
+              </button>
+            </div>
           )}
         </div>
       </aside>
@@ -164,6 +194,15 @@ export function AdminLayout() {
               </NavLink>
             ))}
           </nav>
+
+          <button
+            type="button"
+            onClick={handleSair}
+            className="mt-1 flex w-full items-center gap-3 rounded-lg border-t border-border/70 px-3 py-2.5 pt-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+          >
+            <LogOut className="size-4" />
+            Sair do painel
+          </button>
         </div>
       )}
 
