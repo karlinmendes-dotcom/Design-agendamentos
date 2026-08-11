@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { BellRing, CheckCircle2, Lock, Sparkles } from "lucide-react";
+import { BellRing, CheckCircle2, Lock, Sparkles, UserPlus } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isValidPhone, maskPhone, onlyDigits } from "@/utils/phone";
+import { maskPhone, onlyDigits } from "@/utils/phone";
 import { obterTokenPush, registrarSW } from "@/lib/firebase";
 
 interface EntrarClienteProps {
@@ -16,22 +16,25 @@ interface EntrarClienteProps {
 type StatusAviso = "idle" | "ativando" | "ok" | "sem-permissao";
 
 /**
- * Porta de entrada do app: a cliente entra com nome + WhatsApp e, no mesmo
- * toque, autoriza os avisos (o "pop" de confirmação e cancelamento). É aqui
- * que o navegador pede a permissão de notificação — só funciona dentro de
- * um toque do usuário (regra de segurança de todos os navegadores).
+ * Porta de entrada do app = CRIAÇÃO DE CONTA da cliente: nome + WhatsApp.
+ * Qualquer conta criada é validada automaticamente como cliente do estúdio
+ * (registrada no Convex via clientes.findOrCreate) — sem aprovação manual.
+ * No mesmo toque, o navegador pede a permissão de notificação (regra de
+ * segurança: só funciona dentro de um toque do usuário) para a cliente
+ * receber confirmação e avisos de cancelamento.
  */
 export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
   const registrarTokenPush = useMutation(api.pushTokens.registrar);
+  const criarConta = useMutation(api.clientes.findOrCreate);
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [statusAviso, setStatusAviso] = useState<StatusAviso>("idle");
 
-  const telefoneValido = isValidPhone(telefone);
-  const dadosOk = nome.trim().length >= 2 && telefoneValido;
+  // Qualquer telefone com ao menos 8 números cria a conta — sem barreiras
+  const dadosOk = nome.trim().length >= 2 && onlyDigits(telefone).length >= 8;
 
-  const handleEntrar = async (e: FormEvent) => {
+  const handleCriarConta = async (e: FormEvent) => {
     e.preventDefault();
     if (!dadosOk || enviando) return;
     setEnviando(true);
@@ -68,7 +71,18 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
       setStatusAviso("sem-permissao");
     }
 
-    // 3) Entra no app de qualquer forma
+    // 3) Cria/valida a conta no cadastro do estúdio (qualquer conta é aceita)
+    try {
+      await criarConta({
+        nome: nome.trim(),
+        telefone: onlyDigits(telefone),
+      });
+    } catch {
+      // Se o banco falhar, a pessoa ainda entra — o cadastro é refeito no
+      // momento do agendamento.
+    }
+
+    // 4) Entra no app
     onEntrar({ nome: nome.trim(), telefone: onlyDigits(telefone) });
   };
 
@@ -87,22 +101,22 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
             <Sparkles className="size-3.5" />
           </div>
           <h1 className="font-display mt-3 text-3xl font-extrabold text-foreground">
-            Entre para agendar
+            Crie sua conta
           </h1>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            Informe seu nome e WhatsApp para reservar seu horário e receber
-            os avisos do estúdio.
+            Seu nome e WhatsApp criam sua conta de cliente no estúdio — e
+            você já recebe confirmação e avisos por aqui.
           </p>
         </div>
 
         <form
-          onSubmit={(e) => void handleEntrar(e)}
+          onSubmit={(e) => void handleCriarConta(e)}
           className="rounded-3xl border border-gold/25 bg-white/70 p-6 shadow-[0_24px_70px_-30px_rgba(64,53,1,0.35)] backdrop-blur"
         >
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="nome" className="text-card-foreground">
-                Nome completo
+                Seu nome
               </Label>
               <Input
                 id="nome"
@@ -127,9 +141,9 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
                 autoComplete="tel"
                 maxLength={16}
               />
-              {telefone && !telefoneValido && (
+              {telefone && onlyDigits(telefone).length < 8 && (
                 <p className="text-xs text-red-600">
-                  Informe um telefone válido com DDD.
+                  Informe seu número com DDD (mínimo 8 números).
                 </p>
               )}
             </div>
@@ -139,7 +153,14 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
               disabled={!dadosOk || enviando}
               className="w-full py-6 text-base"
             >
-              {enviando ? "Entrando..." : "Entrar no estúdio"}
+              {enviando ? (
+                "Criando sua conta..."
+              ) : (
+                <>
+                  <UserPlus className="size-4" />
+                  Criar minha conta
+                </>
+              )}
             </Button>
           </div>
 
@@ -147,14 +168,13 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
           {statusAviso === "ativando" && (
             <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
               <BellRing className="size-3.5 animate-pulse text-gold" />
-              Ativando seus avisos...
+              Criando sua conta e ativando os avisos...
             </p>
           )}
           {statusAviso === "ok" && (
             <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs font-medium text-green-700">
               <CheckCircle2 className="size-3.5" />
-              Avisos ativados! Você recebe confirmação e cancelamento por
-              aqui. 💛
+              Conta criada e avisos ativados! 💛
             </p>
           )}
           {statusAviso === "sem-permissao" && (
@@ -167,8 +187,7 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-muted-foreground/80">
             <Lock className="size-3 shrink-0" />
-            Seus dados ficam só no seu aparelho e são usados para identificar
-            seu horário.
+            Sua conta fica salva no cadastro do estúdio e no seu aparelho.
           </p>
         </form>
       </div>

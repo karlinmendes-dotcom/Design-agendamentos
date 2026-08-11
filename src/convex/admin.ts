@@ -14,7 +14,7 @@ import { v } from "convex/values";
  * tem prioridade sobre o padrão abaixo. Se quiser trocar no código, edite
  * SENHA_PADRAO e publique as funções (bun convex dev --once).
  */
-const SENHA_PADRAO = "natali2026";
+const SENHA_PADRAO = "123456";
 
 /** Confere a senha digitada no login do painel. Retorna true/false. */
 export const verificarSenha = action({

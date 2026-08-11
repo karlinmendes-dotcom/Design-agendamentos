@@ -212,21 +212,26 @@ do Freebuff.
 
 ## 10. 🔐 Acessos do app (login e senha)
 
-> Criados em **11/08/2026** — a porta de entrada do cliente (nome + WhatsApp)
-> e o cadeado do painel administrativo. **Trocar a senha do painel = editar
-> `src/convex/admin.ts`** (constante `SENHA_ADMIN`) e publicar as funções
-> (`bun convex dev --once`).
+> Atualizado em **11/08/2026** — a porta de entrada do cliente virou
+> **CRIAÇÃO DE CONTA** (nome + WhatsApp; qualquer conta criada é validada
+> automaticamente como cliente via `clientes.findOrCreate`) e o painel
+> administrativo tem cadeado. **Trocar a senha do painel = editar
+> `src/convex/admin.ts`** (constante `SENHA_PADRAO`) e publicar as funções
+> (`CONVEX_DEPLOY_KEY='dev:hardy-aardvark-221|...' bun convex dev --once`).
 
 | Acesso | Usuário | Senha / dados |
 |---|---|---|
-| **Painel admin** (`/admin`) | `admin` | Senha: `natali2026` |
+| **Painel admin** (`/admin`) | `admin` | Senha: `123456` |
 | **Cliente de teste** (para o teste de push) | Nome: `Ana Paula Teste` | WhatsApp: `(11) 98888-7766` |
 
 **Como funciona:**
 
-- **Cliente:** ao abrir o site, a pessoa digita nome + WhatsApp uma vez (fica
-  salvo no aparelho dela). No mesmo toque, o navegador pede "Permitir
-  notificações" e o token FCM é salvo no banco vinculado ao telefone.
+- **Cliente — criar conta:** ao abrir o site, a pessoa cria a conta com nome
+  + WhatsApp (qualquer nome/número com 8+ dígitos é aceito — sem aprovação
+  manual). A conta é registrada/validada no cadastro do estúdio
+  (`clientes.findOrCreate`) e fica salva no aparelho dela. No mesmo toque, o
+  navegador pede "Permitir notificações" e o token FCM é salvo no banco
+  vinculado ao telefone.
 - **Admin:** `/admin` agora pede usuário e senha (conferidos no backend
   Convex — a senha não fica no código do site). Depois de entrar, o painel
   fica liberado no aparelho; o botão **Sair** fica no menu lateral.
