@@ -85,6 +85,16 @@ export default defineSchema({
     ativo: v.boolean(),
   }),
 
+  // ---------- Administradores do painel (login /admin) ----------
+  // A dona adiciona novos direto no dashboard (Convex → Data → admins →
+  // Insert) — libera no login automaticamente, sem mexer em código.
+  admins: defineTable({
+    usuario: v.string(),
+    senha: v.string(),
+    nome: v.optional(v.string()),
+    ativo: v.boolean(),
+  }).index("por_usuario", ["usuario"]),
+
   // ---------- Uso da assistente Gemini (cota mensal do dashboard) ----------
   gemini_uso: defineTable({
     mes: v.string(), // YYYY-MM
