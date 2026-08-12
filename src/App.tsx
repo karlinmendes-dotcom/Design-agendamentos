@@ -47,6 +47,9 @@ const Configuracoes = lazy(() =>
     default: m.Configuracoes,
   })),
 );
+const Equipe = lazy(() =>
+  import("@/pages/admin/Equipe").then((m) => ({ default: m.Equipe })),
+);
 const AdminLogin = lazy(() =>
   import("@/pages/admin/AdminLogin").then((m) => ({ default: m.AdminLogin })),
 );
@@ -159,6 +162,7 @@ export default function App() {
                 <Route path="agenda" element={<Agenda />} />
                 <Route path="servicos" element={<ServicosAdmin />} />
                 <Route path="configuracoes" element={<Configuracoes />} />
+                <Route path="equipe" element={<Equipe />} />
               </Route>
             </Route>
 

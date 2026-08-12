@@ -44,7 +44,7 @@ export function AdminLogin() {
         senha,
       });
       if (ok) {
-        entrar();
+        entrar(usuario, senha);
         navigate(destino, { replace: true });
       } else {
         setErro("Usuário ou senha incorretos.");
