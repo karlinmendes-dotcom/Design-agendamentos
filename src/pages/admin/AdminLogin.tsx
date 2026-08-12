@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useConvex } from "convex/react";
+import { useMutation } from "convex/react";
 import { Eye, EyeOff, KeyRound, Lock, ShieldCheck, UserRound } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,13 +17,7 @@ export function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { entrar } = useAdminAuth();
-  // Chamada pelo caminho da função ("admin:verificarSenha") para o build
-  // não depender dos tipos gerados — a função vive no backend do Convex.
-  const convex = useConvex();
-  const verificarSenha = convex.mutation as (
-    name: string,
-    args: { usuario: string; senha: string },
-  ) => Promise<boolean>;
+  const verificarSenha = useMutation(api.admin.verificarSenha);
 
   const [usuario, setUsuario] = useState("admin");
   const [senha, setSenha] = useState("");
@@ -39,10 +34,7 @@ export function AdminLogin() {
     setEnviando(true);
     setErro(null);
     try {
-      const ok: boolean = await verificarSenha("admin:verificarSenha", {
-        usuario,
-        senha,
-      });
+      const ok = await verificarSenha({ usuario, senha });
       if (ok) {
         entrar(usuario, senha);
         navigate(destino, { replace: true });

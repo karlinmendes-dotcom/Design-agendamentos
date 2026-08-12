@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useConvex } from "convex/react";
+import { useMutation } from "convex/react";
 import {
   KeyRound,
   Loader2,
@@ -9,6 +9,8 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,18 +39,13 @@ import {
 import { formatDateShort } from "@/utils/date";
 
 interface Membro {
-  id: string;
+  id: Id<"admins">;
   usuario: string;
   senha: string;
   nome: string | null;
   ativo: boolean;
   criado_em: string;
 }
-
-type Chamada = <T>(
-  name: string,
-  args: Record<string, unknown>,
-) => Promise<T>;
 
 const SEM_PERMISSAO = "Sem permissão para gerenciar a equipe.";
 
@@ -61,8 +58,11 @@ function erroBonito(msg: string): string {
 }
 
 export function Equipe() {
-  const convex = useConvex();
-  const chamada = convex.mutation as unknown as Chamada;
+  const listar = useMutation(api.admin.listar);
+  const criar = useMutation(api.admin.criar);
+  const atualizar = useMutation(api.admin.atualizar);
+  const remover = useMutation(api.admin.remover);
+  const verificarSenha = useMutation(api.admin.verificarSenha);
 
   const [creds, setCreds] = useState(obterCredenciaisAdmin);
   const [desbloqueio, setDesbloqueio] = useState({ usuario: "", senha: "" });
@@ -84,7 +84,7 @@ export function Equipe() {
     setCarregando(true);
     setErro(null);
     try {
-      const lista = await chamada<Membro[]>("admin:listar", {
+      const lista = await listar({
         adminUsuario: creds.usuario,
         adminSenha: creds.senha,
       });
@@ -94,7 +94,7 @@ export function Equipe() {
     } finally {
       setCarregando(false);
     }
-  }, [creds, chamada]);
+  }, [creds, listar]);
 
   useEffect(() => {
     void carregar();
@@ -104,7 +104,7 @@ export function Equipe() {
     e.preventDefault();
     setErroDesbloqueio(null);
     try {
-      const ok = await chamada<boolean>("admin:verificarSenha", {
+      const ok = await verificarSenha({
         usuario: desbloqueio.usuario,
         senha: desbloqueio.senha,
       });
@@ -142,7 +142,7 @@ export function Equipe() {
     setErroForm(null);
     try {
       if (editando) {
-        await chamada<{ ok: boolean }>("admin:atualizar", {
+        await atualizar({
           adminUsuario: creds.usuario,
           adminSenha: creds.senha,
           id: editando.id,
@@ -152,7 +152,7 @@ export function Equipe() {
           ativo: formAtivo,
         });
       } else {
-        await chamada<{ ok: boolean }>("admin:criar", {
+        await criar({
           adminUsuario: creds.usuario,
           adminSenha: creds.senha,
           usuario: form.usuario,
@@ -173,7 +173,7 @@ export function Equipe() {
     if (!creds) return;
     setErro(null);
     try {
-      await chamada<{ ok: boolean }>("admin:atualizar", {
+      await atualizar({
         adminUsuario: creds.usuario,
         adminSenha: creds.senha,
         id: m.id,
@@ -199,7 +199,7 @@ export function Equipe() {
     }
     setErro(null);
     try {
-      await chamada<{ ok: boolean }>("admin:remover", {
+      await remover({
         adminUsuario: creds.usuario,
         adminSenha: creds.senha,
         id: m.id,
