@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarCheck, Clock } from "lucide-react";
+import { ArrowRight, CalendarCheck, Clock, Sparkles } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { ServiceCard } from "@/components/ServiceCard";
 import { ErrorState } from "@/components/Feedback";
@@ -10,7 +10,10 @@ import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 
 export function Servicos() {
-  const { servicos, loading, error, refresh, usandoDemo } = useServicos(true);
+  const { servicos, loading, error, refresh, usandoDemo } = useServicos(
+    true,
+    "servico",
+  );
   const { horarioFuncionamento } = useConfiguracao();
 
   return (
@@ -72,6 +75,25 @@ export function Servicos() {
             ))}
           </div>
         )}
+
+        <Reveal className="mt-8">
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-gold/30 bg-gold/10 px-6 py-6 text-center">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-foreground uppercase">
+              <Sparkles className="size-4 text-gold" />
+              Quer economizar no conjunto?
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Nossos combos unem os serviços favoritos da casa em um só
+              agendamento, com preço especial.
+            </p>
+            <Button asChild variant="outline" className="border-gold/50 text-gold hover:bg-gold/10">
+              <Link to="/promocoes">
+                Ver combos e promoções
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+        </Reveal>
 
         <Reveal className="mt-14">
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-gold/25 bg-gradient-to-r from-graphite to-onyx p-8 text-center sm:flex-row sm:justify-between sm:text-left">

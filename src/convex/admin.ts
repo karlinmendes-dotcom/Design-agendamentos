@@ -1,4 +1,5 @@
 import { mutation, type MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 
 /**
@@ -88,12 +89,24 @@ export const criar = mutation({
     await ctx.db.insert("admins", {
       usuario,
       senha: args.senha,
-      nome: args.nome ?? undefined,
+      nome: args.nome?.trim() || undefined,
       ativo: true,
     });
     return { ok: true };
   },
 });
+
+/** Quantos admins ativos restariam sem o alvo? (protege o último admin) */
+async function restariamAtivosAlemDe(
+  ctx: MutationCtx,
+  id: Id<"admins"> | null,
+): Promise<number> {
+  const docs = await ctx.db.query("admins").collect();
+  return docs.filter((d) => {
+    if (id && d._id === id) return false;
+    return d.ativo !== false;
+  }).length;
+}
 
 /** Atualiza um administrador (nome, senha, acesso) — só para quem já é admin. */
 export const atualizar = mutation({
@@ -115,10 +128,18 @@ export const atualizar = mutation({
     if (args.senha.length < 4) {
       throw new Error("A senha precisa ter pelo menos 4 caracteres.");
     }
+    if (!args.ativo) {
+      const restantes = await restariamAtivosAlemDe(ctx, args.id);
+      if (restantes < 1) {
+        throw new Error(
+          "Não é possível desativar o último administrador ativo — o painel ficaria sem acesso.",
+        );
+      }
+    }
     await ctx.db.patch(args.id, {
       usuario,
       senha: args.senha,
-      nome: args.nome ?? undefined,
+      nome: args.nome?.trim() || undefined,
       ativo: args.ativo,
     });
     return { ok: true };
@@ -136,7 +157,71 @@ export const remover = mutation({
     if (!(await ehAdmin(ctx, args.adminUsuario, args.adminSenha))) {
       throw new Error("Sem permissão para gerenciar a equipe.");
     }
+    const restantes = await restariamAtivosAlemDe(ctx, args.id);
+    if (restantes < 1) {
+      throw new Error(
+        "Não é possível remover o último administrador ativo — o painel ficaria sem acesso.",
+      );
+    }
     await ctx.db.delete(args.id);
+    return { ok: true };
+  },
+});
+
+/**
+ * Cria um admin sem exigir credenciais — usado pela assistente Gemini
+ * (a action roda no servidor e não tem a senha do admin na mão). Mesma
+ * validação da tela Equipe: usuário único + senha >= 4 caracteres.
+ */
+export const criarViaAssistente = mutation({
+  args: {
+    usuario: v.string(),
+    senha: v.string(),
+    nome: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const usuario = args.usuario.trim().toLowerCase();
+    if (usuario.length < 2) throw new Error("Informe um usuário válido.");
+    if (args.senha.length < 4) {
+      throw new Error("A senha precisa ter pelo menos 4 caracteres.");
+    }
+    const existente = await ctx.db
+      .query("admins")
+      .withIndex("por_usuario", (q) => q.eq("usuario", usuario))
+      .first();
+    if (existente) {
+      throw new Error("Já existe um administrador com esse usuário.");
+    }
+    await ctx.db.insert("admins", {
+      usuario,
+      senha: args.senha,
+      nome: args.nome?.trim() || undefined,
+      ativo: true,
+    });
+    return { ok: true };
+  },
+});
+
+/**
+ * Remove um admin sem exigir credenciais — usado pela assistente Gemini.
+ * Mantém a proteção do último admin ativo (o painel nunca fica travado).
+ */
+export const removerViaAssistente = mutation({
+  args: { usuario: v.string() },
+  handler: async (ctx, { usuario }) => {
+    const u = usuario.trim().toLowerCase();
+    const doc = await ctx.db
+      .query("admins")
+      .withIndex("por_usuario", (q) => q.eq("usuario", u))
+      .first();
+    if (!doc) throw new Error("Administrador não encontrado.");
+    const restantes = await restariamAtivosAlemDe(ctx, doc._id);
+    if (restantes < 1) {
+      throw new Error(
+        "Não é possível remover o último administrador ativo — o painel ficaria sem acesso.",
+      );
+    }
+    await ctx.db.delete(doc._id);
     return { ok: true };
   },
 });

@@ -11,6 +11,7 @@ function mapBarbearia(doc: {
   endereco?: string;
   telefone?: string;
   instagram?: string;
+  instagram_url?: string;
   ativo: boolean;
 }) {
   return {
@@ -22,6 +23,7 @@ function mapBarbearia(doc: {
     endereco: doc.endereco ?? null,
     telefone: doc.telefone ?? null,
     instagram: doc.instagram ?? null,
+    instagram_url: doc.instagram_url ?? null,
     ativo: doc.ativo,
     created_at: new Date(doc._creationTime).toISOString(),
   };
@@ -43,6 +45,7 @@ export const salvar = mutation({
     descricao: v.optional(v.union(v.string(), v.null())),
     telefone: v.optional(v.union(v.string(), v.null())),
     instagram: v.optional(v.union(v.string(), v.null())),
+    instagram_url: v.optional(v.union(v.string(), v.null())),
     endereco: v.optional(v.union(v.string(), v.null())),
     logo_url: v.optional(v.union(v.string(), v.null())),
   },
@@ -55,6 +58,8 @@ export const salvar = mutation({
     if (args.descricao !== undefined) patch.descricao = args.descricao ?? "";
     if (args.telefone !== undefined) patch.telefone = args.telefone ?? "";
     if (args.instagram !== undefined) patch.instagram = args.instagram ?? "";
+    if (args.instagram_url !== undefined)
+      patch.instagram_url = args.instagram_url ?? "";
     if (args.endereco !== undefined) patch.endereco = args.endereco ?? "";
     if (args.logo_url !== undefined) patch.logo_url = args.logo_url ?? "";
     await ctx.db.patch(existente._id, patch);

@@ -38,6 +38,7 @@ export function Configuracoes() {
   const [descricaoHorarios, setDescricaoHorarios] = useState("");
   const [telefone, setTelefone] = useState("");
   const [instagram, setInstagram] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
   const [endereco, setEndereco] = useState("");
   const [dias, setDias] = useState<Record<number, DiaForm>>({});
   const [salvando, setSalvando] = useState(false);
@@ -57,6 +58,7 @@ export function Configuracoes() {
     if (barbearia) {
       setTelefone(barbearia.telefone ?? "");
       setInstagram(barbearia.instagram ?? "");
+      setInstagramUrl(barbearia.instagram_url ?? "");
       setEndereco(barbearia.endereco ?? "");
     }
     const next: Record<number, DiaForm> = {};
@@ -132,6 +134,7 @@ export function Configuracoes() {
       await salvarBarbearia({
         telefone: telefone.trim() || null,
         instagram: instagram.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
         endereco: endereco.trim() || null,
       });
 
@@ -244,13 +247,30 @@ export function Configuracoes() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="c-instagram">Instagram</Label>
+              <Label htmlFor="c-instagram">Instagram (nome exibido)</Label>
               <Input
                 id="c-instagram"
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
                 placeholder="@naildesignstudio (sem o @)"
               />
+              <p className="text-xs text-muted-foreground">
+                É o nome que aparece no rodapé e na página de contato.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-instagram-url">Link do Instagram (clique)</Label>
+              <Input
+                id="c-instagram-url"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://www.instagram.com/sua_conta"
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Cole o link completo do seu perfil. É ele que abre quando a
+                cliente toca no Instagram. Vazio = usa o nome acima.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="c-endereco">Endereço</Label>

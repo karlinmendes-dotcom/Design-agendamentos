@@ -12,6 +12,8 @@ export interface Barbearia {
   endereco: string | null;
   telefone: string | null;
   instagram: string | null;
+  /** Link completo do Instagram — destino real do clique (roda pé/contato). */
+  instagram_url: string | null;
   ativo: boolean;
   created_at: string;
 }
@@ -56,6 +58,9 @@ export interface Servico {
   midia_id: string | null;
   video_url: string | null;
   poster_url: string | null;
+  // Combo: serviço agrupado (mesmo motor de agendamento)
+  is_combo: boolean;
+  itens_combo: string[];
 }
 
 export interface Cliente {
@@ -119,6 +124,8 @@ export interface ServicoFormData {
   duracao_minutos: string;
   video_url: string;
   poster_url: string;
+  is_combo: boolean;
+  itens_combo: string[];
 }
 
 export interface NovoAgendamento {

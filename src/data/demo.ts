@@ -16,6 +16,8 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
   },
   {
     id: "demo-pedicure",
@@ -30,6 +32,8 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
   },
   {
     id: "demo-gel",
@@ -44,6 +48,8 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
   },
   {
     id: "demo-alongamento",
@@ -58,6 +64,8 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
   },
   {
     id: "demo-nail-art",
@@ -72,6 +80,8 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
   },
   {
     id: "demo-spa",
@@ -86,6 +96,57 @@ export const DEMO_SERVICOS: Servico[] = [
     midia_id: null,
     video_url: null,
     poster_url: null,
+    is_combo: false,
+    itens_combo: [],
+  },
+  // ---- Combos de exemplo (is_combo=true — mesmo motor de agendamento) ----
+  {
+    id: "demo-combo-manicure-pedicure",
+    nome: "Combo Manicure + Pedicure",
+    descricao:
+      "O clássico da casa: mãos e pés impecáveis no mesmo dia, com atendimento exclusivo.",
+    preco: 80,
+    duracao_minutos: 100,
+    ativo: true,
+    created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
+    poster_url: null,
+    is_combo: true,
+    itens_combo: ["Manicure", "Pedicure"],
+  },
+  {
+    id: "demo-combo-spa",
+    nome: "Dia de Spa Completo",
+    descricao:
+      "Manicure + pedicure + spa dos pés para renovar corpo e mente em uma única visita.",
+    preco: 160,
+    duracao_minutos: 180,
+    ativo: true,
+    created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
+    poster_url: null,
+    is_combo: true,
+    itens_combo: ["Manicure", "Pedicure", "Spa dos Pés"],
+  },
+  {
+    id: "demo-combo-unhas-dos-sonhos",
+    nome: "Unhas dos Sonhos",
+    descricao:
+      "Alongamento em gel + nail art para um visual marcante e duradouro.",
+    preco: 145,
+    duracao_minutos: 120,
+    ativo: true,
+    created_at: new Date().toISOString(),
+    barbearia_id: BARBEARIA_NETO_ID,
+    midia_id: null,
+    video_url: null,
+    poster_url: null,
+    is_combo: true,
+    itens_combo: ["Alongamento em Gel", "Nail Art"],
   },
 ];
 

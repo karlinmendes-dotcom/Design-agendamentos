@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  limparCredenciaisAdmin,
   obterCredenciaisAdmin,
   salvarCredenciaisAdmin,
 } from "@/hooks/useAdminAuth";
@@ -54,6 +55,9 @@ function erroBonito(msg: string): string {
   if (msg.includes("já existe")) return "Já existe um administrador com esse usuário.";
   if (msg.includes("pelo menos 4")) return "A senha precisa ter pelo menos 4 caracteres.";
   if (msg.includes("usuário válido")) return "Informe um usuário válido.";
+  if (msg.includes("último administrador"))
+    return "Não é possível remover ou desativar o último administrador ativo — o painel ficaria sem acesso.";
+  if (msg.includes("própria conta")) return msg;
   return msg;
 }
 
@@ -79,6 +83,16 @@ export function Equipe() {
   const [salvando, setSalvando] = useState(false);
   const [erroForm, setErroForm] = useState<string | null>(null);
 
+  // Credenciais antigas/desatualizadas no aparelho → devolve para o
+  // desbloqueio com uma explicação (a senha pode ter sido trocada).
+  const perderPermissao = useCallback(() => {
+    limparCredenciaisAdmin();
+    setCreds(null);
+    setErroDesbloqueio(
+      "O acesso salvo neste aparelho não é mais válido. Digite usuário e senha atuais para continuar.",
+    );
+  }, []);
+
   const carregar = useCallback(async () => {
     if (!creds) return;
     setCarregando(true);
@@ -90,11 +104,16 @@ export function Equipe() {
       });
       setMembros(lista);
     } catch (e) {
-      setErro(erroBonito(e instanceof Error ? e.message : String(e)));
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("Sem permissão")) {
+        perderPermissao();
+        return;
+      }
+      setErro(erroBonito(msg));
     } finally {
       setCarregando(false);
     }
-  }, [creds, listar]);
+  }, [creds, listar, perderPermissao]);
 
   useEffect(() => {
     void carregar();
@@ -163,7 +182,13 @@ export function Equipe() {
       setDialogAberto(false);
       void carregar();
     } catch (err) {
-      setErroForm(erroBonito(err instanceof Error ? err.message : String(err)));
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Sem permissão")) {
+        setDialogAberto(false);
+        perderPermissao();
+        return;
+      }
+      setErroForm(erroBonito(msg));
     } finally {
       setSalvando(false);
     }
@@ -172,6 +197,12 @@ export function Equipe() {
   const alternarAtivo = async (m: Membro, ativo: boolean) => {
     if (!creds) return;
     setErro(null);
+    if (!ativo && m.usuario === creds.usuario) {
+      setErro(
+        "Você está usando este login agora — não é possível desativar a própria conta. Peça para outro administrador fazer isso.",
+      );
+      return;
+    }
     try {
       await atualizar({
         adminUsuario: creds.usuario,
@@ -184,12 +215,23 @@ export function Equipe() {
       });
       void carregar();
     } catch (err) {
-      setErro(erroBonito(err instanceof Error ? err.message : String(err)));
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Sem permissão")) {
+        perderPermissao();
+        return;
+      }
+      setErro(erroBonito(msg));
     }
   };
 
   const excluir = async (m: Membro) => {
     if (!creds) return;
+    if (m.usuario === creds.usuario) {
+      setErro(
+        "Você está usando este login agora — não é possível remover a própria conta. Peça para outro administrador fazer isso.",
+      );
+      return;
+    }
     if (
       !window.confirm(
         `Remover ${m.nome ?? m.usuario} da equipe? Ela perde o acesso ao painel na hora.`,
@@ -206,7 +248,12 @@ export function Equipe() {
       });
       void carregar();
     } catch (err) {
-      setErro(erroBonito(err instanceof Error ? err.message : String(err)));
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Sem permissão")) {
+        perderPermissao();
+        return;
+      }
+      setErro(erroBonito(msg));
     }
   };
 

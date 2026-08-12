@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Hand, Loader2, Pencil, Plus, Power, Tags, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Power, Tags, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,28 +30,41 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { erroMensagem, isConvexConfigured } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL, formatMinutes } from "@/utils/format";
-import type { Servico, ServicoFormData } from "@/types";
+import type { Servico } from "@/types";
 
-const FORM_VAZIO: ServicoFormData = {
+interface ComboForm {
+  nome: string;
+  descricao: string;
+  preco: string;
+  duracao_minutos: string;
+  video_url: string;
+  poster_url: string;
+  itens_combo: string[];
+}
+
+const FORM_VAZIO: ComboForm = {
   nome: "",
   descricao: "",
   preco: "",
   duracao_minutos: "",
   video_url: "",
   poster_url: "",
-  is_combo: false,
   itens_combo: [],
 };
 
-export function ServicosAdmin() {
-  const { servicos, loading, refresh, usandoDemo } = useServicos(false, "servico");
+export function CombosAdmin() {
+  const { servicos: combos, loading, refresh, usandoDemo } = useServicos(
+    false,
+    "combo",
+  );
+  const { servicos: cardapio } = useServicos(false, "servico");
   const criarServico = useMutation(api.servicos.criar);
   const atualizarServico = useMutation(api.servicos.atualizar);
   const setServicoAtivo = useMutation(api.servicos.setAtivo);
   const excluirServico = useMutation(api.servicos.excluir);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editando, setEditando] = useState<Servico | null>(null);
-  const [form, setForm] = useState<ServicoFormData>(FORM_VAZIO);
+  const [form, setForm] = useState<ComboForm>(FORM_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
@@ -72,19 +84,27 @@ export function ServicosAdmin() {
     setDialogAberto(true);
   };
 
-  const abrirEdicao = (s: Servico) => {
-    setEditando(s);
+  const abrirEdicao = (c: Servico) => {
+    setEditando(c);
     setForm({
-      nome: s.nome,
-      descricao: s.descricao ?? "",
-      preco: String(s.preco).replace(".", ","),
-      duracao_minutos: String(s.duracao_minutos),
-      video_url: s.video_url ?? "",
-      poster_url: s.poster_url ?? "",
-      is_combo: false,
-      itens_combo: [],
+      nome: c.nome,
+      descricao: c.descricao ?? "",
+      preco: String(c.preco).replace(".", ","),
+      duracao_minutos: String(c.duracao_minutos),
+      video_url: c.video_url ?? "",
+      poster_url: c.poster_url ?? "",
+      itens_combo: [...c.itens_combo],
     });
     setDialogAberto(true);
+  };
+
+  const alternarItem = (nome: string) => {
+    setForm((prev) => ({
+      ...prev,
+      itens_combo: prev.itens_combo.includes(nome)
+        ? prev.itens_combo.filter((i) => i !== nome)
+        : [...prev.itens_combo, nome],
+    }));
   };
 
   const salvar = async () => {
@@ -95,60 +115,51 @@ export function ServicosAdmin() {
     setSalvando(true);
     setErro(null);
     try {
+      const dados = {
+        nome: form.nome.trim(),
+        descricao: form.descricao.trim() || null,
+        preco: Number(form.preco.replace(",", ".")),
+        duracao_minutos: Number(form.duracao_minutos),
+        video_url: form.video_url.trim() || null,
+        poster_url: form.poster_url.trim() || null,
+        is_combo: true,
+        itens_combo: form.itens_combo,
+      };
       if (editando) {
-        await atualizarServico({
-          id: editando.id as Id<"servicos">,
-          nome: form.nome.trim(),
-          descricao: form.descricao.trim() || null,
-          preco: Number(form.preco.replace(",", ".")),
-          duracao_minutos: Number(form.duracao_minutos),
-          video_url: form.video_url.trim() || null,
-          poster_url: form.poster_url.trim() || null,
-          is_combo: false,
-          itens_combo: [],
-        });
-        toast("success", "Serviço atualizado com sucesso.");
+        await atualizarServico({ id: editando.id as Id<"servicos">, ...dados });
+        toast("success", "Combo atualizado com sucesso.");
       } else {
-        await criarServico({
-          nome: form.nome.trim(),
-          descricao: form.descricao.trim() || null,
-          preco: Number(form.preco.replace(",", ".")),
-          duracao_minutos: Number(form.duracao_minutos),
-          video_url: form.video_url.trim() || null,
-          poster_url: form.poster_url.trim() || null,
-          is_combo: false,
-          itens_combo: [],
-        });
-        toast("success", "Serviço criado com sucesso.");
+        await criarServico(dados);
+        toast("success", "Combo criado com sucesso.");
       }
       setDialogAberto(false);
       await refresh();
     } catch (err) {
-      setErro(erroMensagem(err, "Erro ao salvar o serviço."));
+      setErro(erroMensagem(err, "Erro ao salvar o combo."));
     } finally {
       setSalvando(false);
     }
   };
 
-  const alternarAtivo = async (s: Servico) => {
+  const alternarAtivo = async (c: Servico) => {
     try {
-      await setServicoAtivo({ id: s.id as Id<"servicos">, ativo: !s.ativo });
-      toast("success", `Serviço ${s.ativo ? "desativado" : "ativado"}.`);
+      await setServicoAtivo({ id: c.id as Id<"servicos">, ativo: !c.ativo });
+      toast("success", `Combo ${c.ativo ? "desativado" : "ativado"}.`);
       await refresh();
     } catch (err) {
-      toast("error", erroMensagem(err, "Erro ao atualizar serviço."));
+      toast("error", erroMensagem(err, "Erro ao atualizar o combo."));
     }
   };
 
-  const confirmarExclusao = async (s: Servico) => {
-    if (excluindoId !== s.id) {
-      setExcluindoId(s.id);
+  const confirmarExclusao = async (c: Servico) => {
+    if (excluindoId !== c.id) {
+      setExcluindoId(c.id);
       return;
     }
     try {
-      await excluirServico({ id: s.id as Id<"servicos"> });
+      await excluirServico({ id: c.id as Id<"servicos"> });
       setExcluindoId(null);
-      toast("success", "Serviço excluído.");
+      toast("success", "Combo excluído.");
       await refresh();
     } catch (err) {
       setExcluindoId(null);
@@ -167,54 +178,43 @@ export function ServicosAdmin() {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-            Serviços
+            Combos
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Adicione, edite valores e durações, e ative ou desative serviços.
+            Combine serviços em pacotes com preço único. Os combos aparecem na
+            página Promoções e podem ser agendados como um serviço normal.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            asChild
-            className="border-gold/40 text-gold hover:bg-gold/10 hover:text-gold"
-          >
-            <Link to="/admin/combos">
-              <Tags className="size-4" />
-              Gerenciar combos
-            </Link>
-          </Button>
-          <Button variant="gold" onClick={abrirNovo} disabled={!isConvexConfigured}>
-            <Plus className="size-4" />
-            Novo serviço
-          </Button>
-        </div>
+        <Button variant="gold" onClick={abrirNovo} disabled={!isConvexConfigured}>
+          <Plus className="size-4" />
+          Novo combo
+        </Button>
       </div>
 
       {usandoDemo && (
         <div className="mb-4 rounded-lg border border-yellow-600/40 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
-          Mostrando serviços de demonstração. Conecte o Convex para editar os
-          serviços reais.
+          Mostrando combos de demonstração. Conecte o Convex para editar os
+          combos reais.
         </div>
       )}
 
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
         {loading ? (
           <div className="space-y-3 p-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
-        ) : servicos.length === 0 ? (
+        ) : combos.length === 0 ? (
           <div className="p-5">
             <EmptyState
-              icon={Hand}
-              title="Nenhum serviço cadastrado"
-              description="Crie o primeiro serviço para começar a receber agendamentos."
+              icon={Tags}
+              title="Nenhum combo cadastrado"
+              description="Crie pacotes com mais de um serviço para atrair clientes com um preço especial."
               action={
                 <Button variant="gold" size="sm" onClick={abrirNovo}>
                   <Plus className="size-4" />
-                  Criar serviço
+                  Criar combo
                 </Button>
               }
             />
@@ -223,7 +223,8 @@ export function ServicosAdmin() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Serviço</TableHead>
+                <TableHead>Combo</TableHead>
+                <TableHead>Inclui</TableHead>
                 <TableHead>Duração</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
                 <TableHead>Status</TableHead>
@@ -231,27 +232,28 @@ export function ServicosAdmin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {servicos.map((s) => (
-                <TableRow key={s.id}>
+              {combos.map((c) => (
+                <TableRow key={c.id}>
                   <TableCell>
-                    <p className="font-medium text-card-foreground">{s.nome}</p>
+                    <p className="font-medium text-card-foreground">{c.nome}</p>
                     <p className="max-w-64 truncate text-xs text-muted-foreground">
-                      {s.descricao ?? ""}
+                      {c.descricao ?? ""}
                     </p>
-                    {s.video_url && (
-                      <p className="mt-0.5 flex items-center gap-1 text-[10px] text-blood/80">
-                        <span className="size-1.5 rounded-full bg-blood" />
-                        vídeo personalizado
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>{formatMinutes(s.duracao_minutos)}</TableCell>
-                  <TableCell className="text-right font-display text-base font-bold text-gradient-red">
-                    {formatBRL(s.preco)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={s.ativo ? "success" : "secondary"}>
-                      {s.ativo ? "Ativo" : "Inativo"}
+                    <p className="max-w-56 text-xs text-muted-foreground">
+                      {c.itens_combo.length > 0
+                        ? c.itens_combo.join(" + ")
+                        : "—"}
+                    </p>
+                  </TableCell>
+                  <TableCell>{formatMinutes(c.duracao_minutos)}</TableCell>
+                  <TableCell className="text-right font-display text-base font-bold text-gradient-red">
+                    {formatBRL(c.preco)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={c.ativo ? "success" : "secondary"}>
+                      {c.ativo ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -259,8 +261,8 @@ export function ServicosAdmin() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => abrirEdicao(s)}
-                        aria-label={`Editar ${s.nome}`}
+                        onClick={() => abrirEdicao(c)}
+                        aria-label={`Editar ${c.nome}`}
                         disabled={!isConvexConfigured}
                       >
                         <Pencil className="size-4" />
@@ -268,24 +270,26 @@ export function ServicosAdmin() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => void alternarAtivo(s)}
-                        aria-label={s.ativo ? "Desativar" : "Ativar"}
+                        onClick={() => void alternarAtivo(c)}
+                        aria-label={c.ativo ? "Desativar" : "Ativar"}
                         disabled={!isConvexConfigured}
-                        className={s.ativo ? "text-blood" : "text-muted-foreground"}
+                        className={c.ativo ? "text-blood" : "text-muted-foreground"}
                       >
                         <Power className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => void confirmarExclusao(s)}
-                        aria-label={`Excluir ${s.nome}`}
+                        onClick={() => void confirmarExclusao(c)}
+                        aria-label={`Excluir ${c.nome}`}
                         disabled={!isConvexConfigured}
                         className={
-                          excluindoId === s.id ? "text-destructive" : "text-muted-foreground"
+                          excluindoId === c.id
+                            ? "text-destructive"
+                            : "text-muted-foreground"
                         }
                       >
-                        {excluindoId === s.id ? (
+                        {excluindoId === c.id ? (
                           <span className="text-[10px] font-bold">OK?</span>
                         ) : (
                           <Trash2 className="size-4" />
@@ -303,74 +307,85 @@ export function ServicosAdmin() {
       <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editando ? "Editar serviço" : "Novo serviço"}
-            </DialogTitle>
+            <DialogTitle>{editando ? "Editar combo" : "Novo combo"}</DialogTitle>
             <DialogDescription>
               {editando
-                ? "Ajuste as informações do serviço."
-                : "Cadastre um novo serviço para seus clientes."}
+                ? "Ajuste as informações do combo."
+                : "Monte um pacote de serviços com preço único."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="s-nome">Nome do serviço</Label>
+              <Label htmlFor="cb-nome">Nome do combo</Label>
               <Input
-                id="s-nome"
+                id="cb-nome"
                 value={form.nome}
                 onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                placeholder="Ex.: Manicure"
+                placeholder="Ex.: Combo Manicure + Pedicure"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="s-desc">Descrição</Label>
+              <Label htmlFor="cb-desc">Descrição</Label>
               <Textarea
-                id="s-desc"
+                id="cb-desc"
                 value={form.descricao}
                 onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                placeholder="O que está incluso no serviço?"
+                placeholder="O que a cliente ganha com esse combo?"
                 rows={3}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="s-video">Vídeo (URL opcional)</Label>
-              <Input
-                id="s-video"
-                value={form.video_url}
-                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                placeholder="https://... (usado no card do serviço)"
-                className="font-mono text-xs"
-              />
-              <p className="text-xs text-muted-foreground">
-                Deixe vazio para usar o vídeo padrão da biblioteca de mídia.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="s-foto">Foto de capa (URL opcional)</Label>
-              <Input
-                id="s-foto"
-                value={form.poster_url}
-                onChange={(e) => setForm({ ...form, poster_url: e.target.value })}
-                placeholder="https://... (capa do card enquanto o vídeo carrega)"
-                className="font-mono text-xs"
-              />
+              <Label>Serviços inclusos</Label>
+              {cardapio.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                  Cadastre os serviços primeiro (aba Serviços) para montar os
+                  combos.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {cardapio.map((s) => {
+                    const ativo = form.itens_combo.includes(s.nome);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => alternarItem(s.nome)}
+                        aria-pressed={ativo}
+                        className={
+                          ativo
+                            ? "inline-flex items-center gap-1.5 rounded-full bg-gold-gradient px-3 py-1.5 text-xs font-semibold text-cream shadow-sm"
+                            : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-gold/60 hover:text-foreground"
+                        }
+                      >
+                        {ativo ? "✓ " : "+ "}
+                        {s.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {form.itens_combo.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Inclui: {form.itens_combo.join(" + ")}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="s-preco">Preço (R$)</Label>
+                <Label htmlFor="cb-preco">Preço do combo (R$)</Label>
                 <Input
-                  id="s-preco"
+                  id="cb-preco"
                   value={form.preco}
                   onChange={(e) => setForm({ ...form, preco: e.target.value })}
-                  placeholder="45,00"
+                  placeholder="80,00"
                   inputMode="decimal"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="s-duracao">Duração (minutos)</Label>
+                <Label htmlFor="cb-duracao">Duração (minutos)</Label>
                 <Input
-                  id="s-duracao"
+                  id="cb-duracao"
                   value={form.duracao_minutos}
                   onChange={(e) =>
                     setForm({
@@ -378,10 +393,30 @@ export function ServicosAdmin() {
                       duracao_minutos: e.target.value.replace(/\D/g, ""),
                     })
                   }
-                  placeholder="40"
+                  placeholder="100"
                   inputMode="numeric"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cb-video">Vídeo (URL opcional)</Label>
+              <Input
+                id="cb-video"
+                value={form.video_url}
+                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                placeholder="https://... (usado no card do combo)"
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cb-foto">Foto de capa (URL opcional)</Label>
+              <Input
+                id="cb-foto"
+                value={form.poster_url}
+                onChange={(e) => setForm({ ...form, poster_url: e.target.value })}
+                placeholder="https://... (capa do card)"
+                className="font-mono text-xs"
+              />
             </div>
             {erro && (
               <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">

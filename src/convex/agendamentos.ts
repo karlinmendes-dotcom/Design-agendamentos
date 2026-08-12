@@ -209,6 +209,79 @@ export const criar = mutation({
 });
 
 /**
+ * Cria um agendamento a partir de nomes (assistente Gemini): resolve o
+ * cliente (cria se não existir, por telefone) e o serviço (por nome) e
+ * aplica TODAS as validações do fluxo normal (dia ativo, expediente,
+ * anti-sobreposição) — o dashboard continua mandando de verdade.
+ */
+export const criarViaAssistente = mutation({
+  args: {
+    nome_cliente: v.string(),
+    telefone_cliente: v.string(),
+    servico_nome: v.string(),
+    data: v.string(),
+    horario: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 1. Resolve o serviço pelo nome
+    const servicos = await ctx.db.query("servicos").collect();
+    const servico = servicos.find(
+      (s) => s.nome.trim().toLowerCase() === args.servico_nome.trim().toLowerCase(),
+    );
+    if (!servico) {
+      throw new ConvexError(
+        `Serviço "${args.servico_nome}" não encontrado no cardápio.`,
+      );
+    }
+
+    // 2. Resolve o cliente (cria se for novo, por telefone — mesmo fluxo do app)
+    const telefone = args.telefone_cliente.replace(/\D/g, "");
+    if (telefone.length < 8) {
+      throw new ConvexError("Informe um telefone válido com DDD.");
+    }
+    const existente = await ctx.db
+      .query("clientes")
+      .filter((q) => q.eq(q.field("telefone"), telefone))
+      .first();
+    const cliente_id = existente
+      ? existente._id
+      : await ctx.db.insert("clientes", {
+          nome: args.nome_cliente.trim(),
+          telefone,
+        });
+
+    // 3. Valida disponibilidade + anti-sobreposição (idêntico ao criar normal)
+    await validarDisponibilidade(ctx, args.data, args.horario, servico.duracao_minutos);
+    const existentes = await ctx.db
+      .query("agendamentos")
+      .withIndex("por_data", (q) => q.eq("data", args.data))
+      .collect();
+    const ocupados = existentes
+      .filter((a) => a.status !== "cancelado")
+      .map((a) => ({
+        horario: a.horario,
+        duracao_minutos: a.duracao_minutos,
+      }));
+    if (isSlotOcupado(args.horario, servico.duracao_minutos, ocupados)) {
+      throw new ConvexError(ERRO_HORARIO_OCUPADO);
+    }
+
+    const id = await ctx.db.insert("agendamentos", {
+      cliente_id,
+      servico_id: servico._id,
+      data: args.data,
+      horario: args.horario,
+      status: "confirmado",
+      duracao_minutos: servico.duracao_minutos,
+    });
+
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Erro ao criar agendamento.");
+    return mapAgendamento(ctx, doc);
+  },
+});
+
+/**
  * Cancela TODOS os agendamentos ativos de um dia inteiro (usado pela dona no
  * dashboard ou pela Gemini). Retorna quantos foram cancelados e os telefones
  * dos clientes afetados para o disparo de notificação push (FCM).

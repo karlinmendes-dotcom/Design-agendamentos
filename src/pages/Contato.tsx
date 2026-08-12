@@ -13,6 +13,7 @@ import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useBarbearia } from "@/hooks/useBarbearia";
+import { linkInstagram } from "@/utils/social";
 
 function normalizarTelefone(telefone: string | null | undefined): string {
   const digitos = (telefone ?? "(00) 00000-0000").replace(/\D/g, "");
@@ -32,9 +33,11 @@ export function Contato() {
   const whats = `https://wa.me/${normalizarTelefone(barbearia?.telefone)}?text=${MENSAGEM}`;
 
   const instagram = barbearia?.instagram?.trim();
-  const instagramHref = instagram
-    ? `https://instagram.com/${instagram.replace(/^@/, "")}`
-    : "#";
+  // Link real do Instagram (URL completa tem prioridade; apelido como fallback)
+  const instagramHref =
+    linkInstagram(barbearia?.instagram_url) ??
+    linkInstagram(instagram) ??
+    "#";
 
   return (
     <div className="min-h-screen bg-background">

@@ -392,11 +392,18 @@ export function Agendamento() {
                           : "border-border bg-muted/50 hover:border-gold/60",
                       )}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="font-display text-base font-bold text-card-foreground">
                           {s.nome}
                         </span>
-                        <Hand className="size-4 text-blood" />
+                        <span className="flex items-center gap-1.5">
+                          {s.is_combo && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-gold-gradient px-2 py-0.5 text-[9px] font-bold tracking-wide text-cream uppercase">
+                              Combo
+                            </span>
+                          )}
+                          <Hand className="size-4 text-blood" />
+                        </span>
                       </div>
                       <span className="text-xs text-muted-foreground line-clamp-2">
                         {s.descricao}

@@ -3,6 +3,7 @@ import { AtSign, Camera, Clock, MapPin, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useBarbearia } from "@/hooks/useBarbearia";
+import { linkInstagram } from "@/utils/social";
 
 export function Footer() {
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
@@ -13,9 +14,12 @@ export function Footer() {
     barbearia?.endereco ??
     "R. Expedicionário Abílio dos Santos, 0184, Sala 209, Centro, Colatina – ES, 29700-070";
   const instagram = barbearia?.instagram?.trim();
-  const instagramHref = instagram
-    ? `https://instagram.com/${instagram.replace(/^@/, "")}`
-    : "#";
+  // Link real: o campo "Link do Instagram" (URL completa) tem prioridade;
+  // sem ele, usa o apelido para montar o perfil. Nunca mais cai em "#".
+  const instagramHref =
+    linkInstagram(barbearia?.instagram_url) ??
+    linkInstagram(instagram) ??
+    "#";
 
   const whats =
     telefone !== "(00) 00000-0000"

@@ -7,6 +7,16 @@ const PADRAO = {
   dias_disponiveis: [1, 2, 3, 4, 5, 6],
 };
 
+const NOME_DIA = [
+  "domingo",
+  "segunda-feira",
+  "terça-feira",
+  "quarta-feira",
+  "quinta-feira",
+  "sexta-feira",
+  "sábado",
+];
+
 function mapConfiguracao(doc: {
   _id: string;
   _creationTime: number;
@@ -33,6 +43,61 @@ export const get = query({
     const doc = await ctx.db.query("configuracoes").first();
     if (!doc) return null;
     return mapConfiguracao(doc);
+  },
+});
+
+/**
+ * Abre ou fecha um dia da semana (usado pelo dashboard e pela assistente).
+ * Mantém `dias_disponiveis` (calendário) e `horarios` (expediente) em
+ * sincronia: dia fechado some do calendário e o expediente é desativado.
+ */
+export const alternarDia = mutation({
+  args: { dia_semana: v.number(), ativo: v.boolean() },
+  handler: async (ctx, { dia_semana, ativo }) => {
+    if (dia_semana < 0 || dia_semana > 6) {
+      throw new Error("Dia da semana inválido (0 = domingo, 6 = sábado).");
+    }
+
+    const config = await ctx.db.query("configuracoes").first();
+    const atuais = config?.dias_disponiveis ?? PADRAO.dias_disponiveis;
+    const dias = new Set(atuais);
+    if (ativo) dias.add(dia_semana);
+    else dias.delete(dia_semana);
+    const novos = [...dias].sort((a, b) => a - b);
+
+    if (config) {
+      await ctx.db.patch(config._id, { dias_disponiveis: novos });
+    } else {
+      await ctx.db.insert("configuracoes", {
+        nome_barbearia: PADRAO.nome_barbearia,
+        horario_funcionamento: PADRAO.horario_funcionamento,
+        dias_disponiveis: novos,
+      });
+    }
+
+    // Sincroniza o expediente do dia (o agendamento valida por horarios.ativo)
+    const horario = await ctx.db
+      .query("horarios")
+      .filter((q) => q.eq(q.field("dia_semana"), dia_semana))
+      .first();
+    if (horario) {
+      await ctx.db.patch(horario._id, { ativo });
+    } else if (ativo) {
+      await ctx.db.insert("horarios", {
+        dia_semana,
+        hora_inicio: "09:00",
+        hora_fim: "19:00",
+        ativo: true,
+      });
+    }
+
+    return {
+      ok: true,
+      dia_semana,
+      nome: NOME_DIA[dia_semana],
+      ativo,
+      dias_disponiveis: novos,
+    };
   },
 });
 

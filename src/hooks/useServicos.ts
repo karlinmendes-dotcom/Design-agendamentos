@@ -4,14 +4,19 @@ import { isConvexConfigured } from "@/lib/convex";
 import { DEMO_SERVICOS } from "@/data/demo";
 import type { Servico } from "@/types";
 
-export function useServicos(apenasAtivos = false) {
-  const dados = useQuery(api.servicos.list, { apenasAtivos });
+export type TipoCardapio = "servico" | "combo" | "todos";
+
+export function useServicos(apenasAtivos = false, tipo: TipoCardapio = "todos") {
+  const dados = useQuery(api.servicos.list, { apenasAtivos, tipo });
   const usandoDemo = !isConvexConfigured;
 
   const servicos: Servico[] = usandoDemo
-    ? apenasAtivos
-      ? DEMO_SERVICOS.filter((s) => s.ativo)
-      : DEMO_SERVICOS
+    ? DEMO_SERVICOS.filter((s) => {
+        if (apenasAtivos && !s.ativo) return false;
+        if (tipo === "servico") return !s.is_combo;
+        if (tipo === "combo") return s.is_combo;
+        return true;
+      })
     : (dados ?? []);
 
   return {

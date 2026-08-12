@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Tags,
   Users,
   X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const ADMIN_LINKS = [
   { to: "/admin", label: "Visão geral", icon: LayoutDashboard, end: true },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/servicos", label: "Serviços", icon: Hand },
+  { to: "/admin/combos", label: "Combos", icon: Tags },
   { to: "/admin/equipe", label: "Equipe", icon: Users },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
@@ -30,6 +32,7 @@ const ADMIN_LINKS = [
 const TITULOS: { prefixo: string; titulo: string }[] = [
   { prefixo: "/admin/agenda", titulo: "Agenda" },
   { prefixo: "/admin/servicos", titulo: "Serviços" },
+  { prefixo: "/admin/combos", titulo: "Combos" },
   { prefixo: "/admin/equipe", titulo: "Equipe" },
   { prefixo: "/admin/configuracoes", titulo: "Configurações" },
   { prefixo: "/admin", titulo: "Visão geral" },

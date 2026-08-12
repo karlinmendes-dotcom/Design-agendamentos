@@ -1,87 +1,29 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarCheck, Crown, Gift, Tag, Ticket } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  Clock,
+  Crown,
+  Gift,
+  Sparkles,
+  Tag,
+  Ticket,
+} from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { ErrorState, LoadingState } from "@/components/Feedback";
-import { VideoCarousel, type VideoCarouselItem } from "@/components/VideoCarousel";
+import { VideoCover } from "@/components/VideoCover";
 import { Button } from "@/components/ui/button";
 import { useServicos } from "@/hooks/useServicos";
 import { mediaParaServico } from "@/utils/media";
 import { formatBRL, formatMinutes } from "@/utils/format";
 
 /**
- * Combos da casa — montados a partir dos serviços reais do banco (vídeo,
- * preço e duração vêm direto do cardápio). Quando o programa de
- * fidelidade/cupons for ativado, esta página passa a consumir a estrutura
- * de promoções (tabela futura).
+ * Combos da casa — lidos direto do banco (aba "Combos" do painel). Cada
+ * combo é um serviço agrupado (is_combo) e pode ser agendado normalmente.
  */
 export function Promocoes() {
-  const { servicos, loading, error, refresh } = useServicos(true);
-
-  const manicure = servicos.find((s) => s.nome.toLowerCase().includes("manicure"));
-  const pedicure = servicos.find((s) => s.nome.toLowerCase().includes("pedicure"));
-  const gel = servicos.find((s) => s.nome.toLowerCase().includes("gel"));
-  const alongamento = servicos.find((s) =>
-    s.nome.toLowerCase().includes("alongamento"),
-  );
-  const nailArt = servicos.find((s) => s.nome.toLowerCase().includes("nail art"));
-  const spa = servicos.find((s) => s.nome.toLowerCase().includes("spa"));
-
-  const combos = [
-    {
-      nome: "Combo Manicure + Pedicure",
-      descricao:
-        "O clássico da casa: mãos e pés impecáveis no mesmo dia.",
-      itens: [manicure, pedicure].filter(Boolean),
-      badge: "Mais pedido",
-    },
-    {
-      nome: "Dia de spa completo",
-      descricao:
-        "Manicure + pedicure + spa dos pés para renovar corpo e mente.",
-      itens: [manicure, pedicure, spa].filter(Boolean),
-      badge: "Transformação",
-    },
-    {
-      nome: "Unhas dos sonhos",
-      descricao: "Alongamento em gel + nail art para um visual marcante e duradouro.",
-      itens: [alongamento, nailArt].filter(Boolean),
-      badge: "Destaque",
-    },
-    {
-      nome: "Brilho que dura",
-      descricao: "Esmaltação em gel + nail art para arrasar por semanas.",
-      itens: [gel, nailArt].filter(Boolean),
-      badge: "Durabilidade",
-    },
-  ]
-    .filter((c) => c.itens.length > 0)
-    .map((c) => ({
-      ...c,
-      itens: c.itens as NonNullable<(typeof servicos)[number]>[],
-    }));
-
-  const totalCombo = (itens: { preco: number }[]) =>
-    itens.reduce((soma, i) => soma + (i.preco ?? 0), 0);
-
-  const carrossel: VideoCarouselItem[] = combos.map((combo) => {
-    const primeiro = combo.itens[0];
-    const video = mediaParaServico(primeiro);
-    return {
-      id: combo.nome,
-      titulo: combo.nome,
-      descricao: combo.descricao,
-      badge: combo.badge,
-      preco: formatBRL(totalCombo(combo.itens)),
-      duracao: formatMinutes(
-        combo.itens.reduce((soma, i) => soma + (i.duracao_minutos ?? 0), 0),
-      ),
-      extra: `Inclui: ${combo.itens.map((i) => i.nome).join(" + ")}`,
-      src: video.src,
-      poster: video.poster,
-      to: "/agendamento",
-    };
-  });
+  const { servicos: combos, loading, error, refresh } = useServicos(true, "combo");
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +50,7 @@ export function Promocoes() {
           <LoadingState label="Carregando ofertas..." />
         ) : error ? (
           <ErrorState message={error} onRetry={refresh} />
-        ) : carrossel.length === 0 ? (
+        ) : combos.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-20 text-center">
             <p className="text-muted-foreground">
               Em breve teremos combos exclusivos para você.
@@ -119,7 +61,63 @@ export function Promocoes() {
             <p className="mb-6 flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-foreground uppercase">
               <CalendarCheck className="size-4" /> Navegue pelos combos
             </p>
-            <VideoCarousel itens={carrossel} />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {combos.map((combo, i) => {
+                const video = mediaParaServico(combo);
+                return (
+                  <Reveal key={combo.id} delay={(i % 3) * 90}>
+                    <div className="red-ring-hover group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card">
+                      <div className="relative aspect-video overflow-hidden border-b border-border/60">
+                        <VideoCover
+                          src={video.src}
+                          poster={video.poster}
+                          alt={combo.nome}
+                          className="absolute inset-0 size-full transition-transform duration-700 group-hover:scale-[1.04]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-gold-light/40 bg-black/60 px-2.5 py-1 text-[10px] font-bold tracking-wide text-gold-light uppercase backdrop-blur">
+                          <Sparkles className="size-3" />
+                          Combo
+                        </span>
+                        <p className="absolute bottom-3 left-4 font-display text-lg font-bold text-white">
+                          {combo.nome}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-1 flex-col gap-3 p-5">
+                        <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
+                          {combo.descricao ?? "Atendimento com as melhores profissionais."}
+                        </p>
+                        {combo.itens_combo.length > 0 && (
+                          <p className="flex items-center gap-1.5 rounded-lg bg-charcoal/5 px-3 py-2 text-xs font-medium text-charcoal/80">
+                            <Gift className="size-3.5 shrink-0 text-gold" />
+                            Inclui: {combo.itens_combo.join(" + ")}
+                          </p>
+                        )}
+                        <div className="mt-auto flex items-center justify-between pt-1">
+                          <div>
+                            <p className="font-display text-2xl font-extrabold text-gradient-red">
+                              {formatBRL(combo.preco)}
+                            </p>
+                            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="size-3" />
+                              {formatMinutes(combo.duracao_minutos)}
+                            </p>
+                          </div>
+                          <Link
+                            to={`/agendamento?servico=${combo.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-green-800/25 bg-green-800/5 px-3 py-1.5 text-xs font-semibold text-green-800 transition-all duration-300 hover:bg-gold-gradient hover:text-cream active:scale-95"
+                          >
+                            Agendar
+                            <ArrowRight className="size-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
         )}
 

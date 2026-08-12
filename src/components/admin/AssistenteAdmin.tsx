@@ -49,10 +49,15 @@ export function AssistenteAdmin() {
     const p = (pergunta ?? texto).trim();
     if (!p || pensando) return;
     setTexto("");
+    // Histórico (sem a pergunta atual) — necessário para o protocolo de
+    // confirmação: a dona pede → a assistente pergunta → a dona responde
+    // "Sim" → a assistente executa de fato na próxima mensagem.
+    const historico: { papel: "usuario" | "assistente"; texto: string }[] =
+      mensagens.slice(-12).map((m) => ({ papel: m.papel, texto: m.texto }));
     setMensagens((m) => [...m, { papel: "usuario", texto: p }]);
     setPensando(true);
     try {
-      const resposta = await perguntar({ pergunta: p });
+      const resposta = await perguntar({ pergunta: p, historico });
       setMensagens((m) => [...m, { papel: "assistente", texto: resposta }]);
     } catch (err) {
       setMensagens((m) => [

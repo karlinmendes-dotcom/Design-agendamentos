@@ -18,7 +18,8 @@ export default defineSchema({
     descricao: v.optional(v.string()),
     endereco: v.optional(v.string()),
     telefone: v.optional(v.string()),
-    instagram: v.optional(v.string()),
+    instagram: v.optional(v.string()), // apelido exibido (ex.: @nataliabraga_nail)
+    instagram_url: v.optional(v.string()), // link completo (destino do clique)
     ativo: v.boolean(),
   }),
 
@@ -32,6 +33,10 @@ export default defineSchema({
   }),
 
   // ---------- Cardápio ----------
+  // Um registro pode ser um serviço comum (is_combo=false) ou um combo
+  // (is_combo=true). Os combos usam o mesmo motor de agendamento — por isso
+  // vivem aqui e não em outra tabela: preço, duração, agenda e WhatsApp já
+  // funcionam sem código extra.
   servicos: defineTable({
     barbearia_id: v.optional(v.id("barbearias")),
     nome: v.string(),
@@ -41,6 +46,8 @@ export default defineSchema({
     ativo: v.boolean(),
     video_url: v.optional(v.string()),
     poster_url: v.optional(v.string()),
+    is_combo: v.optional(v.boolean()),
+    itens_combo: v.optional(v.array(v.string())), // nomes dos serviços inclusos (exibição)
   }),
 
   // ---------- Profissionais (estrutura multi-profissional) ----------

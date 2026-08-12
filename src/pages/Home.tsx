@@ -77,7 +77,7 @@ const AVALIACOES = [
 ];
 
 export function Home() {
-  const { servicos } = useServicos(true);
+  const { servicos } = useServicos(true, "servico");
   const { nomeBarbearia, horarioFuncionamento } = useConfiguracao();
 
   const procurados = servicos.slice(0, 6);
