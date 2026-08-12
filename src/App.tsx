@@ -62,6 +62,12 @@ const Contato = lazy(() =>
 const Reagendar = lazy(() =>
   import("@/pages/Reagendar").then((m) => ({ default: m.Reagendar })),
 );
+const Privacidade = lazy(() =>
+  import("@/pages/Privacidade").then((m) => ({ default: m.Privacidade })),
+);
+const Termos = lazy(() =>
+  import("@/pages/Termos").then((m) => ({ default: m.Termos })),
+);
 
 /**
  * Porta de entrada da cliente: pede nome + WhatsApp (e autoriza os avisos)
@@ -151,6 +157,10 @@ export default function App() {
                 <Route path="/reagendar" element={<Reagendar />} />
               </Route>
             </Route>
+
+            {/* Páginas legais — abertas, para ler antes de criar a conta */}
+            <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/termos" element={<Termos />} />
 
             {/* Login do painel — aberto, para a dona entrar */}
             <Route path="/admin/entrar" element={<AdminLogin />} />

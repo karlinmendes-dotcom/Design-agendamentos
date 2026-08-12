@@ -169,26 +169,15 @@ export function Home() {
         </div>
       </section>
 
-      {/* ===== Faixa marquee — animada no desktop; estática (quebra em linhas) no celular ===== */}
+      {/* ===== Faixa marquee — animada correndo no desktop E no celular ===== */}
       <div className="overflow-hidden border-y border-gold/25 bg-gold-gradient py-4">
-        <div className="animate-marquee hidden w-max items-center gap-10 md:flex">
+        <div className="animate-marquee flex w-max items-center gap-6 md:gap-10">
           {[...MARQUEE, ...MARQUEE].map((item, i) => (
             <span
               key={i}
-              className="flex items-center gap-3 whitespace-nowrap text-xs font-semibold tracking-[0.25em] text-gold-light uppercase"
+              className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] whitespace-nowrap text-gold-light uppercase md:gap-3 md:text-xs md:tracking-[0.25em]"
             >
-              <Sparkles className="size-3.5 text-gold-light" />
-              {item}
-            </span>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-5 md:hidden">
-          {MARQUEE.map((item) => (
-            <span
-              key={item}
-              className="flex items-center gap-2 whitespace-nowrap text-[10px] font-semibold tracking-[0.18em] text-gold-light uppercase"
-            >
-              <Sparkles className="size-3 shrink-0 text-gold-light" />
+              <Sparkles className="size-3 shrink-0 text-gold-light md:size-3.5" />
               {item}
             </span>
           ))}

@@ -95,6 +95,16 @@ export function Footer() {
                 Área do estúdio
               </Link>
             </li>
+            <li>
+              <Link to="/privacidade" className="transition-colors hover:text-gold-light">
+                Política de Privacidade
+              </Link>
+            </li>
+            <li>
+              <Link to="/termos" className="transition-colors hover:text-gold-light">
+                Termos de Uso
+              </Link>
+            </li>
           </ul>
         </div>
 

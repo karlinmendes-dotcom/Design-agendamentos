@@ -39,10 +39,18 @@ const FIREBASE_CONFIG = {
 };
 
 /**
- * Chave pública do par de chaves Web Push (Firebase → Configurações do
- * projeto → Cloud Messaging → Certificados Web Push). Necessária para gerar o
- * token FCM. Pública por design — sobrescreva via VITE_FIREBASE_VAPID_KEY se
- * precisar (projeto poupaps-cancelar).
+ * ⚙️ PRODUÇÃO — CHAVE VAPID (Web Push)
+ *
+ * A chave abaixo é a PÚBLICA do projeto Firebase "poupaps-cancelar" e já
+ * funciona em produção. Pública por design: ela vai no navegador e não é
+ * segredo. O segredo (FIREBASE_SERVICE_ACCOUNT) vive só no servidor Convex.
+ *
+ * PARA TROCAR DE PROJETO FIREBASE:
+ * 1. Firebase Console → Configurações do projeto → Cloud Messaging →
+ *    Certificados Web Push → copie a "Chave pública" (começa com BP...).
+ * 2. Defina VITE_FIREBASE_VAPID_KEY nas env vars do painel (Vercel/Keys) —
+ *    NUNCA edite a constante abaixo em produção; ela é só o fallback local.
+ * 3. Mantenha o public/firebase-messaging-sw.js com o mesmo projeto Firebase.
  */
 const VAPID_KEY_PADRAO =
   "BPILKFOKhBqgOYngruXDKhuATn2hdQ08XqgAdV4kN9wFPlyhGd1F11kt9Gz5VyD6Vr0DzWG9o31NDYYI7gXVGp8";
@@ -57,6 +65,15 @@ let suportado: boolean | null = null;
 /** O navegador suporta FCM web? (https, service worker, etc.) */
 export async function firebaseDisponivel(): Promise<boolean> {
   if (suportado !== null) return suportado;
+  // ⚠️ Web Push só funciona em HTTPS (ou localhost). Sem HTTPS o FCM falha em
+  // silêncio — avisamos no console para facilitar o diagnóstico em produção
+  // (Vercel/Freebuff já servem por HTTPS, então o aviso só aparece em dev).
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    console.warn(
+      "[push] Ambiente SEM HTTPS detectado — as notificações web não funcionarão. " +
+        "Acesse o site por https:// em produção.",
+    );
+  }
   try {
     suportado = await isSupported();
   } catch {

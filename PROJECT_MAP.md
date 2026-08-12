@@ -36,13 +36,13 @@
 | `hooks/` | `useServicos`, `useHorarios`, `useConfiguracao`, `useDatasBloqueadas`, `useAgendamentos`, `useBarbearia`, `useBarbeiros`, `useClientes` (queries reativas + fallback demo) · `useIdentidadeCliente` (nome+WhatsApp da cliente no aparelho) · `useAdminAuth` (sessão do painel) |
 | `contexts/ToastContext.tsx` | Notificações |
 | `layouts/AdminLayout.tsx` | Sidebar + topbar do painel `/admin` |
-| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar), **`EntrarCliente`** (porta de entrada: nome+WhatsApp+permissão de notificação) |
+| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar), `LegalPage` (layout das páginas legais), **`EntrarCliente`** (porta de entrada: nome+WhatsApp+checkbox de consentimento LGPD com links /termos e /privacidade + banner de notificações antes do pop-up nativo) |
 | `components/ui/` | shadcn/ui: button, card, dialog, input, label, select, switch, table, textarea, badge, skeleton |
-| `pages/` | Cliente: `Home`, `Servicos`, `Agendamento`, `Promocoes`, `Contato`, `Sucesso`, `Reagendar` (rota aberta ao tocar na notificação) |
+| `pages/` | Cliente: `Home`, `Servicos`, `Agendamento`, `Promocoes`, `Contato`, `Sucesso`, `Reagendar` (rota aberta ao tocar na notificação) · Legais: `Privacidade` (`/privacidade`), `Termos` (`/termos`) — abertas, sem pedir conta (LGPD/Google) |
 | `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `Configuracoes`, **`AdminLogin`** (login do painel) |
 | `utils/` | `slots` (motor de horários), `whatsapp` (confirmação), `date`, `format`, `phone`, `media` (resolução de mídia), `videos` (fallback Mixkit), `serviceIcon` |
 
-**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente cria conta com nome+WhatsApp (`EntrarCliente`); `/admin*` exige login (`AdminLogin` + action `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada nas notas do dono)
+**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/privacidade` · `/termos` (abertas, sem conta) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente cria conta com nome+WhatsApp (`EntrarCliente`, com consentimento LGPD); `/admin*` exige login (`AdminLogin` + mutation `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada nas notas do dono)
 
 **Push FCM:** `public/firebase-messaging-sw.js` (service worker — recebe o pop até com o app fechado e abre `/reagendar` ao tocar)
 
