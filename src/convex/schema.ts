@@ -108,6 +108,12 @@ export default defineSchema({
     usos: v.number(), // perguntas respondidas no mês
   }).index("por_mes", ["mes"]),
 
+  // ---------- Uso da atendente GROQ (Q&A das clientes, cota mensal) ----------
+  atendente_uso: defineTable({
+    mes: v.string(), // YYYY-MM
+    usos: v.number(), // perguntas respondidas no mês
+  }).index("por_mes", ["mes"]),
+
   // ---------- Tokens de push (FCM) dos navegadores dos clientes ----------
   pushTokens: defineTable({
     token: v.string(), // token FCM do navegador da cliente

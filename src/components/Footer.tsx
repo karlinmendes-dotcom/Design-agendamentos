@@ -109,6 +109,11 @@ export function Footer() {
                 Termos de Uso
               </Link>
             </li>
+            <li>
+              <Link to="/regras" className="transition-colors hover:text-gold-light">
+                Regras de Atendimento
+              </Link>
+            </li>
           </ul>
         </div>
 

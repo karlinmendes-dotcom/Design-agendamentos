@@ -13,6 +13,7 @@ import { LoadingState } from "@/components/Feedback";
 import { BottomNav } from "@/components/BottomNav";
 import { SplashScreen } from "@/components/SplashScreen";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { AtendenteCliente } from "@/components/AtendenteCliente";
 import { PushListener } from "@/components/PushListener";
 import { EntrarCliente } from "@/components/EntrarCliente";
 import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
@@ -71,6 +72,9 @@ const Privacidade = lazy(() =>
 const Termos = lazy(() =>
   import("@/pages/Termos").then((m) => ({ default: m.Termos })),
 );
+const Regras = lazy(() =>
+  import("@/pages/Regras").then((m) => ({ default: m.Regras })),
+);
 
 /**
  * Porta de entrada da cliente: pede nome + WhatsApp (e autoriza os avisos)
@@ -97,6 +101,7 @@ function ClientLayout() {
       </main>
       <BottomNav />
       <WhatsAppFloat />
+      <AtendenteCliente />
       <PushListener />
     </div>
   );
@@ -164,6 +169,7 @@ export default function App() {
             {/* Páginas legais — abertas, para ler antes de criar a conta */}
             <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/termos" element={<Termos />} />
+            <Route path="/regras" element={<Regras />} />
 
             {/* Login do painel — aberto, para a dona entrar */}
             <Route path="/admin/entrar" element={<AdminLogin />} />
