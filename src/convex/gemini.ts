@@ -689,8 +689,23 @@ export const perguntar = action({
       .map((m) => `${m.papel === "usuario" ? "Dona" : "Assistente"}: ${m.texto}`)
       .join("\n");
 
+    // Data atual do SISTEMA (fuso do servidor) — sem ela o modelo inventa a
+    // data e erra perguntas como "quem está marcado hoje?". Teste real de
+    // 2026-08-12 confirmou o erro (o Gemini achava que era 17/08).
+    const agora = new Date();
+    const hojeISO = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
+    const diaSemanaHoje = NOMES_DIAS[agora.getDay()];
+    const dataHoje = agora.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
     const input = [
       conversa ? `Histórico da conversa:\n${conversa}\n` : "",
+      `HOJE (data atual do sistema, use SEMPRE esta — nunca invente): ${dataHoje} (${diaSemanaHoje}, formato ISO ${hojeISO}).`,
+      "",
       `Pergunta da dona do estúdio: ${perguntaLimpa}`,
       "",
       "Dados do estúdio (fonte única de verdade):",
