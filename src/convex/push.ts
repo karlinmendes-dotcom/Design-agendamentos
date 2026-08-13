@@ -27,7 +27,7 @@ const CORPO_AVISO =
 
 /** Chave pública VAPID do estúdio (pública por design — fica no navegador). */
 const VAPID_PUBLIC_KEY =
-  "BASAMPoLelBOjtwzVJZBeuwG26yW7-8PGkEagV9n-x33LNlnTCYyFREgbIui1q6q_izmipY9DXza2MpqlEJ8uURo";
+  "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
 /** Contato identificado no JWT VAPID (exigência do protocolo). */
 const VAPID_SUBJECT = "mailto:avisos@studio-natalia.com.br";

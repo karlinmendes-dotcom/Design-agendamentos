@@ -9,7 +9,7 @@
  * (VAPID_PRIVATE_KEY) vive SÓ no servidor do Convex (src/convex/push.ts).
  */
 const VAPID_KEY_PADRAO =
-  "BASAMPoLelBOjtwzVJZBeuwG26yW7-8PGkEagV9n-x33LNlnTCYyFREgbIui1q6q_izmipY9DXza2MpqlEJ8uURo";
+  "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
 export const VAPID_KEY =
   import.meta.env.VITE_VAPID_PUBLIC_KEY ?? VAPID_KEY_PADRAO;
