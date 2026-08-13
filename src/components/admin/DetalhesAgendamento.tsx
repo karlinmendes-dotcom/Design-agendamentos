@@ -70,7 +70,7 @@ export function DetalhesAgendamento({ agendamento, onFechar }: Props) {
   const { toast } = useToast();
   const atualizarStatus = useMutation(api.agendamentos.atualizarStatus);
   const quitarPendencia = useMutation(api.agendamentos.quitarPendencia);
-  const enviarAviso = useAction(api.push.enviarParaTelefones);
+  const cancelarIndividual = useAction(api.push.cancelarIndividual);
 
   // Sincroniza com o agendamento escolhido pelo pai (abre/atualiza o modal)
   useEffect(() => {
@@ -86,12 +86,19 @@ export function DetalhesAgendamento({ agendamento, onFechar }: Props) {
   ) => {
     setSalvandoId(id);
     try {
-      await atualizarStatus({ id: id as Id<"agendamentos">, status });
-      toast("success", `Agendamento atualizado para "${STATUS_AGENDAMENTO[status]}".`);
-      // Cancelou um horário individual → avisa a cliente por notificação
-      if (status === "cancelado" && telefone) {
-        void enviarAviso({ telefones: [telefone], data }).catch(() => {});
+      if (status === "cancelado") {
+        // Cancelamento individual: o backend cancela no banco (operações
+        // principal) e notifica a cliente por Web Push (operação posterior —
+        // se o push falhar, o cancelamento continua valendo).
+        await cancelarIndividual({
+          id: id as Id<"agendamentos">,
+          data,
+          telefone: telefone ?? undefined,
+        });
+      } else {
+        await atualizarStatus({ id: id as Id<"agendamentos">, status });
       }
+      toast("success", `Agendamento atualizado para "${STATUS_AGENDAMENTO[status]}".`);
       setExibido((atual) => (atual ? { ...atual, status } : atual));
     } catch (err) {
       toast("error", erroMensagem(err, "Não foi possível atualizar o status."));
@@ -116,7 +123,7 @@ export function DetalhesAgendamento({ agendamento, onFechar }: Props) {
   };
 
   /** Confirmação explícita antes de cancelar pelo modal de detalhes. */
-  const cancelarIndividual = async () => {
+  const confirmarCancelamento = async () => {
     if (!exibido) return;
     const nome = exibido.cliente?.nome ?? "esta cliente";
     if (
@@ -337,7 +344,7 @@ export function DetalhesAgendamento({ agendamento, onFechar }: Props) {
                     variant="destructive"
                     className="flex-1"
                     disabled={salvandoId === exibido.id}
-                    onClick={() => void cancelarIndividual()}
+                    onClick={() => void confirmarCancelamento()}
                   >
                     {salvandoId === exibido.id ? (
                       <Loader2 className="size-4 animate-spin" />

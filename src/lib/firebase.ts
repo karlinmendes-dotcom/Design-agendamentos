@@ -76,6 +76,24 @@ export async function obterTokenPush(): Promise<string | null> {
 }
 
 /**
+ * Remove a inscrição push deste aparelho (unsubscribe real do navegador).
+ * Usado pelo botão "Parar notificações" da Política de Privacidade — após
+ * remover do Convex, o navegador deixa de receber/envios de verdade.
+ */
+export async function cancelarInscricaoPush(): Promise<void> {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+  } catch {
+    // best-effort: se falhar, a remoção no banco (feita pela página) já
+    // impede novos envios — o fluxo não quebra.
+  }
+}
+
+/**
  * App aberto: a notificação é exibida pelo próprio service worker (o pop do
  * navegador aparece mesmo com a página em foco) — mantemos a assinatura por
  * compatibilidade com o PushListener, que não precisa mais de listener.

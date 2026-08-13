@@ -8,6 +8,7 @@ import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
 import { useBarbearia } from "@/hooks/useBarbearia";
 import { useToast } from "@/contexts/ToastContext";
 import { maskPhone } from "@/utils/phone";
+import { cancelarInscricaoPush } from "@/lib/firebase";
 
 /** Número do estúdio no formato internacional do wa.me (55 + dígitos). */
 function numeroWhatsApp(telefone: string | null | undefined): string {
@@ -33,12 +34,14 @@ export function Privacidade() {
   const [parandoAvisos, setParandoAvisos] = useState(false);
   const [avisosParados, setAvisosParados] = useState(false);
 
-  /** Remove do banco os tokens de push do telefone salvo neste aparelho. */
+  /** Remove do banco os tokens de push do telefone salvo neste aparelho e
+   *  cancela a inscrição push real do navegador (best-effort). */
   const pararAvisos = async () => {
     if (!identidade) return;
     setParandoAvisos(true);
     try {
       await removerTokens({ telefone: identidade.telefone });
+      await cancelarInscricaoPush();
       setAvisosParados(true);
       toast("success", "Avisos desativados neste aparelho. 💛");
     } catch {

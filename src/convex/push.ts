@@ -7,14 +7,17 @@ import webpush from "web-push";
 
 /**
  * Notificações Web Push (protocolo padrão do navegador, VAPID) — o "pop" que
- * chega no navegador/celular da cliente (confirmação, cancelamento, avisos).
+ * chega no navegador/celular da cliente (confirmação, cancelamento, avisos),
+ * MESMO com o app fechado (quem exibe é o service worker).
  *
- * - Frontend: a cliente permite notificações e o navegador devolve uma
- *   INSCRIÇÃO push (endpoint + chaves), que é gravada como JSON na tabela
- *   pushTokens (campo token), vinculada ao telefone.
+ * - Frontend: a cliente autoriza e o navegador devolve uma INSCRIÇÃO push
+ *   (PushSubscription como JSON), gravada na tabela `pushTokens` (campo
+ *   token) vinculada ao telefone — a validação/limpeza de inscrições
+ *   inválidas fica em `pushTokens.ts`.
  * - Backend: `enviarParaTelefones` busca as inscrições dos telefones afetados
- *   e entrega o aviso via protocolo Web Push (biblioteca web-push), assinando
- *   com a chave PRIVADA VAPID (env VAPID_PRIVATE_KEY — segredo, só servidor).
+ *   e entrega o aviso via protocolo Web Push (biblioteca web-push),
+ *   assinando com a chave PRIVADA VAPID — que existe SOMENTE na variável de
+ *   ambiente `VAPID_PRIVATE_KEY` do Convex (nunca no repositório).
  *   A chave pública fica no frontend (src/lib/firebase.ts).
  *
  * Sem Firebase: não depende de projeto, conta de serviço nem permissões do
@@ -23,29 +26,18 @@ import webpush from "web-push";
 
 const TITULO_AVISO = "⚠️ Alteração no seu Agendamento";
 const CORPO_AVISO =
-  "Olá! Houve um imprevisto na nossa agenda. Toque aqui para ver os detalhes e remarcar o seu horário de forma rápida.";
+  "Olá! Houve um imprevisto na nossa agenda. Toque aqui para ver os detalhes e remarcar o seu horário.";
 
-/** Chave pública VAPID do estúdio (pública por design — fica no navegador).
- * Par válido gerado em 2026-08-13 via web-push.generateVAPIDKeys (o par
- * anterior tinha a pública corrompida e nenhum aviso era entregue). */
+/** Chave pública VAPID do estúdio (pública por design — fica no navegador). */
 const VAPID_PUBLIC_KEY =
   "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
 /**
- * Chave PRIVADA VAPID do estúdio — pareada com a pública acima.
- *
- * Prioridade: se existir a env var VAPID_PRIVATE_KEY no Convex
- * (Environment Variables), ela vence. Senão, usa esta constante como
- * GARANTIA para o envio funcionar sem depender de configuração externa
- * (a dona tem vários projetos no Convex e a env var foi salva no lugar
- * errado — o aviso nunca chegava por isso). É uma chave de envio de
- * notificação (não dá acesso a dados) e o repositório é privado.
+ * Contato identificado no JWT VAPID (exigência do protocolo). Usamos o próprio
+ * endereço do site (https://...) — o protocolo aceita, e assim não inventamos
+ * um e-mail que não existe.
  */
-const VAPID_PRIVATE_KEY_GARANTIA =
-  "UGuMHAqXzcHGFdZizFBzquoRtxDth3nRndLncsrW2dY";
-
-/** Contato identificado no JWT VAPID (exigência do protocolo). */
-const VAPID_SUBJECT = "mailto:avisos@studio-natalia.com.br";
+const VAPID_SUBJECT = "https://design-agendamentos.vercel.app";
 
 /** Resultado de um envio em lote (tipado para evitar inferência circular). */
 interface ResultadoEnvio {
@@ -59,11 +51,13 @@ interface ResultadoEnvio {
 }
 
 /**
- * Configura o VAPID no web-push. Usa a env var do Convex se existir;
- * senão, usa a chave de garantia embutida (ver acima).
+ * Configura o VAPID no web-push. A chave privada é lida SOMENTE do runtime do
+ * Convex (Environment Variables → VAPID_PRIVATE_KEY). Sem ela, o envio não
+ * acontece e o chamador recebe `sem_configuracao: true` — nada de chave
+ * embutida no código-fonte.
  */
 function configurarVapid(): boolean {
-  const privada = process.env.VAPID_PRIVATE_KEY ?? VAPID_PRIVATE_KEY_GARANTIA;
+  const privada = process.env.VAPID_PRIVATE_KEY;
   if (!privada) return false;
   try {
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, privada);
@@ -73,13 +67,15 @@ function configurarVapid(): boolean {
   }
 }
 
-/** Inscrição push gravada no banco (JSON.parse do que o navegador devolveu). */
-
 /**
- * Entrega o aviso para todos os telefones informados (Web Push). Se o
- * VAPID_PRIVATE_KEY ainda não estiver configurado no Convex, retorna
- * sem_configuracao: true (o cancelamento já aconteceu — só o aviso fica
- * pendente).
+ * Entrega o aviso para todos os telefones informados (Web Push).
+ *
+ * Regras:
+ * - O envio NUNCA derruba a operação chamadora (cancelamento, etc.): falhas
+ *   são registradas em `erros` e o cancelamento já aconteceu no banco.
+ * - Inscrições que o push service devolve como inválidas (404/410) são
+ *   removidas automaticamente da base (`pushTokens.remover`) — o aparelho
+ *   que revogou a permissão para de receber sem travar o lote.
  */
 export const enviarParaTelefones = action({
   args: {
@@ -117,13 +113,15 @@ export const enviarParaTelefones = action({
         telefones: limpos,
         sem_configuracao: true,
         data: data ?? null,
-        erros: ["VAPID_PRIVATE_KEY ausente no Convex (Environment Variables)."],
+        erros: [
+          "VAPID_PRIVATE_KEY ausente no Convex (Environment Variables) — o aviso não foi enviado.",
+        ],
       };
     }
 
     // Junta todas as inscrições push dos telefones afetados (uma cliente
     // pode ter vários navegadores/aparelhos). O campo token guarda a
-    // inscrição completa como JSON.
+    // PushSubscription completa como JSON.
     const docs = await ctx.runQuery(api.pushTokens.listarPorTelefones, {
       telefones: limpos,
     });
@@ -185,6 +183,62 @@ export const enviarParaTelefones = action({
       data: data ?? null,
       erros,
     };
+  },
+});
+
+/**
+ * CANCELAMENTO INDIVIDUAL (pela dona, no painel) + aviso por Web Push.
+ *
+ * A operação principal é o cancelamento no banco — que gera a pendência de
+ * 50% (regra do estúdio para desmarcar em cima da hora / falta). A
+ * notificação é uma operação POSTERIOR: se o push falhar, o agendamento
+ * continua corretamente cancelado (o erro do push vai em `push.erros`).
+ */
+/** Resultado do cancelamento individual: cancelamento no banco + push. */
+interface ResultadoCancelamento {
+  cancelado: boolean;
+  telefone: string;
+  push: ResultadoEnvio | { erro: string };
+}
+
+export const cancelarIndividual = action({
+  args: {
+    id: v.id("agendamentos"),
+    data: v.string(),
+    telefone: v.optional(v.string()),
+  },
+  handler: async (
+    ctx,
+    { id, data, telefone },
+  ): Promise<ResultadoCancelamento> => {
+    // 1. Cancela no banco — operação PRINCIPAL (não depende do push)
+    await ctx.runMutation(api.agendamentos.atualizarStatus, {
+      id,
+      status: "cancelado",
+    });
+
+    // 2. Resolve o telefone da cliente (o painel passa, mas confirmamos no
+    //    banco para o envio nunca depender de argumento do navegador)
+    let telefoneCliente = telefone?.replace(/\D/g, "") ?? "";
+    if (!telefoneCliente) {
+      const todos = await ctx.runQuery(api.agendamentos.list);
+      const doc = todos.find((a) => String(a.id) === String(id));
+      telefoneCliente = doc?.cliente?.telefone?.replace(/\D/g, "") ?? "";
+    }
+
+    // 3. Notifica a cliente — operação POSTERIOR; falha não derruba o cancelamento
+    let push: ResultadoEnvio | { erro: string };
+    try {
+      push = await ctx.runAction(api.push.enviarParaTelefones, {
+        telefones: telefoneCliente ? [telefoneCliente] : [],
+        data,
+        url: "/reagendar",
+      });
+    } catch (err) {
+      push = { erro: String(err) };
+    }
+
+    return { cancelado: true, telefone: telefoneCliente, push };
   },
 });
 
