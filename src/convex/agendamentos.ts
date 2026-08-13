@@ -155,6 +155,17 @@ async function validarDisponibilidade(
       `Atendemos das ${expediente.hora_inicio} às ${expediente.hora_fim} neste dia. Escolha um horário dentro do expediente.`,
     );
   }
+
+  // 4. Se o dia tem horários FIXOS definidos (ex.: almoço 11h–14h fora da
+  //    lista), o horário precisa ser exatamente um deles — o servidor recusa
+  //    12h30, 13h, etc. mesmo que caia dentro do expediente. Isso vale para
+  //    o site E para a assistente (criarViaAssistente usa esta função).
+  const fixos = expediente.slots_fixos ?? [];
+  if (fixos.length > 0 && !fixos.includes(horario)) {
+    throw new ConvexError(
+      `Os horários disponíveis neste dia são: ${fixos.join(", ")}. Escolha um desses horários.`,
+    );
+  }
 }
 
 export const criar = mutation({

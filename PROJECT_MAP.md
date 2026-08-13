@@ -36,13 +36,13 @@
 | `hooks/` | `useServicos`, `useHorarios`, `useConfiguracao`, `useDatasBloqueadas`, `useAgendamentos`, `useBarbearia`, `useBarbeiros`, `useClientes` (queries reativas + fallback demo) · `useIdentidadeCliente` (nome+WhatsApp da cliente no aparelho) · `useAdminAuth` (sessão do painel) |
 | `contexts/ToastContext.tsx` | Notificações |
 | `layouts/AdminLayout.tsx` | Sidebar + topbar do painel `/admin` |
-| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar), `LegalPage` (layout das páginas legais), **`EntrarCliente`** (porta de entrada: nome+WhatsApp+checkbox de consentimento LGPD com links /termos e /privacidade + banner de notificações antes do pop-up nativo) |
+| `components/` | Cliente: `Logo`, `Footer`, `WhatsAppFloat`, `SplashScreen`, `ServiceCard`, `VideoCover`, `VideoCarousel`, `TimeSlotGrid`, `BottomNav`, `Feedback`, `Charts`, `StatCard`, `StatusBadge`, `EmptyState`, `Reveal`, `PushListener` (escuta push com app aberto), `ReagendarModal` (aviso de cancelamento + CTA reagendar), `LegalPage` (layout das páginas legais), **`AtendenteCliente`** (Nati — chat flutuante de orientação das clientes, lado esquerdo, ver §5), **`EntrarCliente`** (porta de entrada: nome+WhatsApp+checkbox de consentimento LGPD com links /termos e /privacidade + banner de notificações antes do pop-up nativo) |
 | `components/ui/` | shadcn/ui: button, card, dialog, input, label, select, switch, table, textarea, badge, skeleton |
-| `pages/` | Cliente: `Home`, `Servicos`, `Agendamento`, `Promocoes`, `Contato`, `Sucesso`, `Reagendar` (rota aberta ao tocar na notificação) · Legais: `Privacidade` (`/privacidade`), `Termos` (`/termos`) — abertas, sem pedir conta (LGPD/Google) |
-| `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `Configuracoes`, **`AdminLogin`** (login do painel) |
+| `pages/` | Cliente: `Home`, `Servicos`, `Agendamento`, `Promocoes`, `Contato`, `Sucesso`, `Reagendar` (rota aberta ao tocar na notificação) · Legais: `Privacidade` (`/privacidade`), `Termos` (`/termos`), `Regras` (`/regras` — regras de atendimento que a Nati orienta) — abertas, sem pedir conta (LGPD/Google) |
+| `pages/admin/` | `Dashboard`, `Agenda`, `ServicosAdmin`, `CombosAdmin`, `Equipe`, `Configuracoes`, **`AdminLogin`** (login do painel) |
 | `utils/` | `slots` (motor de horários), `whatsapp` (confirmação), `date`, `format`, `phone`, `media` (resolução de mídia), `videos` (fallback Mixkit), `serviceIcon` |
 
-**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/privacidade` · `/termos` (abertas, sem conta) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/configuracoes` — cliente cria conta com nome+WhatsApp (`EntrarCliente`, com consentimento LGPD); `/admin*` exige login (`AdminLogin` + mutation `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada nas notas do dono)
+**Rotas:** `/` · `/servicos` · `/agendamento` · `/promocoes` · `/contato` · `/sucesso` · `/reagendar` (aberta mesmo sem entrar) · `/privacidade` · `/termos` · `/regras` (abertas, sem conta) · `/admin/entrar` · `/admin` · `/admin/agenda` · `/admin/servicos` · `/admin/combos` · `/admin/equipe` · `/admin/configuracoes` — cliente cria conta com nome+WhatsApp (`EntrarCliente`, com consentimento LGPD); `/admin*` exige login (`AdminLogin` + mutation `admin.verificarSenha`; senha em `src/convex/admin.ts`, anotada nas notas do dono)
 
 **Push FCM:** `public/firebase-messaging-sw.js` (service worker — recebe o pop até com o app fechado e abre `/reagendar` ao tocar)
 
@@ -50,7 +50,7 @@
 
 | Arquivo | Queries / Mutations |
 |---|---|
-| `schema.ts` | Tabelas: `barbearias`, `configuracoes`, `servicos`, `barbeiros`, `horarios`, `clientes`, `midias`, `datasBloqueadas`, `agendamentos`, `pushTokens` |
+| `schema.ts` | Tabelas: `barbearias`, `configuracoes`, `servicos`, `barbeiros`, `horarios`, `clientes`, `midias`, `datasBloqueadas`, `agendamentos`, `pushTokens`, `admins`, `gemini_uso`, `atendente_uso` |
 | `agendamentos.ts` | `list`, `listPorData`, `listOcupados`, **`criar`** (valida dia ativo + data bloqueada + expediente + anti-sobreposição), `atualizarStatus`, **`cancelarDia`** (cancela o dia inteiro + retorna telefones dos afetados) |
 | `pushTokens.ts` | `registrar`, `remover`, `listarPorTelefones` (tokens FCM por telefone) |
 | `admin.ts` | **`verificarSenha`** (login do painel `/admin` — senha no backend, nunca no navegador) |
@@ -62,6 +62,8 @@
 | `horarios.ts` | `list`, `listAtivos`, `upsert` (expediente por dia) |
 | `datasBloqueadas.ts` | `list`, `adicionar`, `remover` (feriados/folgas) |
 | `servicos.ts` | `list`, `criar`, `atualizar`, `setAtivo`, `excluir` |
+| `gemini.ts` | **Assistente da dona (painel)**: action `perguntar` (Gemini + function calling) · queries `contexto` (tudo) e `uso` · mutation `registrarUso` — ver §5 |
+| `atendente.ts` | **Nati (clientes)**: action `perguntar` (GROQ/llama, sem tools) · query `contexto` (só dados públicos) e `uso` · mutation `registrarUso` — ver §5 |
 | `midias.ts` | Biblioteca de conteúdo (vídeo/imagem/banner/logo) |
 | `storage.ts` | Util de validação de arquivos do Convex Storage |
 | `seed.ts` | `seed:inicial` (dados da marca) |
@@ -74,7 +76,27 @@
 - **Dashboard manda de verdade:** `admin/Configuracoes.tsx` grava os 7 dias atomicamente (switches → `configuracoes.salvar` + `horarios.upsert`) e feriados via `datasBloqueadas`; o servidor (`agendamentos.criar`) recusa dia desativado/feriado/fora do expediente.
 - **Identidade visual:** tokens da marca em `src/index.css` (`@theme` + `:root`) — creme `#F8F3EE` de fundo, verde `#2F4A3E` primário, dourado `#C9A86A` em detalhes; fontes Playfair (títulos) / Great Vibes (cursiva) / Cormorant (serif apoio).
 
-## 5. Próximas fases — PLANEJADAS (não implementar ainda)
+## 5. As duas IAs — GEMINI (painel) e NATI (atendente)
+
+| | 🤖 **Gemini — Assistente da dona** | 💅 **Nati — Atendente das clientes** |
+|---|---|---|
+| Área | Só `/admin*` (dashboard, protegido por login) | Só páginas do cliente (`ClientLayout`) |
+| Backend | `src/convex/gemini.ts` — action `gemini:perguntar` | `src/convex/atendente.ts` — action `atendente:perguntar` |
+| Widget | `src/components/admin/AssistenteAdmin.tsx` (montado no `AdminLayout`, lado direito) | `src/components/AtendenteCliente.tsx` (montado no `ClientLayout` do `App.tsx`, lado esquerdo) |
+| Modelo / API | Gemini — env do Convex `GEMINI_API_KEY` (+ `GEMINI_MODEL` opcional) | llama-3.3-70b-versatile (GROQ) — envs do Convex `GROQ_API_KEY` + `GROQ_MODEL` |
+| O que enxerga | Tudo: clientes, agendamentos, admins, expediente + **cardápio ATIVO** com preços (query `gemini.contexto` — só `ativo=true`; histórico usa o mapa completo) | Só nome/telefone/Instagram/endereço (query `atendente.contexto`) — **sem serviços, sem preços, sem clientes, sem agenda** |
+| Execução | CRUD total via function calling (tools) + protocolo "sinal verde" 🚀 para ações críticas | **Nenhuma** — só orienta com o prompt |
+| Cota mensal | Tabela `gemini_uso` (limite 1000/mês) | Tabela `atendente_uso` (limite 3000/mês) — **independentes** |
+| Prompt | `INSTRUCAO_SISTEMA` em `gemini.ts` (verbatim da dona + apêndice técnico) | `ATENDENTE_SISTEMA` em `atendente.ts` (verbatim da dona — **sem** apêndice técnico) |
+
+**Regras de ouro (não quebrar):**
+- A Nati **nunca** recebe serviços, preços, clientes, agendamentos ou admins no contexto. Se um dia precisar de mais dados, perguntar à dona antes.
+- A Nati **não tem ferramentas (tools)** — ela não executa nada no banco; orienta a cliente a usar a página de agendamento do site.
+- O prompt da Nati é **fechado e verbatim da dona** — não adicionar seções nem apêndice técnico (ela não pode saber de tecnologias internas, Google, Gemini, bancos etc.).
+- A Nati aponta as clientes para a página `/regras` (seção 12 do prompt) — manter a página sempre coerente com o prompt.
+- Chaves `GEMINI_API_KEY` e `GROQ_API_KEY` ficam SÓ no Convex (Environment Variables do deployment), **nunca** no repositório.
+
+## 6. Próximas fases — PLANEJADAS (não implementar ainda)
 
 Decisões registradas para não se perder contexto (pedido da dona, 2026-08):
 
@@ -133,7 +155,7 @@ Decisões registradas para não se perder contexto (pedido da dona, 2026-08):
   completo do banco (`clientes.buscar` + `clientes.historico`, com filtro de
   período 3/6/12 meses) — pronta no Dashboard.
 
-## 6. Publicação / deploy
+## 7. Publicação / deploy
 
 ```bash
 bun convex dev --once        # publicar funções (regenera _generated) — requer CONVEX_DEPLOY_KEY
@@ -143,4 +165,5 @@ bun run build                # build → dist/ (deploy na Vercel faz bun install
 ```
 
 - Env: `VITE_CONVEX_URL` → `https://hardy-aardvark-221.convex.cloud` (`.env` ignorado pelo git; configurada na Vercel prod/preview/dev).
+- Envs das IAs ficam **no Convex** (não na Vercel): `GEMINI_API_KEY`, `GROQ_API_KEY`, `GROQ_MODEL`, `FIREBASE_SERVICE_ACCOUNT` — ver §5.
 - ⚠️ Banco/hospedagem **separados** dos outros projetos (barbearia e sushi) — nunca apontar este app para outro deployment.

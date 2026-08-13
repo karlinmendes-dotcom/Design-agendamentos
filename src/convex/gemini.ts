@@ -371,12 +371,17 @@ export const contexto = query({
     const nomeCliente = new Map(
       clientes.map((c) => [c._id, `${c.nome} (tel ${c.telefone})`]),
     );
+    // Mapa com TODOS os serviços (inclusive inativos) para o histórico de
+    // agendamentos continuar mostrando o nome/valor do que foi marcado.
     const infoServico = new Map(
       servicos.map((s) => [
         s._id,
         `${s.nome} — R$ ${s.preco.toFixed(2).replace(".", ",")} (${s.duracao_minutos} min)`,
       ]),
     );
+    // Cardápio ATUAL: apenas serviços/combo ATIVOS (o que o site oferece de
+    // verdade). Serviços desativados (testes/antigos) não são citados pela IA.
+    const servicosAtivos = servicos.filter((s) => s.ativo);
 
     return {
       // 'de_mim' → dados do salão + configurações
@@ -411,7 +416,7 @@ export const contexto = query({
       clientes: clientes
         .map((c) => `${c.nome} (tel ${c.telefone})`)
         .slice(0, 200),
-      servicos: servicos.map(
+      servicos: servicosAtivos.map(
         (s) =>
           `${s.nome} — R$ ${s.preco.toFixed(2).replace(".", ",")} (${s.duracao_minutos} min)${s.is_combo ? " · COMBO" : ""}`,
       ),

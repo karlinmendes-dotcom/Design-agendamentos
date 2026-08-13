@@ -23,59 +23,68 @@ export const inicial = mutation({
     await ctx.db.insert("configuracoes", {
       barbearia_id: estId,
       nome_barbearia: "Studio Natália Braga – Nail Design",
-      horario_funcionamento: "Terça a Sábado — 09h às 19h",
-      dias_disponiveis: [1, 2, 3, 4, 5, 6],
+    horario_funcionamento:
+      "Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h",
+    dias_disponiveis: [1, 2, 3, 4, 5],
     });
 
-    // 3. Cardápio
+    // 3. Cardápio — serviços REAIS do estúdio (valores oficiais 2026-08).
+    // Durações padrão estimadas — ajustáveis pelo painel (Serviços → editar).
     const servicos = [
       {
-        nome: "Manicure",
+        nome: "Aplicação Esmaltada",
         descricao:
-          "Cuidados com as cutículas, lixação, formato dos seus sonhos e esmaltação na cor da sua escolha.",
-        preco: 40,
-        duracao_minutos: 45,
-        video_url: "https://assets.mixkit.co/videos/15806/15806-360.mp4",
+          "Aplicação completa de alongamento com esmaltação em gel — unhas impecáveis do início ao fim.",
+        preco: 250,
+        duracao_minutos: 60,
       },
       {
-        nome: "Pedicure",
+        nome: "Aplicação Natural",
         descricao:
-          "Pés renovados: banho relaxante, cutículas, esfoliação leve e esmaltação impecável.",
+          "Aplicação completa de alongamento com acabamento natural e discreto.",
+        preco: 220,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Manutenção Esmaltada",
+        descricao:
+          "Manutenção do alongamento esmaltado — suas unhas sempre prontas.",
+        preco: 185,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Manutenção Natural",
+        descricao:
+          "Manutenção do alongamento natural com cuidado e precisão.",
+        preco: 165,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Banho de Gel",
+        descricao:
+          "Banho de gel para revitalizar e hidratar as unhas.",
+        preco: 155,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Esmaltação em Gel – Mãos",
+        descricao:
+          "Esmaltação em gel com brilho intenso e durabilidade — mãos.",
+        preco: 115,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Esmaltação em Gel – Pés",
+        descricao:
+          "Esmaltação em gel com brilho intenso e durabilidade — pés.",
+        preco: 100,
+        duracao_minutos: 60,
+      },
+      {
+        nome: "Retirada",
+        descricao: "Retirada do procedimento em gel existente.",
         preco: 50,
         duracao_minutos: 60,
-        video_url: "https://assets.mixkit.co/videos/27906/27906-360.mp4",
-      },
-      {
-        nome: "Esmaltação em Gel",
-        descricao:
-          "Brilho intenso e durabilidade de até 3 semanas com esmalte em gel.",
-        preco: 70,
-        duracao_minutos: 60,
-        video_url: "https://assets.mixkit.co/videos/13084/13084-360.mp4",
-      },
-      {
-        nome: "Alongamento em Gel",
-        descricao:
-          "Unhas alongadas, leves e resistentes, modeladas no formato ideal para você.",
-        preco: 120,
-        duracao_minutos: 90,
-        video_url: "https://assets.mixkit.co/videos/24817/24817-360.mp4",
-      },
-      {
-        nome: "Nail Art",
-        descricao:
-          "Designs exclusivos: francesinha, degradê, desenhos personalizados e brilhos.",
-        preco: 35,
-        duracao_minutos: 30,
-        video_url: "https://assets.mixkit.co/videos/36905/36905-360.mp4",
-      },
-      {
-        nome: "Spa dos Pés",
-        descricao:
-          "Hidratação profunda, esfoliação e massagem relaxante para os pés.",
-        preco: 85,
-        duracao_minutos: 75,
-        video_url: "https://assets.mixkit.co/videos/21970/21970-360.mp4",
       },
     ];
     for (const s of servicos) {
@@ -86,7 +95,6 @@ export const inicial = mutation({
         preco: s.preco,
         duracao_minutos: s.duracao_minutos,
         ativo: true,
-        video_url: s.video_url,
       });
     }
 
@@ -98,14 +106,16 @@ export const inicial = mutation({
       ativo: true,
     });
 
-    // 5. Horários — Terça a Sábado
+    // 5. Horários — Segunda a quinta 08h–18h · Sexta 08h–16h · Sáb/Dom fechado
+    //    Horários FIXOS de agendamento (1h cada), com o almoço 11h–14h fora.
+    const SEG_QUI = ["08:00", "09:00", "10:00", "14:00", "15:00", "16:00", "17:00"];
+    const SEX = ["08:00", "09:00", "10:00", "14:00", "15:00"];
     const horarios = [
-      { dia_semana: 1, hora_inicio: "09:00", hora_fim: "19:00" },
-      { dia_semana: 2, hora_inicio: "09:00", hora_fim: "19:00" },
-      { dia_semana: 3, hora_inicio: "09:00", hora_fim: "19:00" },
-      { dia_semana: 4, hora_inicio: "09:00", hora_fim: "19:00" },
-      { dia_semana: 5, hora_inicio: "09:00", hora_fim: "19:00" },
-      { dia_semana: 6, hora_inicio: "08:00", hora_fim: "18:00" },
+      { dia_semana: 1, hora_inicio: "08:00", hora_fim: "18:00", slots: SEG_QUI },
+      { dia_semana: 2, hora_inicio: "08:00", hora_fim: "18:00", slots: SEG_QUI },
+      { dia_semana: 3, hora_inicio: "08:00", hora_fim: "18:00", slots: SEG_QUI },
+      { dia_semana: 4, hora_inicio: "08:00", hora_fim: "18:00", slots: SEG_QUI },
+      { dia_semana: 5, hora_inicio: "08:00", hora_fim: "16:00", slots: SEX },
     ];
     for (const h of horarios) {
       await ctx.db.insert("horarios", {
@@ -114,6 +124,7 @@ export const inicial = mutation({
         hora_inicio: h.hora_inicio,
         hora_fim: h.hora_fim,
         ativo: true,
+        slots_fixos: h.slots,
       });
     }
 

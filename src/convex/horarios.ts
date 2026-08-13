@@ -11,6 +11,7 @@ function mapHorario(doc: HorarioDoc) {
     hora_inicio: doc.hora_inicio,
     hora_fim: doc.hora_fim,
     ativo: doc.ativo,
+    slots_fixos: doc.slots_fixos ?? [],
     created_at: new Date(doc._creationTime).toISOString(),
     barbearia_id: doc.barbearia_id ?? null,
   };
@@ -42,6 +43,7 @@ export const upsert = mutation({
     hora_inicio: v.string(),
     hora_fim: v.string(),
     ativo: v.boolean(),
+    slots_fixos: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const existente = await ctx.db
@@ -54,6 +56,10 @@ export const upsert = mutation({
         hora_inicio: args.hora_inicio,
         hora_fim: args.hora_fim,
         ativo: args.ativo,
+        // Preserva os slots fixos existentes se não vierem no update
+        ...(args.slots_fixos !== undefined
+          ? { slots_fixos: args.slots_fixos }
+          : {}),
       });
       const doc = await ctx.db.get(existente._id);
       if (!doc) throw new Error("Erro ao atualizar horário.");
@@ -65,6 +71,9 @@ export const upsert = mutation({
       hora_inicio: args.hora_inicio,
       hora_fim: args.hora_fim,
       ativo: args.ativo,
+      ...(args.slots_fixos !== undefined
+        ? { slots_fixos: args.slots_fixos }
+        : {}),
     });
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Erro ao criar horário.");

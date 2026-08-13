@@ -3,8 +3,9 @@ import { v } from "convex/values";
 
 const PADRAO = {
   nome_barbearia: "Studio Natália Braga – Nail Design",
-  horario_funcionamento: "Terça a Sábado — 09h às 19h",
-  dias_disponiveis: [1, 2, 3, 4, 5, 6],
+  horario_funcionamento:
+    "Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h",
+  dias_disponiveis: [1, 2, 3, 4, 5],
 };
 
 const NOME_DIA = [
@@ -85,8 +86,8 @@ export const alternarDia = mutation({
     } else if (ativo) {
       await ctx.db.insert("horarios", {
         dia_semana,
-        hora_inicio: "09:00",
-        hora_fim: "19:00",
+        hora_inicio: "08:00",
+        hora_fim: "18:00",
         ativo: true,
       });
     }

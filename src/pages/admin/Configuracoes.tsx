@@ -20,7 +20,7 @@ interface DiaForm {
   fim: string;
 }
 
-const DIA_PADRAO: DiaForm = { ativo: false, inicio: "09:00", fim: "19:00" };
+const DIA_PADRAO: DiaForm = { ativo: false, inicio: "08:00", fim: "18:00" };
 
 export function Configuracoes() {
   const { configuracao, refresh: refreshConfig } = useConfiguracao();
@@ -143,8 +143,8 @@ export function Configuracoes() {
         const d = dias[dia] ?? { ...DIA_PADRAO };
         await upsertHorario({
           dia_semana: dia,
-          hora_inicio: d.inicio || "09:00",
-          hora_fim: d.fim || "19:00",
+          hora_inicio: d.inicio || "08:00",
+          hora_fim: d.fim || "18:00",
           ativo: d.ativo,
         });
       }
@@ -222,7 +222,7 @@ export function Configuracoes() {
                 id="c-desc"
                 value={descricaoHorarios}
                 onChange={(e) => setDescricaoHorarios(e.target.value)}
-                placeholder="Terça a Sábado — 09h às 19h"
+                placeholder="Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h"
               />
             </div>
           </CardContent>

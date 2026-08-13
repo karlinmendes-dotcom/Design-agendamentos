@@ -103,6 +103,8 @@ export interface Horario {
   hora_inicio: string; // HH:mm
   hora_fim: string; // HH:mm
   ativo: boolean;
+  /** Horários EXATOS de agendamento (quando definidos, só eles são oferecidos). */
+  slots_fixos: string[];
   created_at: string;
   barbearia_id: string | null;
 }

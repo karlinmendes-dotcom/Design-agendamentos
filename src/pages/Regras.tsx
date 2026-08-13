@@ -21,12 +21,23 @@ export function Regras() {
             <>
               <p>Segunda a quinta-feira: das 08:00 às 18:00.</p>
               <ul className="list-disc space-y-1 pl-5">
-                <li>Horários disponíveis: 08:00 | 11:00 | 14:00 | 16:00 | 18:00</li>
+                <li>
+                  Horários disponíveis: 08:00 | 09:00 | 10:00 | 14:00 | 15:00 |
+                  16:00 | 17:00
+                </li>
+                <li>Cada procedimento tem duração de 1 hora.</li>
               </ul>
+              <p>
+                Horário de almoço: das 11:00 às 14:00 — nenhum horário entre
+                eles.
+              </p>
               <p>Sexta-feira: das 08:00 às 16:00.</p>
               <ul className="list-disc space-y-1 pl-5">
-                <li>Horários disponíveis: 08:00 | 11:00 | 14:00 | 16:00</li>
+                <li>
+                  Horários disponíveis: 08:00 | 09:00 | 10:00 | 14:00 | 15:00
+                </li>
               </ul>
+              <p>Sábado e domingo: sem atendimento.</p>
               <p>Não há atendimento em outros horários.</p>
             </>
           ),

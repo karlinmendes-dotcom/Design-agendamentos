@@ -10,7 +10,8 @@ export const CONFIGURACAO_PADRAO: Pick<
 > = {
   nome_barbearia: "Studio Natália Braga – Nail Design",
   logo_url: null,
-  horario_funcionamento: "Terça a Sábado — 09h às 19h",
+  horario_funcionamento:
+    "Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h",
   dias_disponiveis: [1, 2, 3, 4, 5, 6],
 };
 

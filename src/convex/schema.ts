@@ -66,6 +66,10 @@ export default defineSchema({
     hora_inicio: v.string(), // HH:mm
     hora_fim: v.string(), // HH:mm
     ativo: v.boolean(),
+    // Horários EXATOS de agendamento (ex.: ["08:00","09:00","10:00",
+    // "14:00",...] com o almoço fora). Quando definidos, o agendamento
+    // oferece SOMENTE estes horários (nada de grade automática de 30 min).
+    slots_fixos: v.optional(v.array(v.string())),
   }),
 
   // ---------- Clientes (reutilizados por telefone) ----------

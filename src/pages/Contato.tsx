@@ -118,7 +118,7 @@ export function Contato() {
               </p>
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="size-3.5 shrink-0" />
-                {horarioFuncionamento ?? "Terça a Sábado — 09h às 19h"}
+                {horarioFuncionamento ?? "Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h"}
               </p>
             </div>
           </Reveal>

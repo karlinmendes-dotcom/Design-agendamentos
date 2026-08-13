@@ -34,6 +34,7 @@ import {
   gerarSlots,
   filtrarSlotsOcupados,
   filtrarSlotsPassados,
+  filtrarSlotsFixos,
 } from "@/utils/slots";
 import { maskPhone, isValidPhone, onlyDigits } from "@/utils/phone";
 import { linkConfirmacaoWhatsApp } from "@/utils/whatsapp";
@@ -181,18 +182,25 @@ export function Agendamento() {
 
   const slots = useMemo(() => {
     if (!horarioDoDia || !servico) return { grade: [], bloqueados: new Set<string>() };
-    // Grade completa (30 em 30 min) para exibição — horários tomados aparecem bloqueados
-    const grade = gerarSlots(
-      horarioDoDia.hora_inicio,
-      horarioDoDia.hora_fim,
-      30,
-    );
-    // Candidatos respeitando a duração do serviço escolhido
-    const candidatos = gerarSlots(
-      horarioDoDia.hora_inicio,
-      horarioDoDia.hora_fim,
-      servico.duracao_minutos,
-    );
+    // Horários FIXOS definidos pela dona (ex.: 08h, 09h, 10h, 14h, 15h, 16h,
+    // 17h com almoço 11h–14h fora da lista) — quando presentes, são os ÚNICOS
+    // horários exibidos no agendamento. Sem eles, mantém a grade de 30 min.
+    const fixos =
+      horarioDoDia.slots_fixos && horarioDoDia.slots_fixos.length > 0
+        ? horarioDoDia.slots_fixos
+        : null;
+    // Grade completa para exibição — horários tomados aparecem bloqueados
+    const grade = fixos
+      ? fixos
+      : gerarSlots(horarioDoDia.hora_inicio, horarioDoDia.hora_fim, 30);
+    // Candidatos respeitando a duração do serviço (cabe antes do fechamento)
+    const candidatos = fixos
+      ? filtrarSlotsFixos(fixos, horarioDoDia.hora_fim, servico.duracao_minutos)
+      : gerarSlots(
+          horarioDoDia.hora_inicio,
+          horarioDoDia.hora_fim,
+          servico.duracao_minutos,
+        );
     // Mesmo dia: remove horários que já passaram
     const disponiveis = filtrarSlotsPassados(
       filtrarSlotsOcupados(candidatos, ocupados),
@@ -478,7 +486,7 @@ export function Agendamento() {
                 Escolha a data
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Atendemos de {(horarioFuncionamento ?? "Terça a Sábado — 09h às 19h").toLowerCase()}. Toque
+                Atendemos de {(horarioFuncionamento ?? "Segunda a quinta: 08h às 18h · Sexta-feira: 08h às 16h").toLowerCase()}. Toque
                 no dia e siga. ✨
               </p>
               {dataParamValido &&

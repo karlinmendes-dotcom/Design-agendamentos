@@ -114,15 +114,23 @@ Essa informação é necessária porque existem regras específicas para reaplic
 
 **08:00 às 18:00**
 
-Horários disponíveis:
-**08:00 | 11:00 | 14:00 | 16:00 | 18:00**
+Horários disponíveis para agendamento (cada procedimento dura 1 hora):
+**08:00 | 09:00 | 10:00 | 14:00 | 15:00 | 16:00 | 17:00**
+
+Horário de almoço: **11:00 às 14:00** — nenhum horário entre eles.
 
 ### Sexta-feira
 
 **08:00 às 16:00**
 
-Horários disponíveis:
-**08:00 | 11:00 | 14:00 | 16:00**
+Horários disponíveis para agendamento (cada procedimento dura 1 hora):
+**08:00 | 09:00 | 10:00 | 14:00 | 15:00**
+
+Horário de almoço: **11:00 às 14:00** — nenhum horário entre eles.
+
+### Sábado e domingo
+
+Sem atendimento.
 
 Não informe horários diferentes desses.
 
@@ -256,18 +264,15 @@ function mesAtual(): string {
 }
 
 /**
- * Dados PÚBLICOS do estúdio em formato compacto — apenas o apoio de contato
- * e os nomes dos serviços para orientação. Propositalmente NÃO inclui:
- * preços (a Nati não pode informar valores pelo chat), clientes,
- * agendamentos, admins nem expediente (os horários são regra fechada do
- * prompt). Ela não tem acesso a nenhum dado interno.
+ * Dados PÚBLICOS do estúdio em formato compacto — APENAS o contato para
+ * orientação (redirecionar ao WhatsApp/endereço). Propositalmente NÃO inclui
+ * serviços, preços, clientes, agendamentos, admins nem expediente: o prompt
+ * da Nati é fechado e ela só responde com o que está nele (regra de
+ * conhecimento §2 do prompt da dona).
  */
 export const contexto = query({
   handler: async (ctx) => {
-    const [barbearia, servicos] = await Promise.all([
-      ctx.db.query("barbearias").first(),
-      ctx.db.query("servicos").collect(),
-    ]);
+    const barbearia = await ctx.db.query("barbearias").first();
 
     return {
       barbearia: barbearia
@@ -279,10 +284,6 @@ export const contexto = query({
             endereco: barbearia.endereco ?? null,
           }
         : null,
-      // Cardápio — APENAS os nomes dos serviços/combo ativos (sem preços)
-      servicos: servicos
-        .filter((s) => s.ativo)
-        .map((s) => (s.is_combo ? `${s.nome} (combo)` : s.nome)),
     };
   },
 });
@@ -296,10 +297,9 @@ interface DadosContexto {
     instagram_url: string | null;
     endereco: string | null;
   } | null;
-  servicos: string[];
 }
 
-/** Monta o bloco de apoio que vai no prompt da Nati (sem valores). */
+/** Monta o bloco de apoio que vai no prompt da Nati (só contato). */
 function montarBlocoDados(dados: DadosContexto): string {
   const linhas: string[] = [];
 
@@ -311,9 +311,6 @@ function montarBlocoDados(dados: DadosContexto): string {
     if (dados.barbearia?.endereco) extras.push(dados.barbearia.endereco);
     linhas.push(`ESTÚDIO: ${dados.barbearia.nome}${extras.length ? ` — ${extras.join(" · ")}` : ""}`);
   }
-
-  linhas.push("SERVIÇOS DISPONÍVEIS (só para orientar — valores SOMENTE na tabela do site):");
-  linhas.push(...(dados.servicos.length ? dados.servicos : ["(nenhum serviço cadastrado)"]));
 
   return linhas.join("\n");
 }

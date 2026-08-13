@@ -32,6 +32,20 @@ export function gerarSlots(
   return slots;
 }
 
+/**
+ * Mantém apenas os horários FIXOS em que o serviço cabe antes do fechamento
+ * (slot + duração ≤ hora_fim). Usado quando o dia tem slots_fixos definidos
+ * (ex.: almoço fora da lista) — nada de grade automática de 30 min.
+ */
+export function filtrarSlotsFixos(
+  slots: string[],
+  horaFim: string,
+  duracaoMinutos: number,
+): string[] {
+  const end = toMinutes(horaFim);
+  return slots.filter((s) => toMinutes(s) + duracaoMinutos <= end);
+}
+
 /** Um agendamento ocupado (início + duração em minutos). */
 export interface Ocupado {
   horario: string;
