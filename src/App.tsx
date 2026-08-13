@@ -12,7 +12,6 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { LoadingState } from "@/components/Feedback";
 import { BottomNav } from "@/components/BottomNav";
 import { SplashScreen } from "@/components/SplashScreen";
-import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { AtendenteCliente } from "@/components/AtendenteCliente";
 import { PushListener } from "@/components/PushListener";
 import { EntrarCliente } from "@/components/EntrarCliente";
@@ -92,7 +91,7 @@ function GateCliente() {
   return <Outlet />;
 }
 
-/** Layout da área do cliente: BottomNav fixa + WhatsApp flutuante. */
+/** Layout da área do cliente: BottomNav fixa + Nati (atendente flutuante). */
 function ClientLayout() {
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +99,6 @@ function ClientLayout() {
         <Outlet />
       </main>
       <BottomNav />
-      <WhatsAppFloat />
       <AtendenteCliente />
       <PushListener />
     </div>
