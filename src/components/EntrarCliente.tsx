@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { maskPhone, onlyDigits } from "@/utils/phone";
-import { obterTokenPush, registrarSW } from "@/lib/push";
+import { obterTokenPushComDiagnostico, registrarSW } from "@/lib/push";
 import { Link } from "react-router-dom";
 
 interface EntrarClienteProps {
@@ -43,17 +43,26 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
   const [enviando, setEnviando] = useState(false);
   const [statusAviso, setStatusAviso] = useState<StatusAviso>("idle");
   const [bannerAvisos, setBannerAvisos] = useState(false);
+  const [erroAviso, setErroAviso] = useState<string | null>(null);
 
   // Qualquer telefone com ao menos 8 números cria a conta — sem barreiras
   const dadosOk =
     nome.trim().length >= 2 && onlyDigits(telefone).length >= 8 && concordo;
 
-  /** Pergunta ao navegador e, se autorizado, registra o token FCM. */
+  /** Pergunta ao navegador e, se autorizado, registra a inscrição push. */
   async function ativarAvisos(telefoneLimpo: string) {
     let permitiu = false;
+    let jaBloqueado = false;
     if ("Notification" in window) {
       try {
-        permitiu = (await Notification.requestPermission()) === "granted";
+        if (Notification.permission === "granted") {
+          permitiu = true;
+        } else if (Notification.permission === "default") {
+          permitiu = (await Notification.requestPermission()) === "granted";
+        } else {
+          // Já estava negado ANTES do clique: pedir de novo não abre diálogo.
+          jaBloqueado = true;
+        }
       } catch {
         permitiu = false;
       }
@@ -61,17 +70,21 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
     if (permitiu) {
       try {
         await registrarSW();
-        const token = await obterTokenPush();
+        const { token, erro } = await obterTokenPushComDiagnostico();
         if (token) {
           await registrarTokenPush({ token, telefone: telefoneLimpo });
           setStatusAviso("ok");
         } else {
+          setErroAviso(erro);
           setStatusAviso("sem-permissao");
         }
-      } catch {
+      } catch (err) {
+        setErroAviso(err instanceof Error ? err.message : String(err));
         setStatusAviso("sem-permissao");
       }
     } else {
+      // Negado (ou já estava bloqueado): orienta como liberar, sem travar a conta
+      setErroAviso(jaBloqueado ? "bloqueado" : null);
       setStatusAviso("sem-permissao");
     }
   }
@@ -262,13 +275,28 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
               Conta criada e avisos ativados! 💛
             </p>
           )}
-          {statusAviso === "sem-permissao" && (
-            <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-              <BellRing className="size-3.5 text-gold" />
-              Sem problema — pode continuar. Você pode ativar os avisos na
-              confirmação do agendamento.
-            </p>
-          )}
+          {statusAviso === "sem-permissao" &&
+            (erroAviso === "bloqueado" ? (
+              <p className="mt-4 rounded-xl border border-red-600/30 bg-red-600/10 px-3 py-2.5 text-center text-xs leading-relaxed text-red-700">
+                As notificações estão <strong>bloqueadas</strong> para este site
+                (ou a aba é anônima, que não permite). Para receber os avisos:
+                abra no navegador normal e toque no cadeado 🔒 da barra de
+                endereço → Notificações → Permitir. Sua conta já foi criada
+                normalmente.
+              </p>
+            ) : erroAviso ? (
+              <p className="mt-4 rounded-xl border border-red-600/30 bg-red-600/10 px-3 py-2.5 text-center text-xs leading-relaxed text-red-700">
+                Não foi possível ativar os avisos agora:{" "}
+                <span className="break-words">{erroAviso}</span>. Você pode
+                tentar de novo na confirmação do agendamento.
+              </p>
+            ) : (
+              <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+                <BellRing className="size-3.5 text-gold" />
+                Sem problema — pode continuar. Você pode ativar os avisos na
+                confirmação do agendamento.
+              </p>
+            ))}
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-muted-foreground/80">
             <Lock className="size-3 shrink-0" />

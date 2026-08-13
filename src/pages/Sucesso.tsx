@@ -15,6 +15,7 @@ import { onlyDigits } from "@/utils/phone";
 import {
   pushDisponivel,
   obterTokenPush,
+  obterTokenPushComDiagnostico,
   registrarSW,
   VAPID_KEY,
 } from "@/lib/push";
@@ -63,6 +64,7 @@ export function Sucesso() {
     "idle" | "ativando" | "ok" | "erro"
   >(state.avisosAtivados ? "ok" : "idle");
   const [notifDisponivel, setNotifDisponivel] = useState(false);
+  const [erroAviso, setErroAviso] = useState<string | null>(null);
 
   useEffect(() => {
     if (!agendamento) return;
@@ -92,24 +94,38 @@ export function Sucesso() {
 
   const ativarAvisos = async () => {
     setAvisoStatus("ativando");
+    setErroAviso(null);
     try {
-      const permissao = await Notification.requestPermission();
+      // 1. Permissão nativa (dentro do gesto do clique) — pulada se já
+      //    concedida; se já negada, não adianta pedir de novo.
+      let permissao: NotificationPermission =
+        "Notification" in window ? Notification.permission : "denied";
+      if (permissao === "default") {
+        permissao = await Notification.requestPermission();
+      }
       if (permissao !== "granted") {
+        setErroAviso(
+          permissao === "denied" ? "bloqueado" : "negado-pelo-usuario",
+        );
         setAvisoStatus("erro");
         return;
       }
+      // 2. Registra o service worker e cria a inscrição push (com diagnóstico)
       await registrarSW();
-      const token = await obterTokenPush();
+      const { token, erro } = await obterTokenPushComDiagnostico();
       if (!token || !agendamento.cliente?.telefone) {
+        setErroAviso(erro ?? "Telefone do agendamento não encontrado.");
         setAvisoStatus("erro");
         return;
       }
+      // 3. Salva a inscrição no Convex, vinculada ao telefone da cliente
       await registrarToken({
         token,
         telefone: onlyDigits(agendamento.cliente.telefone),
       });
       setAvisoStatus("ok");
-    } catch {
+    } catch (err) {
+      setErroAviso(err instanceof Error ? err.message : String(err));
       setAvisoStatus("erro");
     }
   };
@@ -196,10 +212,29 @@ export function Sucesso() {
                     aqui. Sem spam, prometido.
                   </p>
                   {avisoStatus === "erro" && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {isIOS
-                        ? "No iPhone, adicione o app à Tela de Início (Compartilhar → Adicionar à Tela de Início) e tente de novo."
-                        : "Não foi possível ativar. Permita as notificações pelo navegador e tente de novo."}
+                    <p className="mt-1 text-xs leading-relaxed text-destructive">
+                      {isIOS &&
+                      (erroAviso === "bloqueado" ||
+                        erroAviso === "negado-pelo-usuario") ? (
+                        "No iPhone, adicione o app à Tela de Início (Compartilhar → Adicionar à Tela de Início) e tente de novo."
+                      ) : erroAviso === "bloqueado" ? (
+                        <>
+                          As notificações estão <strong>bloqueadas</strong> para
+                          este site — ou a aba é anônima/privada, que não
+                          permite notificações. Abra no navegador normal e
+                          libere pelo cadeado 🔒 da barra de endereço →
+                          Notificações → Permitir. Depois volte aqui e toque em
+                          "Ativar".
+                        </>
+                      ) : erroAviso === "negado-pelo-usuario" ? (
+                        "Você recusou a permissão do navegador. Sem problema — pode continuar; se mudar de ideia, volte aqui e toque em \"Ativar\"."
+                      ) : (
+                        <>
+                          Não foi possível ativar:{" "}
+                          <span className="break-words">{erroAviso}</span>. Toque
+                          em "Ativar" novamente ou fale com o estúdio.
+                        </>
+                      )}
                     </p>
                   )}
                 </div>

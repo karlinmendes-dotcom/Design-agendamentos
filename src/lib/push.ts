@@ -11,8 +11,13 @@
 const VAPID_KEY_PADRAO =
   "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
-export const VAPID_KEY =
-  import.meta.env.VITE_VAPID_PUBLIC_KEY ?? VAPID_KEY_PADRAO;
+/**
+ * Chave pública VAPID do estúdio — PÚBLICA por design (fica no navegador).
+ * Fixa no código e NÃO depende de variável de ambiente: assim o par com a
+ * privada (VAPID_PRIVATE_KEY no Convex) nunca fica dessincronizado por um
+ * env var antigo deixado no build (Vercel/outros).
+ */
+export const VAPID_KEY = VAPID_KEY_PADRAO;
 
 /** Converte a chave pública VAPID (base64url) para Uint8Array (exigência da API). */
 function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
@@ -61,17 +66,39 @@ export async function registrarSW(): Promise<boolean> {
  * para entregar o aviso. Requer permissão de notificação concedida.
  */
 export async function obterTokenPush(): Promise<string | null> {
-  if (!VAPID_KEY) return null;
-  if (!(await pushDisponivel())) return null;
+  const r = await obterTokenPushComDiagnostico();
+  return r.token;
+}
+
+/**
+ * Versão com diagnóstico: devolve o MOTIVO exato da falha (para a interface
+ * mostrar para a cliente/dona em vez de um erro genérico tipo "não foi
+ * possível ativar").
+ */
+export async function obterTokenPushComDiagnostico(): Promise<{
+  token: string | null;
+  erro: string | null;
+}> {
+  if (!VAPID_KEY) {
+    return { token: null, erro: "Chave pública VAPID ausente no frontend." };
+  }
+  if (!(await pushDisponivel())) {
+    return {
+      token: null,
+      erro:
+        "Este navegador não suporta Web Push ou o site não está em HTTPS (notificações exigem https://).",
+    };
+  }
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
     });
-    return JSON.stringify(sub.toJSON());
-  } catch {
-    return null;
+    return { token: JSON.stringify(sub.toJSON()), erro: null };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { token: null, erro: msg };
   }
 }
 
