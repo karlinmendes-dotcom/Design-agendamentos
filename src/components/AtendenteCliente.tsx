@@ -76,7 +76,7 @@ export function AtendenteCliente() {
         onClick={() => setAberto((v) => !v)}
         aria-label={aberto ? "Fechar atendente" : "Abrir atendente"}
         className={cn(
-          "fixed left-4 bottom-24 z-40 flex size-14 items-center justify-center rounded-full border border-gold-light/40 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-105 md:bottom-6",
+          "fixed right-4 bottom-24 z-40 flex size-14 items-center justify-center rounded-full border border-gold-light/40 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-105 md:bottom-6",
           aberto
             ? "bg-charcoal text-cream"
             : "bg-gold-gradient text-gold-light animate-glow-pulse",
@@ -87,7 +87,7 @@ export function AtendenteCliente() {
 
       {/* Painel de chat */}
       {aberto && (
-        <div className="fixed left-4 bottom-24 z-50 flex h-[30rem] w-[22.5rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] md:bottom-6">
+        <div className="fixed right-4 bottom-24 z-50 flex h-[30rem] w-[22.5rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] md:bottom-6">
           {/* Cabeçalho */}
           <div className="bg-gold-gradient flex items-center gap-3 px-4 py-3.5">
             <span className="flex size-9 items-center justify-center rounded-full border border-gold-light/40 bg-black/25">

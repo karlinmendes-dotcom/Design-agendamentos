@@ -34,6 +34,8 @@ interface ResultadoEnvio {
   telefones: string[];
   sem_configuracao: boolean;
   data: string | null;
+  /** Detalhe dos erros do FCM (ex.: 403 MISMATCH_SENDER_ID) — diagnóstico. */
+  erros: string[];
 }
 
 interface ResultadoCancelamento {
@@ -108,8 +110,17 @@ export const enviarParaTelefones = action({
   args: {
     telefones: v.array(v.string()),
     data: v.optional(v.string()),
+    // Texto e destino customizáveis (ex.: confirmação de agendamento).
+    // Sem eles, o aviso padrão de cancelamento é usado.
+    titulo: v.optional(v.string()),
+    mensagem: v.optional(v.string()),
+    tipo: v.optional(v.string()),
+    url: v.optional(v.string()),
   },
-  handler: async (ctx, { telefones, data }): Promise<ResultadoEnvio> => {
+  handler: async (
+    ctx,
+    { telefones, data, titulo, mensagem, tipo, url },
+  ): Promise<ResultadoEnvio> => {
     const limpos = [
       ...new Set(telefones.map((t) => t.replace(/\D/g, "")).filter(Boolean)),
     ];
@@ -120,6 +131,7 @@ export const enviarParaTelefones = action({
         telefones: [],
         sem_configuracao: false,
         data: data ?? null,
+        erros: [],
       };
     }
 
@@ -131,6 +143,9 @@ export const enviarParaTelefones = action({
         telefones: limpos,
         sem_configuracao: true,
         data: data ?? null,
+        erros: [
+          "FIREBASE_SERVICE_ACCOUNT ausente ou inválido (sem project_id).",
+        ],
       };
     }
 
@@ -146,21 +161,23 @@ export const enviarParaTelefones = action({
         telefones: limpos,
         sem_configuracao: false,
         data: data ?? null,
+        erros: ["Nenhum token FCM cadastrado para este telefone."],
       };
     }
 
     const accessToken = await obterAccessToken(sa);
-    const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
     let enviados = 0;
     let falhas = 0;
+    const erros: string[] = [];
     const fila = [...tokens];
     // Lote de 10 por vez para não estourar o FCM nem o runtime
     for (let i = 0; i < fila.length; i += 10) {
       const lote = fila.slice(i, i + 10);
       const resultados = await Promise.all(
         lote.map(async (token) => {
-          const resposta = await fetch(url, {
+          const resposta = await fetch(fcmUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -169,16 +186,22 @@ export const enviarParaTelefones = action({
             body: JSON.stringify({
               message: {
                 token,
-                notification: { title: TITULO_AVISO, body: CORPO_AVISO },
+                notification: {
+                  title: titulo ?? TITULO_AVISO,
+                  body: mensagem ?? CORPO_AVISO,
+                },
                 data: {
-                  tipo: "cancelamento",
-                  url: "/reagendar",
+                  tipo: tipo ?? "cancelamento",
+                  url: url ?? "/reagendar",
                   ...(data ? { dia: data } : {}),
                 },
               },
             }),
           });
           if (resposta.ok) return true;
+          // Guarda o motivo exato para diagnóstico (ex.: MISMATCH_SENDER_ID)
+          const corpoErro = await resposta.text().catch(() => "");
+          erros.push(`${resposta.status}: ${corpoErro.slice(0, 220)}`);
           if (resposta.status === 404 || resposta.status === 410) {
             // Token inválido/revogado → limpa da base para não reenviar
             await ctx.runMutation(api.pushTokens.remover, { token });
@@ -196,6 +219,7 @@ export const enviarParaTelefones = action({
       telefones: limpos,
       sem_configuracao: false,
       data: data ?? null,
+      erros,
     };
   },
 });

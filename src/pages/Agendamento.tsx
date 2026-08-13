@@ -23,7 +23,7 @@ import { useDatasBloqueadas } from "@/hooks/useDatasBloqueadas";
 import { useBarbeiros } from "@/hooks/useBarbeiros";
 import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
 import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { erroMensagem, isConvexConfigured } from "@/lib/convex";
@@ -62,6 +62,7 @@ export function Agendamento() {
   const findOrCreateCliente = useMutation(api.clientes.findOrCreate);
   const criarAgendamento = useMutation(api.agendamentos.criar);
   const registrarTokenPush = useMutation(api.pushTokens.registrar);
+  const enviarAviso = useAction(api.push.enviarParaTelefones);
 
   // A etapa de barbeiro aparece apenas quando há barbeiros ativos
   const temBarbeiros = barbeiros.length > 0;
@@ -309,6 +310,17 @@ export function Agendamento() {
                 telefone: onlyDigits(telefone),
               });
               avisosAtivados = true;
+              // Aviso de CONFIRMAÇÃO na hora — a cliente que autorizou os
+              // avisos recebe o pop imediatamente após marcar (não bloqueia
+              // a navegação para a tela de sucesso).
+              void enviarAviso({
+                telefones: [onlyDigits(telefone)],
+                data,
+                titulo: "💅 Agendamento confirmado!",
+                mensagem: `Olá, ${nome.trim().split(" ")[0]}! Seu horário de ${servico.nome} em ${formatDateShort(data)} às ${horario} está confirmado. Te esperamos! 💛`,
+                tipo: "confirmacao",
+                url: "/",
+              }).catch(() => {});
             }
           } catch {
             // silencioso — a confirmação já aconteceu
