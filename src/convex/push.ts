@@ -25,7 +25,9 @@ const TITULO_AVISO = "⚠️ Alteração no seu Agendamento";
 const CORPO_AVISO =
   "Olá! Houve um imprevisto na nossa agenda. Toque aqui para ver os detalhes e remarcar o seu horário de forma rápida.";
 
-/** Chave pública VAPID do estúdio (pública por design — fica no navegador). */
+/** Chave pública VAPID do estúdio (pública por design — fica no navegador).
+ * Par válido gerado em 2026-08-13 via web-push.generateVAPIDKeys (o par
+ * anterior tinha a pública corrompida e nenhum aviso era entregue). */
 const VAPID_PUBLIC_KEY =
   "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
