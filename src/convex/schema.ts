@@ -4,10 +4,9 @@ import { v } from "convex/values";
 /**
  * Nail Design Studio — schema do banco Convex.
  *
- * Estrutura espelha o modelo anterior (Supabase) para manter os tipos
- * de domínio da aplicação sem reescrita: tenant (barbearias = estúdio),
- * profissionais (barbeiros), cardápio (servicos), agenda (agendamentos),
- * clientes, horários e configurações.
+ * Estrutura por domínio: tenant (barbearias = estúdio), profissionais
+ * (barbeiros), cardápio (servicos), agenda (agendamentos), clientes,
+ * horários, configurações e notificações Web Push (pushTokens).
  */
 export default defineSchema({
   // ---------- Tenant: estúdio ----------
@@ -118,9 +117,11 @@ export default defineSchema({
     usos: v.number(), // perguntas respondidas no mês
   }).index("por_mes", ["mes"]),
 
-  // ---------- Tokens de push (FCM) dos navegadores dos clientes ----------
+  // ---------- Inscrições de Web Push dos navegadores das clientes ----------
+  // O campo `token` guarda a PushSubscription completa em JSON (Web Push
+  // padrão — sem Firebase). Um telefone pode ter vários navegadores/aparelhos.
   pushTokens: defineTable({
-    token: v.string(), // token FCM do navegador da cliente
+    token: v.string(), // PushSubscription (JSON) do navegador da cliente
     telefone: v.string(), // telefone (só dígitos) — vincula o token à cliente
     ultimo_uso: v.number(), // timestamp do último registro
   })

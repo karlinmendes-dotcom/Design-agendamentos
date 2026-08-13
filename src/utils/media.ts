@@ -1,32 +1,20 @@
 import { videoParaServico } from "@/utils/videos";
-import type { VideoSource } from "@/utils/videos";
 
 /**
  * Biblioteca de mídia — camada de resolução de vídeos/imagens.
  *
  * Ordem de prioridade:
- * 1. `servico.video_url` — vídeo configurado pelo admin (banco de dados)
- * 2. Biblioteca `midias` (Supabase) por chave — trocável sem código
- * 3. Fallback local (`utils/videos.ts`) por nome do serviço
+ * 1. `servico.video_url` / `poster_url` — mídia configurada pelo admin (banco)
+ * 2. Fallback local (`utils/videos.ts`) por nome do serviço
  *
  * Assim, o administrador pode trocar vídeos/imagens sem tocar no código.
+ * (A tabela `midias` do Convex guarda mídias com URL pública — usada quando
+ * o admin sobe fotos/vídeos por link, ex.: capas de serviços.)
  */
 export interface MediaSource {
   src: string;
   poster: string;
 }
-
-/** Mapa estático chave → vídeo usado como fallback da biblioteca local. */
-const MIDIA_LOCAL: Record<string, VideoSource> = {
-  hero: videoParaServico("manicure"),
-  "servico-manicure": videoParaServico("manicure"),
-  "servico-pedicure": videoParaServico("pedicure"),
-  "servico-gel": videoParaServico("esmaltacao em gel"),
-  logo: {
-    src: videoParaServico("manicure").src,
-    poster: videoParaServico("manicure").poster,
-  },
-};
 
 /** Resolve o vídeo de um serviço usando a biblioteca de mídia. */
 export function mediaParaServico(
@@ -47,9 +35,4 @@ export function mediaParaServico(
   }
 
   return fallback;
-}
-
-/** Resolve um item da biblioteca (hero, banner, logo) pela chave. */
-export function mediaPorChave(chave: string): MediaSource {
-  return MIDIA_LOCAL[chave] ?? videoParaServico("manicure");
 }

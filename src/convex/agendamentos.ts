@@ -1,12 +1,16 @@
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 
 type AgendamentoDoc = Doc<"agendamentos">;
 
 /** Mensagem amigável quando o horário já foi reservado. */
 const ERRO_HORARIO_OCUPADO =
   "Esse horário acabou de ser reservado por outra pessoa. Escolha outro horário.";
+
+/** Cliente com pendência em aberto não pode marcar novo horário (regra do estúdio). */
+const ERRO_PENDENCIA_ABERTA =
+  "Você tem uma pendência em aberto com o estúdio (50% do valor de uma desmarcação/falta). Enquanto ela não for quitada, o agendamento fica bloqueado — acerte o valor com a dona (WhatsApp) para liberar seu próximo horário. 💛";
 
 function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -104,6 +108,23 @@ export const listOcupados = query({
 });
 
 /**
+ * True quando a cliente tem pendência em aberto (cancelamento em cima da
+ * hora / falta ainda não quitado). Com pendência, ela NÃO pode marcar um
+ * novo horário — só depois que a dona quitar (quitarPendencia) ou concluir
+ * o atendimento pendente (atualizarStatus → concluido).
+ */
+async function temPendenciaAberta(
+  ctx: QueryCtx,
+  clienteId: Id<"clientes">,
+): Promise<boolean> {
+  const docs = await ctx.db
+    .query("agendamentos")
+    .withIndex("por_cliente", (q) => q.eq("cliente_id", clienteId))
+    .collect();
+  return docs.some((a) => a.status === "cancelado" && (a.pendencia ?? 0) > 0);
+}
+
+/**
  * Cria um agendamento com checagem anti-conflito dentro da mutation
  * (atômica no Convex — não há corrida entre dois clientes simultâneos).
  */
@@ -179,6 +200,11 @@ export const criar = mutation({
     barbeiro_id: v.optional(v.union(v.id("barbeiros"), v.null())),
   },
   handler: async (ctx, args) => {
+    // Regra do estúdio: cliente com pendência em aberto não pode marcar
+    if (await temPendenciaAberta(ctx, args.cliente_id)) {
+      throw new ConvexError(ERRO_PENDENCIA_ABERTA);
+    }
+
     // Fonte da verdade: o dashboard controla os dias — recusa fora do expediente
     await validarDisponibilidade(
       ctx,
@@ -262,6 +288,12 @@ export const criarViaAssistente = mutation({
           telefone,
         });
 
+    // 2.1. Regra do estúdio: cliente com pendência em aberto não pode marcar
+    //      (mesma regra do site — a assistente não fura o bloqueio)
+    if (await temPendenciaAberta(ctx, cliente_id)) {
+      throw new ConvexError(ERRO_PENDENCIA_ABERTA);
+    }
+
     // 3. Valida disponibilidade + anti-sobreposição (idêntico ao criar normal)
     await validarDisponibilidade(ctx, args.data, args.horario, servico.duracao_minutos);
     const existentes = await ctx.db
@@ -296,7 +328,7 @@ export const criarViaAssistente = mutation({
 /**
  * Cancela TODOS os agendamentos ativos de um dia inteiro (usado pela dona no
  * dashboard ou pela Gemini). Retorna quantos foram cancelados e os telefones
- * dos clientes afetados para o disparo de notificação push (FCM).
+ * dos clientes afetados para o disparo de notificação push (Web Push).
  */
 export const cancelarDia = mutation({
   args: { data: v.string() },
@@ -358,6 +390,11 @@ export const atualizarStatus = mutation({
       if (servico?.preco) {
         patch.pendencia = Math.round(servico.preco * 0.5 * 100) / 100;
       }
+    }
+    // Concluído = resolvido: a pendência (50%) é encerrada — a cliente volta
+    // a poder marcar sem precisar de ação extra da dona.
+    if (status === "concluido" && doc.pendencia !== undefined) {
+      patch.pendencia = undefined;
     }
     await ctx.db.patch(id, patch);
   },

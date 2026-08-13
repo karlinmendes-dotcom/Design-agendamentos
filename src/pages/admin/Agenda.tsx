@@ -122,7 +122,7 @@ export function Agenda() {
       if (resultado.push?.sem_configuracao) {
         toast(
           "success",
-          `${resultado.cancelados} agendamento(s) cancelado(s). ⚠️ Notificação ainda não configurada (FIREBASE_SERVICE_ACCOUNT).`,
+          `${resultado.cancelados} agendamento(s) cancelado(s). ⚠️ Aviso por notificação não enviado: falta a VAPID_PRIVATE_KEY no Convex (Environment Variables).`,
         );
       } else {
         toast(

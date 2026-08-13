@@ -197,8 +197,8 @@ export function Configuracoes() {
                 placeholder="https://.../logo.png"
               />
               <p className="text-xs text-muted-foreground">
-                Cole o endereço de uma imagem hospedada (ex.: Supabase Storage,
-                Imgur).
+                Cole o endereço de uma imagem hospedada (ex.: Imgur,
+                Cloudinary).
               </p>
             </div>
             <div className="space-y-2">

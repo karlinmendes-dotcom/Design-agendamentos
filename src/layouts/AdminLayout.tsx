@@ -178,7 +178,15 @@ export function AdminLayout() {
       </div>
 
       {menuAberto && (
-        <div className="animate-slide-down border-b border-border/70 bg-coal px-3 py-3 lg:hidden">
+        <>
+          {/* Fundo escurecido — toque fora para fechar */}
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            onClick={() => setMenuAberto(false)}
+            className="fixed inset-0 z-30 bg-black/35 backdrop-blur-[2px] lg:hidden"
+          />
+          <div className="animate-slide-down fixed inset-x-0 top-14 z-40 max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-border/70 bg-coal px-3 py-3 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.6)] lg:hidden">
           <nav className="flex flex-col gap-1">
             {ADMIN_LINKS.map((link) => (
               <NavLink
@@ -207,7 +215,8 @@ export function AdminLayout() {
             <LogOut className="size-4" />
             Sair do painel
           </button>
-        </div>
+          </div>
+        </>
       )}
 
       {/* Assistente IA — flutuante, visível apenas no dashboard */}

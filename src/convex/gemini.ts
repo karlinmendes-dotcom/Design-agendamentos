@@ -221,7 +221,7 @@ function montarRespostaCancelamento(resultado: {
   }
   const base = `✅ ${dia} cancelado(a) — ${resultado.cancelados} atendimento(s) cancelado(s).`;
   if (resultado.push?.sem_configuracao) {
-    return `${base}\n⚠️ Para avisar as clientes por notificação, falta configurar a chave do Firebase no Convex (FIREBASE_SERVICE_ACCOUNT).`;
+    return `${base}\n⚠️ Para avisar as clientes por notificação, falta configurar a chave VAPID privada no Convex (VAPID_PRIVATE_KEY).`;
   }
   return `${base}\n💌 ${resultado.push?.enviados ?? 0} cliente(s) avisado(s) por notificação.`;
 }

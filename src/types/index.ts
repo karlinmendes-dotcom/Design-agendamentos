@@ -29,22 +29,6 @@ export interface Barbeiro {
   created_at: string;
 }
 
-// ---------- Biblioteca de mídia ----------
-export type TipoMidia = "video" | "imagem" | "banner" | "logo";
-
-export interface Midia {
-  id: string;
-  barbearia_id: string | null;
-  tipo: TipoMidia;
-  chave: string; // ex.: 'hero', 'servico-corte', 'logo'
-  url: string;
-  poster_url: string | null;
-  alt: string | null;
-  ordem: number;
-  ativo: boolean;
-  created_at: string;
-}
-
 export interface Servico {
   id: string;
   nome: string;
@@ -132,15 +116,3 @@ export interface ServicoFormData {
   itens_combo: string[];
 }
 
-export interface NovoAgendamento {
-  servico_id: string;
-  data: string;
-  horario: string;
-  nome: string;
-  telefone: string;
-  barbeiro_id?: string | null;
-}
-
-// ---------- Constantes da plataforma ----------
-/** ID fixo do estúdio (primeiro tenant cadastrado). */
-export const BARBEARIA_NETO_ID = "00000000-0000-0000-0000-000000000001";

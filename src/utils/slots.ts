@@ -1,4 +1,4 @@
-import { addDaysISO, todayISO } from "@/utils/date";
+import { todayISO } from "@/utils/date";
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -75,20 +75,6 @@ export function filtrarSlotsOcupados(
 }
 
 /**
- * Conjunto de slots a exibir como bloqueados (começam dentro de um intervalo
- * já ocupado). Mantém a grade visível para o cliente entender o motivo.
- */
-export function slotsBloqueados(slots: string[], ocupados: Ocupado[]): Set<string> {
-  const ranges = rangesOcupados(ocupados);
-  const bloqueados = new Set<string>();
-  for (const slot of slots) {
-    const t = toMinutes(slot);
-    if (ranges.some((r) => t >= r.start && t < r.end)) bloqueados.add(slot);
-  }
-  return bloqueados;
-}
-
-/**
  * Remove horários que já passaram — aplicado apenas no dia de hoje,
  * permitindo o agendamento para o mesmo dia.
  */
@@ -97,26 +83,4 @@ export function filtrarSlotsPassados(slots: string[], data: string): string[] {
   const agora = new Date();
   const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
   return slots.filter((s) => toMinutes(s) > minutosAgora);
-}
-
-/** True quando um horário + duração sobrepõe algum agendamento ocupado. */
-export function isSlotOcupado(
-  horario: string,
-  duracaoMinutos: number,
-  ocupados: Ocupado[],
-): boolean {
-  const start = toMinutes(horario);
-  const end = start + Math.max(duracaoMinutos, 1);
-  return rangesOcupados(ocupados).some((r) => start < r.end && end > r.start);
-}
-
-/**
- * Data limite (15 dias à frente) e datas disponíveis a partir de hoje.
- */
-export function dataLimiteAgendamento(): string {
-  return addDaysISO(15);
-}
-
-export function dataMinimaAgendamento(): string {
-  return todayISO();
 }

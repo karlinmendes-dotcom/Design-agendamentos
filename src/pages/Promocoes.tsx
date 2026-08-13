@@ -51,10 +51,33 @@ export function Promocoes() {
         ) : error ? (
           <ErrorState message={error} onRetry={refresh} />
         ) : combos.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border py-20 text-center">
-            <p className="text-muted-foreground">
-              Em breve teremos combos exclusivos para você.
-            </p>
+          <div className="relative overflow-hidden rounded-2xl border border-gold/25 bg-gradient-to-br from-graphite via-coal to-onyx px-8 py-14 text-center sm:px-10">
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-gold-light/10 blur-3xl" />
+            <div className="relative mx-auto flex max-w-xl flex-col items-center">
+              <span className="flex size-14 items-center justify-center rounded-2xl border border-gold-light/30 bg-black/30">
+                <Sparkles className="size-7 text-gold-light" />
+              </span>
+              <p className="mt-5 flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-gold-light uppercase">
+                <Gift className="size-4" /> Em breve
+              </p>
+              <h2 className="font-display mt-2 text-2xl font-extrabold text-white sm:text-3xl">
+                Combos exclusivos da casa
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-cream/70">
+                Estamos montando combos pensados para você — manicure +
+                pedicure, esmaltação + nail art e muito mais em um único
+                atendimento com preço especial. Fique de olho aqui e no nosso
+                Instagram! 💅
+              </p>
+              <div className="mt-6">
+                <Button asChild variant="gold">
+                  <Link to="/servicos">
+                    Ver cardápio completo
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           <div>

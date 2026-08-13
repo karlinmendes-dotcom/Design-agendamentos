@@ -103,6 +103,9 @@ export function Agendamento() {
     (soma, p) => soma + p.pendencia,
     0,
   );
+  // Com pendência em aberto o agendamento fica BLOQUEADO (regra do estúdio):
+  // a cliente só volta a marcar depois que a dona quitar/encerrar a pendência.
+  const pendenciaBloqueia = !!pendencias && pendencias.length > 0;
 
   const servico = useMemo(
     () => servicos.find((s) => s.id === servicoId) ?? null,
@@ -372,9 +375,9 @@ export function Agendamento() {
                   {pendencias.length === 1
                     ? ` (50% do valor do atendimento de ${formatDateShort(pendencias[0].data)})`
                     : ""}
-                  , referente à sua última desmarcação/falta. Para garantir o
-                  próximo horário, acerte esse valor com a gente primeiro — a
-                  remarcação é liberada assim que o pagamento for feito. 💕
+                  , referente à sua última desmarcação/falta. Enquanto ela não
+                  for quitada, o agendamento fica bloqueado — acerte o valor
+                  com a dona (WhatsApp) para liberar seu próximo horário. 💕
                 </p>
               </div>
             </div>
@@ -739,29 +742,54 @@ export function Agendamento() {
                 </p>
               )}
 
-              <Button
-                variant="gold"
-                size="lg"
-                className="mt-6 w-full"
-                disabled={salvando}
-                onClick={() => void confirmar()}
-              >
-                {salvando ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Confirmando...
-                  </>
-                ) : (
-                  <>
-                    <CalendarCheck className="size-5" />
-                    Confirmar e enviar no WhatsApp
-                  </>
-                )}
-              </Button>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Ao confirmar, o WhatsApp abre com seu resumo completo (dia,
-                horário, serviço e valor) pronto para enviar. 💅
-              </p>
+              {pendenciaBloqueia ? (
+                <div className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-lg">
+                      💛
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-amber-900">
+                        Agendamento bloqueado por pendência
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-amber-900/90">
+                        Você tem uma pendência de{" "}
+                        <strong>{formatBRL(totalPendencias)}</strong> com o
+                        estúdio. Para marcar um novo horário, acerte esse valor
+                        com a dona primeiro (WhatsApp ou página de contato) —
+                        assim que a pendência for quitada, o agendamento é
+                        liberado. 💕
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    variant="gold"
+                    size="lg"
+                    className="mt-6 w-full"
+                    disabled={salvando}
+                    onClick={() => void confirmar()}
+                  >
+                    {salvando ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Confirmando...
+                      </>
+                    ) : (
+                      <>
+                        <CalendarCheck className="size-5" />
+                        Confirmar e enviar no WhatsApp
+                      </>
+                    )}
+                  </Button>
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
+                    Ao confirmar, o WhatsApp abre com seu resumo completo (dia,
+                    horário, serviço e valor) pronto para enviar. 💅
+                  </p>
+                </>
+              )}
             </div>
           )}
 

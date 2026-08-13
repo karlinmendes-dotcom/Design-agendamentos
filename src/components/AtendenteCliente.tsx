@@ -101,6 +101,14 @@ export function AtendenteCliente() {
                 Orienta sobre horários e regras de atendimento 💅
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setAberto(false)}
+              aria-label="Fechar atendente"
+              className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-full text-cream/80 transition-colors hover:bg-black/25 hover:text-cream"
+            >
+              <X className="size-4" />
+            </button>
           </div>
 
           {/* Mensagens */}

@@ -81,14 +81,3 @@ export const upsert = mutation({
   },
 });
 
-/** Ativa/desativa o horário de um dia da semana. */
-export const setAtivo = mutation({
-  args: { dia_semana: v.number(), ativo: v.boolean() },
-  handler: async (ctx, { dia_semana, ativo }) => {
-    const existente = await ctx.db
-      .query("horarios")
-      .filter((q) => q.eq(q.field("dia_semana"), dia_semana))
-      .first();
-    if (existente) await ctx.db.patch(existente._id, { ativo });
-  },
-});
