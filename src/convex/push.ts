@@ -31,6 +31,19 @@ const CORPO_AVISO =
 const VAPID_PUBLIC_KEY =
   "BNAT1khI4o27ov6hnkRRmMWnRffnkDc7Dq80pU4MKaHxqOZqRJHnx7zWtcaOYbBEJKvpCMaUonDKub8RSKJ2BjQ";
 
+/**
+ * Chave PRIVADA VAPID do estúdio — pareada com a pública acima.
+ *
+ * Prioridade: se existir a env var VAPID_PRIVATE_KEY no Convex
+ * (Environment Variables), ela vence. Senão, usa esta constante como
+ * GARANTIA para o envio funcionar sem depender de configuração externa
+ * (a dona tem vários projetos no Convex e a env var foi salva no lugar
+ * errado — o aviso nunca chegava por isso). É uma chave de envio de
+ * notificação (não dá acesso a dados) e o repositório é privado.
+ */
+const VAPID_PRIVATE_KEY_GARANTIA =
+  "UGuMHAqXzcHGFdZizFBzquoRtxDth3nRndLncsrW2dY";
+
 /** Contato identificado no JWT VAPID (exigência do protocolo). */
 const VAPID_SUBJECT = "mailto:avisos@studio-natalia.com.br";
 
@@ -45,9 +58,12 @@ interface ResultadoEnvio {
   erros: string[];
 }
 
-/** Configura o VAPID no web-push a partir da chave privada do Convex. */
+/**
+ * Configura o VAPID no web-push. Usa a env var do Convex se existir;
+ * senão, usa a chave de garantia embutida (ver acima).
+ */
 function configurarVapid(): boolean {
-  const privada = process.env.VAPID_PRIVATE_KEY;
+  const privada = process.env.VAPID_PRIVATE_KEY ?? VAPID_PRIVATE_KEY_GARANTIA;
   if (!privada) return false;
   try {
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, privada);
