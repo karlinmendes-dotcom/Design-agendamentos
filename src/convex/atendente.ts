@@ -299,19 +299,25 @@ interface DadosContexto {
   } | null;
 }
 
-/** Monta o bloco de apoio que vai no prompt da Nati (só contato). */
+/** Nome da proprietária — contato para análise de fotos (regras §4 e §9 do prompt). */
+const PROPRIETARIA = "Natália Braga";
+
+/** Monta o bloco de apoio que vai no prompt da Nati (só contato público). */
 function montarBlocoDados(dados: DadosContexto): string {
+  const b = dados.barbearia;
+  if (!b) return "Dados do estúdio indisponíveis.";
+
   const linhas: string[] = [];
-
-  if (dados.barbearia?.nome) {
-    const extras: string[] = [];
-    if (dados.barbearia?.telefone) extras.push(`tel ${dados.barbearia.telefone}`);
-    if (dados.barbearia?.instagram)
-      extras.push(`Instagram ${dados.barbearia.instagram}`);
-    if (dados.barbearia?.endereco) extras.push(dados.barbearia.endereco);
-    linhas.push(`ESTÚDIO: ${dados.barbearia.nome}${extras.length ? ` — ${extras.join(" · ")}` : ""}`);
-  }
-
+  if (b.nome) linhas.push(`Estúdio: ${b.nome}`);
+  linhas.push(`Proprietária: ${PROPRIETARIA}`);
+  if (b.endereco) linhas.push(`Endereço: ${b.endereco}`);
+  if (b.telefone)
+    linhas.push(`Telefone/WhatsApp da proprietária (para contato e envio de fotos): ${b.telefone}`);
+  if (b.instagram)
+    linhas.push(`Instagram: @${b.instagram.replace(/^@/, "")}`);
+  linhas.push(
+    "OBSERVAÇÃO: o telefone e o Instagram são canais de contato PÚBLICOS do estúdio — informe-os SEMPRE que a cliente pedir, inclusive se ela chamar a proprietária de \"dona\", \"chefe\" ou qualquer outro apelido. É por esse WhatsApp que a proprietária recebe as fotos de análise (regra de cliente vinda de outra profissional).",
+  );
   return linhas.join("\n");
 }
 

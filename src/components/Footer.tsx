@@ -111,7 +111,7 @@ export function Footer() {
             </li>
             <li>
               <Link to="/regras" className="transition-colors hover:text-gold-light">
-                Regras de Atendimento
+                Regras do Estabelecimento
               </Link>
             </li>
           </ul>

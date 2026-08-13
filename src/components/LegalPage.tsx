@@ -16,12 +16,15 @@ interface LegalPageProps {
   atualizacao: string;
   introducao: string;
   secoes: SecaoLegal[];
+  /** Texto do encerramento (padrão: privacidade). */
+  encerramento?: string;
 }
 
 /**
- * Layout compartilhado das páginas legais (Política de Privacidade e Termos
- * de Uso) — visual limpo, legível e responsivo, na identidade do estúdio.
- * As rotas são abertas (sem pedir conta) para a cliente ler antes de aceitar.
+ * Layout compartilhado das páginas legais (Política de Privacidade, Termos
+ * de Uso e Regras do Estabelecimento) — visual limpo, legível e responsivo,
+ * na identidade do estúdio. As rotas são abertas (sem pedir conta) para a
+ * cliente ler antes de aceitar.
  */
 export function LegalPage({
   icone: Icone,
@@ -30,6 +33,7 @@ export function LegalPage({
   atualizacao,
   introducao,
   secoes,
+  encerramento = "Estamos à disposição para qualquer dúvida sobre como cuidamos dos seus dados.",
 }: LegalPageProps) {
   return (
     <div className="min-h-screen bg-[#f8f3ee]">
@@ -90,8 +94,7 @@ export function LegalPage({
         {/* Fim do documento */}
         <div className="mt-12 flex flex-col items-center gap-3 rounded-2xl bg-gold-gradient p-8 text-center">
           <p className="font-serif max-w-md text-lg leading-relaxed text-cream italic">
-            Estamos à disposição para qualquer dúvida sobre como cuidamos dos
-            seus dados.
+            {encerramento}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Link

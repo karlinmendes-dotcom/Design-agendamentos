@@ -12,7 +12,7 @@ const BARBEARIA_DEMO: Barbearia = {
   endereco: "R. Expedicionário Abílio dos Santos, 0184, Sala 209, Centro, Colatina – ES, 29700-070",
   telefone: "(27) 99614-0639",
   instagram: "nataliabraga_nail",
-  instagram_url: null,
+  instagram_url: "https://www.instagram.com/nataliabraga_nail",
   ativo: true,
   created_at: new Date().toISOString(),
 };
