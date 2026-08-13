@@ -5,7 +5,7 @@ import {
   observarMensagens,
   registrarSW,
   obterTokenPush,
-} from "@/lib/firebase";
+} from "@/lib/push";
 import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
 import { onlyDigits } from "@/utils/phone";
 import { ReagendarModal } from "@/components/ReagendarModal";

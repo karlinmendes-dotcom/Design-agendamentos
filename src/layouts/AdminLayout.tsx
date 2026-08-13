@@ -18,7 +18,6 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { AssistenteAdmin } from "@/components/admin/AssistenteAdmin";
-import { isConvexConfigured } from "@/lib/convex";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const ADMIN_LINKS = [
@@ -69,16 +68,6 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      {!isConvexConfigured && (
-        <div className="border-b border-yellow-600/40 bg-yellow-500/15 px-4 py-2.5 text-center text-xs text-yellow-700 sm:text-sm">
-          ⚠️ Banco de dados ainda não configurado. Adicione{" "}
-          <code className="rounded bg-charcoal/10 px-1.5 py-0.5 font-mono">
-            VITE_CONVEX_URL
-          </code>{" "}
-          no .env para salvar e consultar dados.
-        </div>
-      )}
-
       {/* Sidebar desktop */}
       <aside
         className={cn(
@@ -241,17 +230,10 @@ export function AdminLayout() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {isConvexConfigured ? (
-              <span className="flex items-center gap-1.5 rounded-full border border-green-600/30 bg-green-500/15 px-3 py-1 text-xs text-green-700">
-                <span className="size-1.5 rounded-full bg-green-600" />
-                Conectado
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 rounded-full border border-yellow-600/40 bg-yellow-500/15 px-3 py-1 text-xs text-yellow-700">
-                <span className="size-1.5 rounded-full bg-yellow-500" />
-                Modo demonstração
-              </span>
-            )}
+            <span className="flex items-center gap-1.5 rounded-full border border-green-600/30 bg-green-500/15 px-3 py-1 text-xs text-green-700">
+              <span className="size-1.5 rounded-full bg-green-600" />
+              Conectado
+            </span>
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-charcoal/40 hover:text-charcoal"

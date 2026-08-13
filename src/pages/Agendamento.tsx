@@ -26,8 +26,8 @@ import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { erroMensagem, isConvexConfigured } from "@/lib/convex";
-import { obterTokenPush, registrarSW } from "@/lib/firebase";
+import { erroMensagem } from "@/lib/convex";
+import { obterTokenPush, registrarSW } from "@/lib/push";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import { formatDateShort, formatDateWeekday } from "@/utils/date";
 import {
@@ -283,7 +283,6 @@ export function Agendamento() {
     if (linkWhats) window.open(linkWhats, "_blank", "noopener");
 
     try {
-      if (isConvexConfigured) {
         const cliente = await findOrCreateCliente({
           nome: nome.trim(),
           telefone: onlyDigits(telefone),
@@ -325,19 +324,9 @@ export function Agendamento() {
           } catch {
             // silencioso — a confirmação já aconteceu
           }
-        }
-        navigate("/sucesso", {
-          state: { agendamento, demo: false, avisosAtivados },
-        });
-      } else {
-        // Modo demonstração: confirmação local sem banco
-        navigate("/sucesso", {
-          state: {
-            demo: true,
-            agendamento: resumo,
-          },
-        });
-      }
+        }            navigate("/sucesso", {
+              state: { agendamento, avisosAtivados },
+            });
     } catch (err) {
       setErroSalvar(
         erroMensagem(
@@ -747,13 +736,6 @@ export function Agendamento() {
               {erroSalvar && (
                 <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                   {erroSalvar}
-                </p>
-              )}
-
-              {!isConvexConfigured && (
-                <p className="mt-4 rounded-lg border border-yellow-600/30 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-500">
-                  Modo demonstração: a confirmação será exibida, mas o
-                  agendamento só será salvo no banco após conectar o Convex.
                 </p>
               )}
 

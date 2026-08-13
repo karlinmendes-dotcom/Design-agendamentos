@@ -27,7 +27,7 @@ import { useServicos } from "@/hooks/useServicos";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { erroMensagem, isConvexConfigured } from "@/lib/convex";
+import { erroMensagem } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import type { Servico } from "@/types";
@@ -53,7 +53,7 @@ const FORM_VAZIO: ComboForm = {
 };
 
 export function CombosAdmin() {
-  const { servicos: combos, loading, refresh, usandoDemo } = useServicos(
+  const { servicos: combos, loading, refresh } = useServicos(
     false,
     "combo",
   );
@@ -185,18 +185,12 @@ export function CombosAdmin() {
             página Promoções e podem ser agendados como um serviço normal.
           </p>
         </div>
-        <Button variant="gold" onClick={abrirNovo} disabled={!isConvexConfigured}>
+        <Button variant="gold" onClick={abrirNovo} >
           <Plus className="size-4" />
           Novo combo
         </Button>
       </div>
 
-      {usandoDemo && (
-        <div className="mb-4 rounded-lg border border-yellow-600/40 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
-          Mostrando combos de demonstração. Conecte o Convex para editar os
-          combos reais.
-        </div>
-      )}
 
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
         {loading ? (
@@ -263,7 +257,7 @@ export function CombosAdmin() {
                         size="icon"
                         onClick={() => abrirEdicao(c)}
                         aria-label={`Editar ${c.nome}`}
-                        disabled={!isConvexConfigured}
+                        
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -272,7 +266,7 @@ export function CombosAdmin() {
                         size="icon"
                         onClick={() => void alternarAtivo(c)}
                         aria-label={c.ativo ? "Desativar" : "Ativar"}
-                        disabled={!isConvexConfigured}
+                        
                         className={c.ativo ? "text-blood" : "text-muted-foreground"}
                       >
                         <Power className="size-4" />
@@ -282,7 +276,7 @@ export function CombosAdmin() {
                         size="icon"
                         onClick={() => void confirmarExclusao(c)}
                         aria-label={`Excluir ${c.nome}`}
-                        disabled={!isConvexConfigured}
+                        
                         className={
                           excluindoId === c.id
                             ? "text-destructive"

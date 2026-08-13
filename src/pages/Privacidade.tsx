@@ -8,7 +8,7 @@ import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
 import { useBarbearia } from "@/hooks/useBarbearia";
 import { useToast } from "@/contexts/ToastContext";
 import { maskPhone } from "@/utils/phone";
-import { cancelarInscricaoPush } from "@/lib/firebase";
+import { cancelarInscricaoPush } from "@/lib/push";
 
 /** Número do estúdio no formato internacional do wa.me (55 + dígitos). */
 function numeroWhatsApp(telefone: string | null | undefined): string {
@@ -60,7 +60,7 @@ export function Privacidade() {
         ? `\n\nMeu nome: ${identidade.nome}\nMeu WhatsApp: ${maskPhone(identidade.telefone)}`
         : "\n\nVou informar meu nome e telefone aqui na conversa."),
   );
-  const whatsExclusao = `https://wa.me/${numeroWhatsApp(barbearia.telefone)}?text=${mensagemExclusao}`;
+  const whatsExclusao = `https://wa.me/${numeroWhatsApp(barbearia?.telefone ?? "")}?text=${mensagemExclusao}`;
 
   return (
     <LegalPage

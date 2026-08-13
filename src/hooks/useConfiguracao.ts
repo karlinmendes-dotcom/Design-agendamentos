@@ -1,7 +1,5 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { isConvexConfigured } from "@/lib/convex";
-import { DEMO_CONFIG } from "@/data/demo";
 import type { Configuracao } from "@/types";
 
 export const CONFIGURACAO_PADRAO: Pick<
@@ -17,11 +15,8 @@ export const CONFIGURACAO_PADRAO: Pick<
 
 export function useConfiguracao() {
   const dados = useQuery(api.configuracoes.get);
-  const usandoDemo = !isConvexConfigured;
 
-  const configuracao: Configuracao | null = usandoDemo
-    ? DEMO_CONFIG
-    : (dados ?? null);
+  const configuracao: Configuracao | null = dados ?? null;
 
   const nomeBarbearia =
     configuracao?.nome_barbearia ?? CONFIGURACAO_PADRAO.nome_barbearia;
@@ -34,7 +29,7 @@ export function useConfiguracao() {
 
   return {
     configuracao,
-    loading: !usandoDemo && dados === undefined,
+    loading: dados === undefined,
     refresh: () => Promise.resolve(),
     nomeBarbearia,
     logoUrl,

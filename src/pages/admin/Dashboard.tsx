@@ -92,7 +92,7 @@ function ResumoItem({ rotulo, valor }: { rotulo: string; valor: string }) {
  * na página separada "Análises" (/admin/analises).
  */
 export function Dashboard() {
-  const { agendamentos, loading, refresh, usandoDemo } = useAgendamentos();
+  const { agendamentos, loading, refresh } = useAgendamentos();
   const hoje = todayISO();
   const [periodo, setPeriodo] = useState<PeriodoAgenda>("hoje");
 
@@ -130,11 +130,6 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {usandoDemo && (
-            <span className="rounded-full border border-yellow-600/40 bg-yellow-500/15 px-3 py-1 text-xs text-yellow-700">
-              Dados de demonstração
-            </span>
-          )}
           <Button variant="outline" size="sm" onClick={() => void refresh()}>
             <RefreshCw className="size-3.5" />
             Atualizar

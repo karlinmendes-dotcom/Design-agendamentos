@@ -13,11 +13,11 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { onlyDigits } from "@/utils/phone";
 import {
-  firebaseDisponivel,
+  pushDisponivel,
   obterTokenPush,
   registrarSW,
   VAPID_KEY,
-} from "@/lib/firebase";
+} from "@/lib/push";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useBarbearia } from "@/hooks/useBarbearia";
@@ -68,7 +68,7 @@ export function Sucesso() {
     if (!agendamento) return;
     let ativo = true;
     void (async () => {
-      const ok = await firebaseDisponivel();
+      const ok = await pushDisponivel();
       const temPermissao =
         "Notification" in window && Notification.permission === "granted";
       if (!ativo) return;
@@ -222,13 +222,6 @@ export function Sucesso() {
                 <BellRing className="size-4 shrink-0" />
                 ✅ Avisos ativados! Se algo mudar no seu horário, avisamos por
                 aqui.
-              </p>
-            )}
-
-            {state.demo && (
-              <p className="rounded-lg border border-yellow-600/30 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
-                ⚠️ Modo demonstração — conecte o Convex para que os
-                agendamentos sejam salvos no banco de dados.
               </p>
             )}
 

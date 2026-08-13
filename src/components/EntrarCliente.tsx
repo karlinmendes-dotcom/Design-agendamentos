@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { maskPhone, onlyDigits } from "@/utils/phone";
-import { obterTokenPush, registrarSW } from "@/lib/firebase";
+import { obterTokenPush, registrarSW } from "@/lib/push";
 import { Link } from "react-router-dom";
 
 interface EntrarClienteProps {

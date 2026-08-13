@@ -3,12 +3,9 @@ import { ConvexError } from "convex/values";
 
 const url = import.meta.env.VITE_CONVEX_URL;
 
-/** Verdadeiro quando o Convex foi configurado no .env. */
-export const isConvexConfigured = Boolean(url);
-
 /**
- * Client único do app. Sem VITE_CONVEX_URL usamos um placeholder apenas para
- * montar o provider com segurança — os hooks caem no modo demonstração.
+ * Client único do app. `VITE_CONVEX_URL` é obrigatória (Vercel prod/preview);
+ * o placeholder apenas evita crash no bootstrap caso a variável falte.
  */
 export const convexClient = new ConvexReactClient(
   url ?? "https://nao-configurado.convex.cloud",

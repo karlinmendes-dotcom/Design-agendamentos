@@ -10,7 +10,7 @@ import { useHorarios } from "@/hooks/useHorarios";
 import { useBarbearia } from "@/hooks/useBarbearia";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { erroMensagem, isConvexConfigured } from "@/lib/convex";
+import { erroMensagem } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { DIAS_SEMANA, formatDateShort, todayISO } from "@/utils/date";
 
@@ -160,21 +160,6 @@ export function Configuracoes() {
       setSalvando(false);
     }
   };
-
-  if (!isConvexConfigured) {
-    return (
-      <div>
-        <h1 className="font-display mb-2 text-2xl font-bold text-foreground sm:text-3xl">
-          Configurações
-        </h1>
-        <div className="rounded-xl border border-yellow-600/40 bg-yellow-500/15 px-5 py-8 text-center text-sm text-yellow-700">
-          Configure a URL do Convex em <code>.env</code> (
-          <code>VITE_CONVEX_URL</code>) para editar nome, logo, horários e dias
-          de funcionamento.
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-3xl">

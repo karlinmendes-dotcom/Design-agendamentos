@@ -10,7 +10,7 @@ import { useServicos } from "@/hooks/useServicos";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 
 export function Servicos() {
-  const { servicos, loading, error, refresh, usandoDemo } = useServicos(
+  const { servicos, loading, error, refresh } = useServicos(
     true,
     "servico",
   );
@@ -31,11 +31,6 @@ export function Servicos() {
               Todos os serviços incluem atendimento personalizado e produtos
               premium — escolha o seu e garanta o horário.
             </p>
-            {usandoDemo && (
-              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-yellow-600/40 bg-yellow-500/15 px-3 py-1 text-xs text-yellow-300">
-                Mostrando dados de demonstração — conecte o Convex para carregar os serviços reais.
-              </p>
-            )}
           </div>
         </div>
       </section>

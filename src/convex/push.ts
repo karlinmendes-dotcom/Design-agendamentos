@@ -18,7 +18,7 @@ import webpush from "web-push";
  *   e entrega o aviso via protocolo Web Push (biblioteca web-push),
  *   assinando com a chave PRIVADA VAPID — que existe SOMENTE na variável de
  *   ambiente `VAPID_PRIVATE_KEY` do Convex (nunca no repositório).
- *   A chave pública fica no frontend (src/lib/firebase.ts).
+ *   A chave pública fica no frontend (src/lib/push.ts).
  *
  * Sem Firebase: não depende de projeto, conta de serviço nem permissões do
  * Google Cloud — a chave VAPID é gerada e controlada pelo próprio estúdio.

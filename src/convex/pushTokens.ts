@@ -3,32 +3,57 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
- * Registro dos tokens FCM dos navegadores dos clientes (tabela pushTokens).
- * Sem "use node": são mutations puras, rodam no runtime padrão do Convex.
- * O envio em lote fica em push.ts (runtime Node, com a chave do Firebase).
+ * Registro das INSCRIÇÕES de push (Web Push padrão) dos navegadores das
+ * clientes (tabela pushTokens). O campo `token` guarda a PushSubscription
+ * COMPLETA como JSON. Sem "use node": são mutations puras, rodam no runtime
+ * padrão do Convex. O envio em lote fica em push.ts (runtime Node, com a
+ * chave privada VAPID — nunca no frontend).
  */
 
 /**
- * Validação mínima do token FCM web antes de gravar no banco (regra de
- * segurança: nada entra na base sem passar por aqui). Tokens FCM são strings
- * longas (tipicamente 100+ caracteres) com letras/números e caracteres como
- * ":", "-", "_", ".".
+ * Validação da inscrição de push antes de gravar no banco (regra de
+ * segurança: nada entra na base sem passar por aqui). Aceita:
+ *
+ * 1. PushSubscription padrão do navegador como JSON — o formato produzido
+ *    por `obterTokenPush` (src/lib/push.ts):
+ *    {"endpoint":"https://...","expirationTime":null,"keys":{"p256dh":"...","auth":"..."}}
+ * 2. Token FCM legado (string longa com letras/números e ":", "-", "_", ".")
+ *    — para não invalidar inscrições já gravadas antes da migração.
  */
-function tokenFcmValido(token: string): boolean {
-  return (
-    token.length >= 20 &&
-    token.length <= 500 &&
-    /^[A-Za-z0-9_\-:.]+$/.test(token)
-  );
+function inscricaoValida(token: string): boolean {
+  if (token.length < 20 || token.length > 6000) return false;
+
+  // 1) PushSubscription padrão: JSON com endpoint https + chaves p256dh/auth
+  try {
+    const obj = JSON.parse(token) as {
+      endpoint?: unknown;
+      keys?: { p256dh?: unknown; auth?: unknown };
+    };
+    if (
+      typeof obj?.endpoint === "string" &&
+      obj.endpoint.startsWith("https://") &&
+      typeof obj.keys?.p256dh === "string" &&
+      obj.keys.p256dh.length > 0 &&
+      typeof obj.keys?.auth === "string" &&
+      obj.keys.auth.length > 0
+    ) {
+      return true;
+    }
+  } catch {
+    // não é JSON — tenta o formato legado abaixo
+  }
+
+  // 2) Token FCM legado (compatibilidade com registros antigos)
+  return /^[A-Za-z0-9_\-:.]+$/.test(token);
 }
 
-/** Grava/atualiza o token FCM de um navegador (chamado pelo frontend). */
+/** Grava/atualiza a inscrição push de um navegador (chamado pelo frontend). */
 export const registrar = mutation({
   args: { token: v.string(), telefone: v.string() },
   handler: async (ctx, { token, telefone }) => {
     const limpo = telefone.replace(/\D/g, "");
-    if (!tokenFcmValido(token) || limpo.length < 8) {
-      throw new ConvexError("Token de notificação inválido.");
+    if (!inscricaoValida(token) || limpo.length < 8) {
+      throw new ConvexError("Inscrição de notificação inválida.");
     }
     const existente = await ctx.db
       .query("pushTokens")
@@ -49,7 +74,7 @@ export const registrar = mutation({
   },
 });
 
-/** Lista os tokens vinculados aos telefones informados (usado pelo envio). */
+/** Lista as inscrições vinculadas aos telefones informados (usado pelo envio). */
 export const listarPorTelefones = query({
   args: { telefones: v.array(v.string()) },
   handler: async (ctx, { telefones }) => {
@@ -80,9 +105,10 @@ export const remover = mutation({
 });
 
 /**
- * Remove TODOS os tokens de um telefone — usado quando a cliente pede para
- * parar de receber os avisos (botão na Política de Privacidade). Um telefone
- * pode ter tokens em vários navegadores/aparelhos; apagamos todos.
+ * Remove TODAS as inscrições de um telefone — usado quando a cliente pede
+ * para parar de receber os avisos (botão na Política de Privacidade). Um
+ * telefone pode ter inscrições em vários navegadores/aparelhos; apagamos
+ * todas.
  */
 export const removerPorTelefone = mutation({
   args: { telefone: v.string() },

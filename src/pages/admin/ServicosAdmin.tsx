@@ -28,7 +28,7 @@ import { useServicos } from "@/hooks/useServicos";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { erroMensagem, isConvexConfigured } from "@/lib/convex";
+import { erroMensagem } from "@/lib/convex";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL, formatMinutes } from "@/utils/format";
 import type { Servico, ServicoFormData } from "@/types";
@@ -45,7 +45,7 @@ const FORM_VAZIO: ServicoFormData = {
 };
 
 export function ServicosAdmin() {
-  const { servicos, loading, refresh, usandoDemo } = useServicos(false, "servico");
+  const { servicos, loading, refresh } = useServicos(false, "servico");
   const criarServico = useMutation(api.servicos.criar);
   const atualizarServico = useMutation(api.servicos.atualizar);
   const setServicoAtivo = useMutation(api.servicos.setAtivo);
@@ -184,19 +184,13 @@ export function ServicosAdmin() {
               Gerenciar combos
             </Link>
           </Button>
-          <Button variant="gold" onClick={abrirNovo} disabled={!isConvexConfigured}>
+          <Button variant="gold" onClick={abrirNovo} >
             <Plus className="size-4" />
             Novo serviço
           </Button>
         </div>
       </div>
 
-      {usandoDemo && (
-        <div className="mb-4 rounded-lg border border-yellow-600/40 bg-yellow-500/15 px-4 py-3 text-xs text-yellow-700">
-          Mostrando serviços de demonstração. Conecte o Convex para editar os
-          serviços reais.
-        </div>
-      )}
 
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
         {loading ? (
@@ -261,7 +255,7 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => abrirEdicao(s)}
                         aria-label={`Editar ${s.nome}`}
-                        disabled={!isConvexConfigured}
+                        
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -270,7 +264,7 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => void alternarAtivo(s)}
                         aria-label={s.ativo ? "Desativar" : "Ativar"}
-                        disabled={!isConvexConfigured}
+                        
                         className={s.ativo ? "text-blood" : "text-muted-foreground"}
                       >
                         <Power className="size-4" />
@@ -280,7 +274,7 @@ export function ServicosAdmin() {
                         size="icon"
                         onClick={() => void confirmarExclusao(s)}
                         aria-label={`Excluir ${s.nome}`}
-                        disabled={!isConvexConfigured}
+                        
                         className={
                           excluindoId === s.id ? "text-destructive" : "text-muted-foreground"
                         }

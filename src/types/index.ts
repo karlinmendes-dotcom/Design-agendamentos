@@ -91,7 +91,7 @@ export interface Agendamento {
   // Tenant / barbeiro
   barbearia_id: string | null;
   barbeiro_id: string | null;
-  // Relacionamentos (join do Supabase)
+  // Relacionamentos (join do Convex)
   cliente?: Pick<Cliente, "nome" | "telefone"> | null;
   servico?: Pick<Servico, "nome" | "preco" | "duracao_minutos"> | null;
   barbeiro?: Pick<Barbeiro, "nome"> | null;

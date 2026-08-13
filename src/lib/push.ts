@@ -1,9 +1,9 @@
 /**
- * Notificações Web Push — protocolo padrão do navegador (VAPID), SEM Firebase.
+ * Notificações Web Push — protocolo padrão do navegador (VAPID).
  *
- * O pop chega via Push API + service worker (public/firebase-messaging-sw.js),
- * que funciona em todos os navegadores modernos (Chrome, Edge, Firefox,
- * Samsung Internet e Safari — no iPhone exige "Adicionar à tela de início").
+ * O pop chega via Push API + service worker (public/push-sw.js), que
+ * funciona em todos os navegadores modernos (Chrome, Edge, Firefox, Samsung
+ * Internet e Safari — no iPhone exige "Adicionar à tela de início").
  *
  * A chave pública VAPID é pública por design (fica no navegador). A PRIVADA
  * (VAPID_PRIVATE_KEY) vive SÓ no servidor do Convex (src/convex/push.ts).
@@ -27,7 +27,7 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
 let suportado: boolean | null = null;
 
 /** O navegador suporta Web Push? (HTTPS + service worker + Push API) */
-export async function firebaseDisponivel(): Promise<boolean> {
+export async function pushDisponivel(): Promise<boolean> {
   if (suportado !== null) return suportado;
   // ⚠️ Web Push só funciona em HTTPS (ou localhost). Sem HTTPS falha em
   // silêncio — avisamos no console (produção Vercel já serve por HTTPS).
@@ -48,7 +48,7 @@ export async function firebaseDisponivel(): Promise<boolean> {
 export async function registrarSW(): Promise<boolean> {
   if (!("serviceWorker" in navigator)) return false;
   try {
-    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    await navigator.serviceWorker.register("/push-sw.js");
     return true;
   } catch {
     return false;
@@ -62,7 +62,7 @@ export async function registrarSW(): Promise<boolean> {
  */
 export async function obterTokenPush(): Promise<string | null> {
   if (!VAPID_KEY) return null;
-  if (!(await firebaseDisponivel())) return null;
+  if (!(await pushDisponivel())) return null;
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
