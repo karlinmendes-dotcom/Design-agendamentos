@@ -51,7 +51,7 @@ export function Termos() {
                 </li>
                 <li>
                   respeitar uma tolerância de até{" "}
-                  <strong>10 minutos de atraso</strong> — após esse tempo, o
+                  <strong>15 minutos de atraso</strong> — após esse tempo, o
                   horário poderá ser liberado para outra cliente.
                 </li>
               </ul>
@@ -67,7 +67,7 @@ export function Termos() {
                 <li>
                   o horário reservado pode ser{" "}
                   <strong>cancelado automaticamente</strong> em caso de
-                  atraso superior a 10 minutos sem aviso;
+                  atraso superior a 15 minutos sem aviso;
                 </li>
                 <li>
                   em imprevistos técnicos ou pessoais, o estúdio pode

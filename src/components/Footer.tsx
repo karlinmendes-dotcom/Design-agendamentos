@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AtSign, Camera, Clock, MapPin, MessageCircle } from "lucide-react";
+import { Camera, Clock, MapPin, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useBarbearia } from "@/hooks/useBarbearia";
@@ -44,13 +44,6 @@ export function Footer() {
               className="flex size-9 items-center justify-center rounded-full border border-gold-light/25 text-cream/60 transition-all hover:border-gold-light hover:text-gold-light"
             >
               <Camera className="size-4" />
-            </a>
-            <a
-              href="mailto:contato@naildesignstudio.com.br"
-              aria-label="E-mail"
-              className="flex size-9 items-center justify-center rounded-full border border-gold-light/25 text-cream/60 transition-all hover:border-gold-light hover:text-gold-light"
-            >
-              <AtSign className="size-4" />
             </a>
             <a
               href={whats}

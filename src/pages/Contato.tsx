@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import {
-  AtSign,
   CalendarCheck,
   Camera,
   Clock,
@@ -167,11 +166,6 @@ export function Contato() {
             <div className="flex gap-3">
               {[
                 { icon: Camera, label: "Instagram", href: instagramHref },
-                {
-                  icon: AtSign,
-                  label: "E-mail",
-                  href: "mailto:contato@naildesignstudio.com.br",
-                },
                 { icon: MessageCircle, label: "WhatsApp", href: whats },
               ].map((rede) => (
                 <a
