@@ -1,93 +1,47 @@
-import { initializeApp, type FirebaseApp } from "firebase/app";
-import {
-  getMessaging,
-  getToken,
-  isSupported,
-  onMessage,
-  type Messaging,
-  type MessagePayload,
-} from "firebase/messaging";
-
 /**
- * Firebase Cloud Messaging (web) — o "pop" de notificação que avisa a cliente
- * quando o horário dela é cancelado.
+ * Notificações Web Push — protocolo padrão do navegador (VAPID), SEM Firebase.
  *
- * A config abaixo é PÚBLICA por design (fica no navegador); sobrescreva via
- * VITE_FIREBASE_* quando quiser. A chave SECRETA (FIREBASE_SERVICE_ACCOUNT)
- * vive apenas no servidor do Convex (ver src/convex/push.ts).
- */
-const CONFIG_PADRAO = {
-  apiKey: "AIzaSyBoGKjUODcSC7DpeSMNW_ZWRp7uLKSzuuc",
-  authDomain: "poupaps-cancelar.firebaseapp.com",
-  projectId: "poupaps-cancelar",
-  storageBucket: "poupaps-cancelar.firebasestorage.app",
-  messagingSenderId: "66548106345",
-  appId: "1:66548106345:web:008a42ef4cd41e5acecef8",
-};
-
-const FIREBASE_CONFIG = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? CONFIG_PADRAO.apiKey,
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? CONFIG_PADRAO.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? CONFIG_PADRAO.projectId,
-  storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? CONFIG_PADRAO.storageBucket,
-  messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ??
-    CONFIG_PADRAO.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? CONFIG_PADRAO.appId,
-};
-
-/**
- * ⚙️ PRODUÇÃO — CHAVE VAPID (Web Push)
+ * O pop chega via Push API + service worker (public/firebase-messaging-sw.js),
+ * que funciona em todos os navegadores modernos (Chrome, Edge, Firefox,
+ * Samsung Internet e Safari — no iPhone exige "Adicionar à tela de início").
  *
- * A chave abaixo é a PÚBLICA do projeto Firebase "poupaps-cancelar" e já
- * funciona em produção. Pública por design: ela vai no navegador e não é
- * segredo. O segredo (FIREBASE_SERVICE_ACCOUNT) vive só no servidor Convex.
- *
- * PARA TROCAR DE PROJETO FIREBASE:
- * 1. Firebase Console → Configurações do projeto → Cloud Messaging →
- *    Certificados Web Push → copie a "Chave pública" (começa com BP...).
- * 2. Defina VITE_FIREBASE_VAPID_KEY nas env vars do painel (Vercel/Keys) —
- *    NUNCA edite a constante abaixo em produção; ela é só o fallback local.
- * 3. Mantenha o public/firebase-messaging-sw.js com o mesmo projeto Firebase.
+ * A chave pública VAPID é pública por design (fica no navegador). A PRIVADA
+ * (VAPID_PRIVATE_KEY) vive SÓ no servidor do Convex (src/convex/push.ts).
  */
 const VAPID_KEY_PADRAO =
-  "BPILKFOKhBqgOYngruXDKhuATn2hdQ08XqgAdV4kN9wFPlyhGd1F11kt9Gz5VyD6Vr0DzWG9o31NDYYI7gXVGp8";
+  "BASAMPoLelBOjtwzVJZBeuwG26yW7-8PGkEagV9n-x33LNlnTCYyFREgbIui1q6q_izmipY9DXza2MpqlEJ8uURo";
 
 export const VAPID_KEY =
-  import.meta.env.VITE_FIREBASE_VAPID_KEY ?? VAPID_KEY_PADRAO;
+  import.meta.env.VITE_VAPID_PUBLIC_KEY ?? VAPID_KEY_PADRAO;
 
-let app: FirebaseApp | null = null;
-let messaging: Messaging | null = null;
+/** Converte a chave pública VAPID (base64url) para Uint8Array (exigência da API). */
+function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const comPadding = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  const bin = atob(comPadding);
+  const bytes = new Uint8Array(new ArrayBuffer(bin.length));
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
 let suportado: boolean | null = null;
 
-/** O navegador suporta FCM web? (https, service worker, etc.) */
+/** O navegador suporta Web Push? (HTTPS + service worker + Push API) */
 export async function firebaseDisponivel(): Promise<boolean> {
   if (suportado !== null) return suportado;
-  // ⚠️ Web Push só funciona em HTTPS (ou localhost). Sem HTTPS o FCM falha em
-  // silêncio — avisamos no console para facilitar o diagnóstico em produção
-  // (Vercel/Freebuff já servem por HTTPS, então o aviso só aparece em dev).
+  // ⚠️ Web Push só funciona em HTTPS (ou localhost). Sem HTTPS falha em
+  // silêncio — avisamos no console (produção Vercel já serve por HTTPS).
   if (typeof window !== "undefined" && !window.isSecureContext) {
     console.warn(
       "[push] Ambiente SEM HTTPS detectado — as notificações web não funcionarão. " +
         "Acesse o site por https:// em produção.",
     );
   }
-  try {
-    suportado = await isSupported();
-  } catch {
-    suportado = false;
-  }
+  suportado =
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
   return suportado;
-}
-
-async function obterMessaging(): Promise<Messaging | null> {
-  if (messaging) return messaging;
-  if (!(await firebaseDisponivel())) return null;
-  app = app ?? initializeApp(FIREBASE_CONFIG);
-  messaging = getMessaging(app);
-  return messaging;
 }
 
 /** Registra o service worker que recebe o pop mesmo com o app fechado. */
@@ -101,23 +55,33 @@ export async function registrarSW(): Promise<boolean> {
   }
 }
 
-/** Pede o token FCM do navegador (requer permissão + VAPID configurado). */
+/**
+ * Cria (ou reutiliza) a inscrição push do navegador e devolve a assinatura
+ * como JSON — que é gravada no banco (pushTokens.token) e usada pelo servidor
+ * para entregar o aviso. Requer permissão de notificação concedida.
+ */
 export async function obterTokenPush(): Promise<string | null> {
   if (!VAPID_KEY) return null;
-  const m = await obterMessaging();
-  if (!m) return null;
+  if (!(await firebaseDisponivel())) return null;
   try {
-    return (await getToken(m, { vapidKey: VAPID_KEY })) ?? null;
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+    });
+    return JSON.stringify(sub.toJSON());
   } catch {
     return null;
   }
 }
 
-/** Escuta mensagens enquanto o app está aberto (mostra o aviso no app). */
+/**
+ * App aberto: a notificação é exibida pelo próprio service worker (o pop do
+ * navegador aparece mesmo com a página em foco) — mantemos a assinatura por
+ * compatibilidade com o PushListener, que não precisa mais de listener.
+ */
 export async function observarMensagens(
-  handler: (payload: MessagePayload) => void,
+  _handler: (payload: { data?: Record<string, string> }) => void,
 ): Promise<() => void> {
-  const m = await obterMessaging();
-  if (!m) return () => {};
-  return onMessage(m, handler);
+  return () => {};
 }

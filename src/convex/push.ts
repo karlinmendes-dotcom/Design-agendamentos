@@ -3,29 +3,34 @@
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { v } from "convex/values";
-import { createSign } from "node:crypto";
+import webpush from "web-push";
 
 /**
- * Notificações push (Firebase Cloud Messaging) — o "pop" que chega no
- * navegador/celular da cliente quando o horário dela é cancelado.
+ * Notificações Web Push (protocolo padrão do navegador, VAPID) — o "pop" que
+ * chega no navegador/celular da cliente (confirmação, cancelamento, avisos).
  *
- * - Frontend: a cliente permite notificações e o token FCM do navegador dela é
- *   gravado aqui (tabela pushTokens), vinculado ao telefone.
- * - Backend: `enviarParaTelefones` busca os tokens dos telefones afetados e
- *   envia o alerta em lote pela API HTTP v1 do FCM, autenticando com a chave
- *   privada do SDK Admin (env FIREBASE_SERVICE_ACCOUNT — segredo, só servidor).
+ * - Frontend: a cliente permite notificações e o navegador devolve uma
+ *   INSCRIÇÃO push (endpoint + chaves), que é gravada como JSON na tabela
+ *   pushTokens (campo token), vinculada ao telefone.
+ * - Backend: `enviarParaTelefones` busca as inscrições dos telefones afetados
+ *   e entrega o aviso via protocolo Web Push (biblioteca web-push), assinando
+ *   com a chave PRIVADA VAPID (env VAPID_PRIVATE_KEY — segredo, só servidor).
+ *   A chave pública fica no frontend (src/lib/firebase.ts).
+ *
+ * Sem Firebase: não depende de projeto, conta de serviço nem permissões do
+ * Google Cloud — a chave VAPID é gerada e controlada pelo próprio estúdio.
  */
 
 const TITULO_AVISO = "⚠️ Alteração no seu Agendamento";
 const CORPO_AVISO =
   "Olá! Houve um imprevisto na nossa agenda. Toque aqui para ver os detalhes e remarcar o seu horário de forma rápida.";
 
-interface ServiceAccount {
-  project_id?: string;
-  client_email?: string;
-  private_key?: string;
-  token_uri?: string;
-}
+/** Chave pública VAPID do estúdio (pública por design — fica no navegador). */
+const VAPID_PUBLIC_KEY =
+  "BASAMPoLelBOjtwzVJZBeuwG26yW7-8PGkEagV9n-x33LNlnTCYyFREgbIui1q6q_izmipY9DXza2MpqlEJ8uURo";
+
+/** Contato identificado no JWT VAPID (exigência do protocolo). */
+const VAPID_SUBJECT = "mailto:avisos@studio-natalia.com.br";
 
 /** Resultado de um envio em lote (tipado para evitar inferência circular). */
 interface ResultadoEnvio {
@@ -34,77 +39,29 @@ interface ResultadoEnvio {
   telefones: string[];
   sem_configuracao: boolean;
   data: string | null;
-  /** Detalhe dos erros do FCM (ex.: 403 MISMATCH_SENDER_ID) — diagnóstico. */
+  /** Detalhe dos erros (ex.: assinatura inválida, 404/410) — diagnóstico. */
   erros: string[];
 }
 
-interface ResultadoCancelamento {
-  data: string;
-  cancelados: number;
-  telefones: string[];
-  push: ResultadoEnvio;
-}
-
-/** Lê a chave privada do Firebase (JSON do SDK Admin) das variáveis do servidor. */
-function lerServiceAccount(): ServiceAccount | null {
-  const bruto = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!bruto) return null;
+/** Configura o VAPID no web-push a partir da chave privada do Convex. */
+function configurarVapid(): boolean {
+  const privada = process.env.VAPID_PRIVATE_KEY;
+  if (!privada) return false;
   try {
-    return JSON.parse(bruto) as ServiceAccount;
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, privada);
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
-function base64url(texto: string): string {
-  return Buffer.from(texto).toString("base64url");
-}
-
-/** Troca o JWT assinado por um access_token do OAuth2 (escopo FCM). */
-async function obterAccessToken(sa: ServiceAccount): Promise<string> {
-  if (!sa.client_email || !sa.private_key || !sa.token_uri) {
-    throw new Error(
-      "Service account incompleto (faltam client_email/private_key/token_uri).",
-    );
-  }
-  const agora = Math.floor(Date.now() / 1000);
-  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claims = base64url(
-    JSON.stringify({
-      iss: sa.client_email,
-      scope: "https://www.googleapis.com/auth/firebase.messaging",
-      aud: sa.token_uri,
-      iat: agora,
-      exp: agora + 3600,
-    }),
-  );
-  const assinaturaInput = `${header}.${claims}`;
-  const signer = createSign("RSA-SHA256");
-  signer.update(assinaturaInput);
-  signer.end();
-  const assinatura = signer.sign(sa.private_key, "base64url");
-  const jwt = `${assinaturaInput}.${assinatura}`;
-
-  const resposta = await fetch(sa.token_uri, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
-  });
-  const json = (await resposta.json()) as { access_token?: string };
-  if (!resposta.ok || !json.access_token) {
-    throw new Error(`Falha ao obter token do Firebase (${resposta.status}).`);
-  }
-  return json.access_token;
-}
+/** Inscrição push gravada no banco (JSON.parse do que o navegador devolveu). */
 
 /**
- * Envia o aviso de cancelamento para todos os tokens vinculados aos telefones
- * informados. Se o FIREBASE_SERVICE_ACCOUNT ainda não estiver configurado,
- * retorna sem_configuracao: true (o cancelamento já aconteceu — só o aviso
- * fica pendente).
+ * Entrega o aviso para todos os telefones informados (Web Push). Se o
+ * VAPID_PRIVATE_KEY ainda não estiver configurado no Convex, retorna
+ * sem_configuracao: true (o cancelamento já aconteceu — só o aviso fica
+ * pendente).
  */
 export const enviarParaTelefones = action({
   args: {
@@ -135,82 +92,71 @@ export const enviarParaTelefones = action({
       };
     }
 
-    const sa = lerServiceAccount();
-    if (!sa || !sa.project_id) {
+    if (!configurarVapid()) {
       return {
         enviados: 0,
         falhas: 0,
         telefones: limpos,
         sem_configuracao: true,
         data: data ?? null,
-        erros: [
-          "FIREBASE_SERVICE_ACCOUNT ausente ou inválido (sem project_id).",
-        ],
+        erros: ["VAPID_PRIVATE_KEY ausente no Convex (Environment Variables)."],
       };
     }
 
-    // Junta todos os tokens dos telefones afetados (um cliente pode ter vários)
+    // Junta todas as inscrições push dos telefones afetados (uma cliente
+    // pode ter vários navegadores/aparelhos). O campo token guarda a
+    // inscrição completa como JSON.
     const docs = await ctx.runQuery(api.pushTokens.listarPorTelefones, {
       telefones: limpos,
     });
-    const tokens = new Set(docs.map((d) => d.token));
-    if (tokens.size === 0) {
+    const inscricoes = docs.map((d) => d.token).filter(Boolean);
+    if (inscricoes.length === 0) {
       return {
         enviados: 0,
         falhas: 0,
         telefones: limpos,
         sem_configuracao: false,
         data: data ?? null,
-        erros: ["Nenhum token FCM cadastrado para este telefone."],
+        erros: ["Nenhuma inscrição push cadastrada para este telefone."],
       };
     }
 
-    const accessToken = await obterAccessToken(sa);
-    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+    const payload = JSON.stringify({
+      titulo: titulo ?? TITULO_AVISO,
+      mensagem: mensagem ?? CORPO_AVISO,
+      url: url ?? "/reagendar",
+      tipo: tipo ?? "cancelamento",
+      ...(data ? { dia: data } : {}),
+    });
 
     let enviados = 0;
     let falhas = 0;
     const erros: string[] = [];
-    const fila = [...tokens];
-    // Lote de 10 por vez para não estourar o FCM nem o runtime
-    for (let i = 0; i < fila.length; i += 10) {
-      const lote = fila.slice(i, i + 10);
-      const resultados = await Promise.all(
-        lote.map(async (token) => {
-          const resposta = await fetch(fcmUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              message: {
-                token,
-                notification: {
-                  title: titulo ?? TITULO_AVISO,
-                  body: mensagem ?? CORPO_AVISO,
-                },
-                data: {
-                  tipo: tipo ?? "cancelamento",
-                  url: url ?? "/reagendar",
-                  ...(data ? { dia: data } : {}),
-                },
-              },
-            }),
-          });
-          if (resposta.ok) return true;
-          // Guarda o motivo exato para diagnóstico (ex.: MISMATCH_SENDER_ID)
-          const corpoErro = await resposta.text().catch(() => "");
-          erros.push(`${resposta.status}: ${corpoErro.slice(0, 220)}`);
-          if (resposta.status === 404 || resposta.status === 410) {
-            // Token inválido/revogado → limpa da base para não reenviar
-            await ctx.runMutation(api.pushTokens.remover, { token });
-          }
-          return false;
-        }),
-      );
-      enviados += resultados.filter(Boolean).length;
-      falhas += resultados.filter((r) => !r).length;
+
+    for (const bruto of inscricoes) {
+      let inscricao: webpush.PushSubscription;
+      try {
+        inscricao = JSON.parse(bruto) as webpush.PushSubscription;
+      } catch {
+        continue; // registro corrompido — ignora sem derrubar o lote
+      }
+      try {
+        await webpush.sendNotification(inscricao, payload);
+        enviados++;
+      } catch (err) {
+        const e = err as { statusCode?: number; body?: unknown; message?: string };
+        const status = e.statusCode ?? 0;
+        erros.push(
+          `HTTP ${status}: ${String(e.body ?? e.message ?? "").slice(0, 220)}`,
+        );
+        if (status === 404 || status === 410) {
+          // Inscrição inválida/revogada → limpa da base para não reenviar
+          await ctx.runMutation(api.pushTokens.remover, { token: bruto }).catch(
+            () => {},
+          );
+        }
+        falhas++;
+      }
     }
 
     return {
@@ -224,10 +170,15 @@ export const enviarParaTelefones = action({
   },
 });
 
-/** Cancela um dia inteiro (mutation) + notifica os afetados (FCM). */
+/** Cancela um dia inteiro (mutation) + notifica os afetados (Web Push). */
 export const cancelarDiaCompleto = action({
   args: { data: v.string() },
-  handler: async (ctx, { data }): Promise<ResultadoCancelamento> => {
+  handler: async (ctx, { data }): Promise<{
+    data: string;
+    cancelados: number;
+    telefones: string[];
+    push: ResultadoEnvio;
+  }> => {
     const cancelado = await ctx.runMutation(api.agendamentos.cancelarDia, {
       data,
     });
