@@ -53,6 +53,9 @@ const Configuracoes = lazy(() =>
 const Equipe = lazy(() =>
   import("@/pages/admin/Equipe").then((m) => ({ default: m.Equipe })),
 );
+const Analises = lazy(() =>
+  import("@/pages/admin/Analises").then((m) => ({ default: m.Analises })),
+);
 const AdminLogin = lazy(() =>
   import("@/pages/admin/AdminLogin").then((m) => ({ default: m.AdminLogin })),
 );
@@ -181,6 +184,7 @@ export default function App() {
                 <Route path="combos" element={<CombosAdmin />} />
                 <Route path="configuracoes" element={<Configuracoes />} />
                 <Route path="equipe" element={<Equipe />} />
+                <Route path="analises" element={<Analises />} />
               </Route>
             </Route>
 

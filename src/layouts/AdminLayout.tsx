@@ -10,6 +10,7 @@ import {
   PanelLeftOpen,
   Settings,
   Tags,
+  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const ADMIN_LINKS = [
   { to: "/admin/servicos", label: "Serviços", icon: Hand },
   { to: "/admin/combos", label: "Combos", icon: Tags },
   { to: "/admin/equipe", label: "Equipe", icon: Users },
+  { to: "/admin/analises", label: "Análises", icon: TrendingUp },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 
@@ -34,6 +36,7 @@ const TITULOS: { prefixo: string; titulo: string }[] = [
   { prefixo: "/admin/servicos", titulo: "Serviços" },
   { prefixo: "/admin/combos", titulo: "Combos" },
   { prefixo: "/admin/equipe", titulo: "Equipe" },
+  { prefixo: "/admin/analises", titulo: "Análises" },
   { prefixo: "/admin/configuracoes", titulo: "Configurações" },
   { prefixo: "/admin", titulo: "Visão geral" },
 ];
@@ -50,8 +53,14 @@ export function AdminLayout() {
     navigate("/", { replace: true });
   };
 
+  // Toda troca de página fecha o menu mobile E rola a tela para o topo:
+  // no celular, quem tocou num item do menu precisa ver a página nova
+  // desde o começo — sem continuar no meio da página anterior.
   useEffect(() => {
     setMenuAberto(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, [location.pathname]);
 
   const titulo =

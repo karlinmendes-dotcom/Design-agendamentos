@@ -23,13 +23,13 @@ import { useDatasBloqueadas } from "@/hooks/useDatasBloqueadas";
 import { useBarbeiros } from "@/hooks/useBarbeiros";
 import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
 import { useIdentidadeCliente } from "@/hooks/useIdentidadeCliente";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { erroMensagem, isConvexConfigured } from "@/lib/convex";
 import { obterTokenPush, registrarSW } from "@/lib/firebase";
 import { formatBRL, formatMinutes } from "@/utils/format";
-import { formatDateWeekday } from "@/utils/date";
+import { formatDateShort, formatDateWeekday } from "@/utils/date";
 import {
   gerarSlots,
   filtrarSlotsOcupados,
@@ -86,6 +86,22 @@ export function Agendamento() {
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
   const dadosAvancouRef = useRef(false);
   const avancouParamRef = useRef(false);
+
+  // Pendência em aberto (regra do estúdio: cancelamento em cima da hora /
+  // falta = 50% do valor). Se a cliente desmarcou/faltou e ainda não acertou,
+  // ela vê o aviso aqui antes de marcar o próximo horário. Usa o telefone do
+  // formulário (quando preenchido) ou o da conta salva no aparelho.
+  const telefonePendencias = (() => {
+    const digitos = onlyDigits(telefone);
+    return digitos.length >= 8 ? digitos : (identidade?.telefone ?? "");
+  })();
+  const pendencias = useQuery(api.agendamentos.pendenciasPorTelefone, {
+    telefone: telefonePendencias,
+  });
+  const totalPendencias = (pendencias ?? []).reduce(
+    (soma, p) => soma + p.pendencia,
+    0,
+  );
 
   const servico = useMemo(
     () => servicos.find((s) => s.id === servicoId) ?? null,
@@ -332,6 +348,37 @@ export function Agendamento() {
             Reserve seu <span className="text-gradient-red">horário</span>
           </h1>
         </div>
+
+        {/* Aviso de pendência — regra de desmarcação/falta do estúdio */}
+        {pendencias && pendencias.length > 0 && (
+          <div
+            className="animate-slide-up mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-4 shadow-[0_14px_40px_-30px_rgba(180,120,0,0.6)]"
+            style={{ animationDelay: "0.03s" }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-lg">
+                💛
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-amber-900">
+                  {identidade?.nome
+                    ? `${identidade.nome.trim().split(" ")[0]}, antes de marcar...`
+                    : "Antes de marcar..."}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-amber-900/90">
+                  Você tem uma <strong>pendência de {formatBRL(totalPendencias)}</strong>{" "}
+                  com o estúdio
+                  {pendencias.length === 1
+                    ? ` (50% do valor do atendimento de ${formatDateShort(pendencias[0].data)})`
+                    : ""}
+                  , referente à sua última desmarcação/falta. Para garantir o
+                  próximo horário, acerte esse valor com a gente primeiro — a
+                  remarcação é liberada assim que o pagamento for feito. 💕
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Barra de progresso — preenche a cada etapa concluída */}
         <div className="animate-slide-up mb-8" style={{ animationDelay: "0.05s" }}>

@@ -95,6 +95,8 @@ export interface Agendamento {
   cliente?: Pick<Cliente, "nome" | "telefone"> | null;
   servico?: Pick<Servico, "nome" | "preco" | "duracao_minutos"> | null;
   barbeiro?: Pick<Barbeiro, "nome"> | null;
+  /** Pendência da cliente (50% por cancelamento em cima da hora / falta). */
+  pendencia?: number | null;
 }
 
 export interface Horario {

@@ -45,6 +45,7 @@ async function mapAgendamento(ctx: QueryCtx, doc: AgendamentoDoc) {
     horario: doc.horario,
     status: doc.status,
     duracao_minutos: doc.duracao_minutos,
+    pendencia: doc.pendencia ?? null,
     created_at: new Date(doc._creationTime).toISOString(),
     barbearia_id: doc.barbearia_id ?? null,
     barbeiro_id: doc.barbeiro_id ?? null,
@@ -341,6 +342,74 @@ export const atualizarStatus = mutation({
     ),
   },
   handler: async (ctx, { id, status }) => {
-    await ctx.db.patch(id, { status });
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new ConvexError("Agendamento não encontrado.");
+
+    const patch: {
+      status: "confirmado" | "concluido" | "cancelado";
+      pendencia?: number;
+    } = { status };
+    // Cancelamento individual feito pela dona → fica a pendência de 50% do
+    // valor (regra do estúdio para desmarcar em cima da hora / falta). O
+    // cancelamento em massa (cancelarDia — imprevisto do estúdio) NÃO gera
+    // pendência, pois não é culpa da cliente.
+    if (status === "cancelado" && doc.pendencia === undefined) {
+      const servico = doc.servico_id ? await ctx.db.get(doc.servico_id) : null;
+      if (servico?.preco) {
+        patch.pendencia = Math.round(servico.preco * 0.5 * 100) / 100;
+      }
+    }
+    await ctx.db.patch(id, patch);
+  },
+});
+
+/**
+ * Pendências em aberto de uma cliente (por telefone) — usada no agendamento
+ * para avisar que, para remarcar, a cliente precisa acertar o valor pendente
+ * (regra de cancelamento em cima da hora / falta).
+ */
+export const pendenciasPorTelefone = query({
+  args: { telefone: v.string() },
+  handler: async (ctx, { telefone }) => {
+    const digitos = telefone.replace(/\D/g, "");
+    if (digitos.length < 8) return [];
+
+    const docs = await ctx.db.query("agendamentos").collect();
+    const itens: {
+      id: string;
+      data: string;
+      horario: string;
+      servico: string;
+      pendencia: number;
+    }[] = [];
+
+    for (const a of docs) {
+      if (a.status !== "cancelado" || !a.pendencia) continue;
+      const cliente = a.cliente_id ? await ctx.db.get(a.cliente_id) : null;
+      if (!cliente || cliente.telefone.replace(/\D/g, "") !== digitos) continue;
+      const servico = a.servico_id ? await ctx.db.get(a.servico_id) : null;
+      itens.push({
+        id: a._id,
+        data: a.data,
+        horario: a.horario,
+        servico: servico?.nome ?? "Procedimento",
+        pendencia: a.pendencia,
+      });
+    }
+
+    return itens.sort((x, y) => y.data.localeCompare(x.data));
+  },
+});
+
+/**
+ * Marca a pendência de um agendamento como QUITADA (a dona recebeu o valor
+ * dos 50% e libera a remarcação da cliente).
+ */
+export const quitarPendencia = mutation({
+  args: { id: v.id("agendamentos") },
+  handler: async (ctx, { id }) => {
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new ConvexError("Agendamento não encontrado.");
+    await ctx.db.patch(id, { pendencia: undefined });
   },
 });

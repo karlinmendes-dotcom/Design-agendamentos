@@ -148,6 +148,11 @@ export default defineSchema({
       v.literal("cancelado"),
     ),
     duracao_minutos: v.number(), // duração gravada na marcação (integridade)
+    // Pendência da cliente por cancelamento em cima da hora / falta (regra do
+    // estúdio): 50% do valor. Preenchido quando a dona cancela individualmente;
+    // zera quando a dona marca como quitado (quitarPendencia). O agendamento
+    // da cliente mostra um aviso se ela tiver alguma pendência em aberto.
+    pendencia: v.optional(v.number()),
   })
     .index("por_data", ["data"])
     .index("por_cliente", ["cliente_id"]),
