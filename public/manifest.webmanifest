@@ -1,0 +1,19 @@
+{
+  "name": "Studio Natália Braga – Nail Design",
+  "short_name": "Studio NB",
+  "description": "Agendamento online de manicure, pedicure, esmaltação em gel e nail art. Unhas impecáveis, horário garantido.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f3ee",
+  "theme_color": "#2F4A3E",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

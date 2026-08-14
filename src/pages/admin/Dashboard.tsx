@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
+  CheckCircle2,
   Hand,
   Phone,
   RefreshCw,
@@ -62,6 +63,9 @@ function agendarPorPeriodo(
 ): Agendamento[] {
   const inicio = new Date(`${hojeISO}T00:00:00`);
   const fim = new Date(inicio);
+  // "Hoje" = do início do dia até o início do dia seguinte (sem isso o
+  // filtro de hoje nunca mostra nada — o fim ficava igual ao início).
+  if (periodo === "hoje") fim.setDate(inicio.getDate() + 1);
   if (periodo === "semana") fim.setDate(inicio.getDate() + 6);
   if (periodo === "mes") fim.setMonth(inicio.getMonth() + 1);
 
@@ -99,6 +103,18 @@ export function Dashboard() {
   const agendaDoPeriodo = useMemo(
     () => agendarPorPeriodo(agendamentos, periodo, hoje),
     [agendamentos, periodo, hoje],
+  );
+
+  // A frente do dia: mostra quem AINDA vai ser atendido. Os concluídos não
+  // somem do banco (histórico/analises usam) — apenas saem da lista ativa
+  // e ficam numa seção discreta "Concluídos hoje".
+  const pendentesDoDia = useMemo(
+    () => agendaDoPeriodo.filter((a) => a.status !== "concluido"),
+    [agendaDoPeriodo],
+  );
+  const concluidosDoDia = useMemo(
+    () => agendaDoPeriodo.filter((a) => a.status === "concluido"),
+    [agendaDoPeriodo],
   );
 
   // Agendamento em detalhe — tocar numa linha da agenda abre o modal
@@ -206,40 +222,49 @@ export function Dashboard() {
           </div>
         ) : (
           <div>
-            {/* Próxima cliente em destaque (hoje) */}
-            {periodo === "hoje" && (
-              <div className="flex flex-wrap items-center gap-4 border-b border-border/60 bg-muted/35 px-5 py-4 sm:px-6">
-                <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex flex-col items-center rounded-xl border border-gold/35 bg-gold/15 px-3.5 py-2">
-                    <span className="font-display text-2xl leading-none font-extrabold tabular-nums text-green-900">
-                      {agendaDoPeriodo[0].horario.slice(0, 2)}
-                    </span>
-                    <span className="mt-0.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                      {agendaDoPeriodo[0].horario.slice(3)}
-                    </span>
+            {/* Próxima cliente em destaque (hoje) — só quem ainda não foi atendida */}
+            {periodo === "hoje" &&
+              (pendentesDoDia.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-4 border-b border-border/60 bg-muted/35 px-5 py-4 sm:px-6">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex flex-col items-center rounded-xl border border-gold/35 bg-gold/15 px-3.5 py-2">
+                      <span className="font-display text-2xl leading-none font-extrabold tabular-nums text-green-900">
+                        {pendentesDoDia[0].horario.slice(0, 2)}
+                      </span>
+                      <span className="mt-0.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                        {pendentesDoDia[0].horario.slice(3)}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold tracking-[0.22em] text-blood uppercase">
+                        Próxima cliente
+                      </p>
+                      <p className="font-display mt-0.5 truncate text-xl font-bold text-card-foreground">
+                        {pendentesDoDia[0].cliente?.nome ?? "—"}
+                      </p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {pendentesDoDia[0].servico?.nome ?? "—"} ·{" "}
+                        {formatBRL(pendentesDoDia[0].servico?.preco ?? 0)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold tracking-[0.22em] text-blood uppercase">
-                      Próxima cliente
-                    </p>
-                    <p className="font-display mt-0.5 truncate text-xl font-bold text-card-foreground">
-                      {agendaDoPeriodo[0].cliente?.nome ?? "—"}
-                    </p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {agendaDoPeriodo[0].servico?.nome ?? "—"} ·{" "}
-                      {formatBRL(agendaDoPeriodo[0].servico?.preco ?? 0)}
-                    </p>
+                  <div className="ml-auto">
+                    <StatusBadge status={pendentesDoDia[0].status} />
                   </div>
                 </div>
-                <div className="ml-auto">
-                  <StatusBadge status={agendaDoPeriodo[0].status} />
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-muted/35 px-5 py-4 sm:px-6">
+                  <CheckCircle2 className="size-4 text-green-700" />
+                  <p className="text-sm font-medium text-card-foreground">
+                    Tudo concluído hoje! A lista da frente fica livre para o
+                    próximo dia. 💛
+                  </p>
                 </div>
-              </div>
-            )}
+              ))}
 
-            {/* Lista cronológica */}
+            {/* Lista cronológica — só os pendentes no dia; semana/mês mostram tudo */}
             <div className="divide-y divide-border/60">
-              {agendaDoPeriodo
+              {(periodo === "hoje" ? pendentesDoDia : agendaDoPeriodo)
                 .slice(periodo === "hoje" ? 1 : 0)
                 .map((a) => (
                   <div
@@ -282,6 +307,43 @@ export function Dashboard() {
                   </div>
                 ))}
             </div>
+
+            {/* Concluídos hoje — fora da lista ativa, mas nada se perde */}
+            {periodo === "hoje" && concluidosDoDia.length > 0 && (
+              <details className="border-t border-border/60 bg-muted/20 px-5 py-3 sm:px-6">
+                <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted-foreground select-none">
+                  <CheckCircle2 className="size-3.5 text-green-700" />
+                  Concluídos hoje ({concluidosDoDia.length}) — toque para ver
+                </summary>
+                <div className="mt-2 space-y-1.5">
+                  {concluidosDoDia.map((a) => (
+                    <div
+                      key={a.id}
+                      onClick={() => setSelecionado(a)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelecionado(a);
+                        }
+                      }}
+                      className="flex items-center justify-between gap-3 rounded-lg bg-background/70 px-3 py-2 transition-colors hover:bg-gold/5"
+                    >
+                      <span className="flex min-w-0 items-center gap-2 text-xs">
+                        <span className="font-semibold text-card-foreground">
+                          {a.cliente?.nome ?? "—"}
+                        </span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {a.horario}
+                        </span>
+                      </span>
+                      <StatusBadge status={a.status} />
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
         )}
       </div>
