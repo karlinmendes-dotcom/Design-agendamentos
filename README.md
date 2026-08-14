@@ -33,7 +33,21 @@ administrativo em `/admin`.
   servidor) → confirmação com WhatsApp.
 - **Regra de cancelamento:** desmarcar em cima da hora / falta gera pendência
   de 50% na cliente; a remarcação fica bloqueada até a pendência ser quitada
-  no painel.
+  no painel (botão "Pendência quitada" ou status "Concluído").
+- **Visão geral do painel:** a aba "Hoje" mostra só quem ainda vai ser
+  atendida; os concluídos saem da lista ativa e ficam em "Concluídos hoje"
+  (nada é apagado — histórico, análises e a regra de pendência continuam
+  usando os registros).
+
+## Estado atual (validado em produção)
+
+- ✅ Notificações nativas de **confirmação** e **cancelamento** chegando no
+  celular da cliente (Android), mesmo com o site fechado.
+- ✅ Regra de pendência bloqueando a remarcação até a dona quitar.
+- ✅ Painel: lista da frente limpa, agenda por Hoje/Semana/Mês, busca de
+  cliente com histórico e análises.
+- ✅ Chat Nati (clientes) com botão fechar; assistente Gemini (dona) no painel.
+- ✅ PWA instalável + guia no site para iPhone (ver "PWA / iPhone").
 
 ## Como rodar
 
@@ -44,16 +58,19 @@ bun run typecheck    # tsc -b --noEmit (0 erros antes de entregar)
 bun run build        # build → dist/ (deploy na Vercel)
 ```
 
-## Variáveis necessárias
+## Variáveis necessárias (apenas os NOMES — valores ficam nos painéis)
 
 - **Vercel (frontend):** `VITE_CONVEX_URL` → URL pública do deployment Convex.
-  (Opcional: `VITE_VAPID_PUBLIC_KEY` para sobrescrever a chave pública VAPID
-  padrão embutida no app.)
+  (A chave pública VAPID já está embutida no código — `src/lib/push.ts` — e
+  não depende de env var.)
 - **Convex (Environment Variables do deployment — nunca no repositório):**
   - `GEMINI_API_KEY` (+ `GEMINI_MODEL` opcional) — assistente da dona;
   - `GROQ_API_KEY` (+ `GROQ_MODEL` opcional) — Nati, atendente das clientes;
   - `VAPID_PRIVATE_KEY` — chave privada Web Push (sem ela o aviso de
     cancelamento não é enviado; a pública fica no frontend).
+
+> ⚠️ A `VAPID_PRIVATE_KEY` é o par da pública embutida no código. Se um dia
+> for trocada, trocar **as duas juntas** (Convex + `src/lib/push.ts`).
 
 ## Convex
 
@@ -76,10 +93,22 @@ bun run build        # build → dist/ (deploy na Vercel)
   `/reagendar` ao tocar).
 - Backend: `src/convex/push.ts` (envio via `web-push`, `VAPID_PRIVATE_KEY` só
   no Convex; remove inscrições 404/410) + `src/convex/pushTokens.ts`
-  (PushSubscription por telefone).
+  (PushSubscription por telefone, vários aparelhos por cliente).
 - Fluxo: a cliente autoriza → o navegador devolve a inscrição → é salva
-  vinculada ao telefone → a dona cancela no painel → o aviso chega mesmo com o
-  app fechado.
+  vinculada ao telefone → a dona cancela/confirma no painel → o aviso chega
+  mesmo com o app fechado.
+- A ativação tem diagnóstico na tela: se estiver bloqueada ou em aba anônima,
+  o site explica o motivo exato (cadeado 🔒, abrir no navegador normal).
+
+## PWA / iPhone
+
+- Manifest em `public/manifest.webmanifest` + metas em `index.html` — o site
+  é instalável ("Adicionar à Tela de Início").
+- **iPhone:** a Apple só libera Web Push para apps adicionados à Tela de
+  Início (vale para qualquer navegador no iOS — todos usam WebKit). O site
+  detecta isso e mostra o passo a passo (Compartilhar ⬆️ → Adicionar à Tela de
+  Início → abrir pelo ícone → aceitar avisos).
+- **Android:** funciona direto no navegador, sem instalar nada.
 
 ## Deploy na Vercel
 
@@ -88,6 +117,14 @@ bun run build        # build → dist/ (deploy na Vercel)
 - `vercel.json`: `bun install` + `bun run build` → `dist`, com rewrite SPA.
 - ⚠️ Banco e hospedagem são **separados** de outros projetos — nunca apontar
   este app para outro deployment Convex.
+
+## Como publicar tudo (checklist)
+
+1. `bun run typecheck` — zero erros antes de subir;
+2. `CONVEX_DEPLOY_KEY='dev:<deployment>|...' bun convex dev --once` — backend
+   no ar (se mexeu em `src/convex/`);
+3. Commit + push na `main` — o Vercel rebuilda sozinho (~3 min);
+4. Conferir no celular em **aba normal** (não anônima) com cache limpo.
 
 ## Regras de ouro
 
