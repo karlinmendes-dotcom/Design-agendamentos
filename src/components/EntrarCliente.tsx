@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { maskPhone, onlyDigits } from "@/utils/phone";
-import { obterTokenPushComDiagnostico, registrarSW } from "@/lib/push";
+import {
+  obterTokenPushComDiagnostico,
+  registrarSW,
+  isIOS,
+  estaInstalado,
+} from "@/lib/push";
 import { Link } from "react-router-dom";
 
 interface EntrarClienteProps {
@@ -83,8 +88,16 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
         setStatusAviso("sem-permissao");
       }
     } else {
-      // Negado (ou já estava bloqueado): orienta como liberar, sem travar a conta
-      setErroAviso(jaBloqueado ? "bloqueado" : null);
+      // Negado (ou já estava bloqueado): orienta como liberar, sem travar a
+      // conta. No iPhone fora da Tela de Início, a Apple bloqueia — mostra o
+      // guia de instalação.
+      setErroAviso(
+        jaBloqueado
+          ? isIOS && !estaInstalado()
+            ? "ios-instalar"
+            : "bloqueado"
+          : null,
+      );
       setStatusAviso("sem-permissao");
     }
   }
@@ -276,7 +289,14 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
             </p>
           )}
           {statusAviso === "sem-permissao" &&
-            (erroAviso === "bloqueado" ? (
+            (erroAviso === "ios-instalar" ? (
+              <p className="mt-4 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2.5 text-center text-xs leading-relaxed text-muted-foreground">
+                No iPhone, para receber os avisos: toque em{" "}
+                <strong>Compartilhar</strong> (⬆️) no Safari →{" "}
+                <strong>"Adicionar à Tela de Início"</strong> → abra o app pelo
+                ícone novo → volte aqui. Sua conta já foi criada normalmente.
+              </p>
+            ) : erroAviso === "bloqueado" ? (
               <p className="mt-4 rounded-xl border border-red-600/30 bg-red-600/10 px-3 py-2.5 text-center text-xs leading-relaxed text-red-700">
                 As notificações estão <strong>bloqueadas</strong> para este site
                 (ou a aba é anônima, que não permite). Para receber os avisos:
@@ -319,27 +339,65 @@ export function EntrarCliente({ onEntrar }: EntrarClienteProps) {
               </h2>
             </div>
             <div className="px-6 pb-7 pt-5 text-center">
-              <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
-                Confirmação, cancelamento e promoções direto na tela do seu
-                celular — mesmo com o site fechado. É opcional e você pode
-                desativar quando quiser.
-              </p>
-              <div className="mt-6 space-y-2.5">
-                <Button
-                  className="w-full py-5 text-sm"
-                  onClick={() => void aceitarAvisos()}
-                >
-                  <BellRing className="size-4" />
-                  Sim, quero receber os avisos
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                  onClick={() => void recusarAvisos()}
-                >
-                  Agora não
-                </Button>
-              </div>
+              {isIOS && !estaInstalado() ? (
+                <>
+                  <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
+                    No iPhone, para receber os avisos de cancelamento e
+                    confirmação, adicione o app à Tela de Início:
+                  </p>
+                  <ol className="mx-auto mt-4 max-w-xs space-y-1.5 text-left text-xs leading-relaxed text-muted-foreground">
+                    <li>
+                      <span className="font-bold text-card-foreground">1.</span>{" "}
+                      Toque em <strong>Compartilhar</strong> (⬆️) na barra do
+                      Safari
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">2.</span>{" "}
+                      Escolha <strong>"Adicionar à Tela de Início"</strong>
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">3.</span>{" "}
+                      Abra o app pelo ícone novo na tela inicial
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">4.</span>{" "}
+                      Volte aqui e toque em{" "}
+                      <strong>"Sim, quero receber os avisos"</strong>
+                    </li>
+                  </ol>
+                  <Button
+                    variant="ghost"
+                    className="mt-6 w-full py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    onClick={() => void recusarAvisos()}
+                  >
+                    Entendi, continuar
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
+                    Confirmação, cancelamento e promoções direto na tela do seu
+                    celular — mesmo com o site fechado. É opcional e você pode
+                    desativar quando quiser.
+                  </p>
+                  <div className="mt-6 space-y-2.5">
+                    <Button
+                      className="w-full py-5 text-sm"
+                      onClick={() => void aceitarAvisos()}
+                    >
+                      <BellRing className="size-4" />
+                      Sim, quero receber os avisos
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                      onClick={() => void recusarAvisos()}
+                    >
+                      Agora não
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

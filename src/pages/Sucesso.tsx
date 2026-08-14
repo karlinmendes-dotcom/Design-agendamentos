@@ -18,6 +18,8 @@ import {
   obterTokenPushComDiagnostico,
   registrarSW,
   VAPID_KEY,
+  isIOS,
+  estaInstalado,
 } from "@/lib/push";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -36,10 +38,6 @@ interface SucessoState {
   /** Já pedimos e a cliente permitiu as notificações no momento da confirmação. */
   avisosAtivados?: boolean;
 }
-
-const isIOS =
-  typeof navigator !== "undefined" &&
-  /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 export function Sucesso() {
   const location = useLocation();
@@ -96,6 +94,13 @@ export function Sucesso() {
     setAvisoStatus("ativando");
     setErroAviso(null);
     try {
+      // iPhone no Safari (sem estar na Tela de Início): a Apple bloqueia —
+      // mostramos o guia de instalação em vez de um erro genérico.
+      if (isIOS && !estaInstalado()) {
+        setErroAviso("ios-instalar");
+        setAvisoStatus("erro");
+        return;
+      }
       // 1. Permissão nativa (dentro do gesto do clique) — pulada se já
       //    concedida; se já negada, não adianta pedir de novo.
       let permissao: NotificationPermission =
@@ -200,58 +205,108 @@ export function Sucesso() {
               </dl>
             </div>
 
-            {notifDisponivel && avisoStatus !== "ok" && (
-              <div className="flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 p-4">
-                <BellRing className="mt-0.5 size-5 shrink-0 text-green-800" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">
+            {notifDisponivel && avisoStatus !== "ok" &&
+              (isIOS && !estaInstalado() ? (
+                // iPhone sem o app instalado: ensina a adicionar à Tela de
+                // Início — sem isso a Apple bloqueia o Web Push.
+                <div className="rounded-xl border border-gold/30 bg-gold/10 p-4">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <BellRing className="size-4 shrink-0 text-green-800" />
                     Receba avisos do estúdio 💌
                   </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    Se o seu horário precisar ser remarcado, avisamos você por
-                    aqui. Sem spam, prometido.
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    No iPhone, para receber os avisos de cancelamento e
+                    confirmação, adicione o app à Tela de Início:
                   </p>
-                  {avisoStatus === "erro" && (
-                    <p className="mt-1 text-xs leading-relaxed text-destructive">
-                      {isIOS &&
-                      (erroAviso === "bloqueado" ||
-                        erroAviso === "negado-pelo-usuario") ? (
-                        "No iPhone, adicione o app à Tela de Início (Compartilhar → Adicionar à Tela de Início) e tente de novo."
-                      ) : erroAviso === "bloqueado" ? (
-                        <>
-                          As notificações estão <strong>bloqueadas</strong> para
-                          este site — ou a aba é anônima/privada, que não
-                          permite notificações. Abra no navegador normal e
-                          libere pelo cadeado 🔒 da barra de endereço →
-                          Notificações → Permitir. Depois volte aqui e toque em
-                          "Ativar".
-                        </>
-                      ) : erroAviso === "negado-pelo-usuario" ? (
-                        "Você recusou a permissão do navegador. Sem problema — pode continuar; se mudar de ideia, volte aqui e toque em \"Ativar\"."
-                      ) : (
-                        <>
-                          Não foi possível ativar:{" "}
-                          <span className="break-words">{erroAviso}</span>. Toque
-                          em "Ativar" novamente ou fale com o estúdio.
-                        </>
-                      )}
+                  <ol className="mt-3 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+                    <li>
+                      <span className="font-bold text-card-foreground">1.</span>{" "}
+                      Toque no ícone de <strong>Compartilhar</strong> (⬆️) na
+                      barra do Safari
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">2.</span>{" "}
+                      Escolha <strong>"Adicionar à Tela de Início"</strong>
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">3.</span>{" "}
+                      Abra o app pelo ícone novo na tela inicial
+                    </li>
+                    <li>
+                      <span className="font-bold text-card-foreground">4.</span>{" "}
+                      Volte aqui e toque em <strong>"Ativar"</strong>
+                    </li>
+                  </ol>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-4 w-full"
+                    disabled={avisoStatus === "ativando"}
+                    onClick={() => void ativarAvisos()}
+                  >
+                    {avisoStatus === "ativando" && (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    )}
+                    Já adicionei — tentar ativar
+                  </Button>
+                  {avisoStatus === "erro" && erroAviso === "ios-instalar" && (
+                    <p className="mt-2 text-xs leading-relaxed text-destructive">
+                      Ainda não está na Tela de Início. Siga o passo a passo
+                      acima (Compartilhar → Adicionar à Tela de Início) e abra o
+                      app pelo ícone novo.
                     </p>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0"
-                  disabled={avisoStatus === "ativando"}
-                  onClick={() => void ativarAvisos()}
-                >
-                  {avisoStatus === "ativando" && (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  )}
-                  {avisoStatus === "ativando" ? "Ativando..." : "Ativar"}
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 p-4">
+                  <BellRing className="mt-0.5 size-5 shrink-0 text-green-800" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      Receba avisos do estúdio 💌
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      Se o seu horário precisar ser remarcado, avisamos você
+                      por aqui. Sem spam, prometido.
+                    </p>
+                    {avisoStatus === "erro" && (
+                      <p className="mt-1 text-xs leading-relaxed text-destructive">
+                        {erroAviso === "ios-instalar" ? (
+                          "No iPhone, adicione o app à Tela de Início (Compartilhar → Adicionar à Tela de Início) e tente de novo."
+                        ) : erroAviso === "bloqueado" ? (
+                          <>
+                            As notificações estão{" "}
+                            <strong>bloqueadas</strong> para este site — ou a
+                            aba é anônima/privada, que não permite notificações.
+                            Abra no navegador normal e libere pelo cadeado 🔒 da
+                            barra de endereço → Notificações → Permitir. Depois
+                            volte aqui e toque em "Ativar".
+                          </>
+                        ) : erroAviso === "negado-pelo-usuario" ? (
+                          "Você recusou a permissão do navegador. Sem problema — pode continuar; se mudar de ideia, volte aqui e toque em \"Ativar\"."
+                        ) : (
+                          <>
+                            Não foi possível ativar:{" "}
+                            <span className="break-words">{erroAviso}</span>.
+                            Toque em "Ativar" novamente ou fale com o estúdio.
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    disabled={avisoStatus === "ativando"}
+                    onClick={() => void ativarAvisos()}
+                  >
+                    {avisoStatus === "ativando" && (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    )}
+                    {avisoStatus === "ativando" ? "Ativando..." : "Ativar"}
+                  </Button>
+                </div>
+              ))}
             {avisoStatus === "ok" && (
               <p className="flex items-center gap-2 rounded-xl border border-green-700/30 bg-green-800/10 px-4 py-3 text-xs font-medium text-green-700">
                 <BellRing className="size-4 shrink-0" />

@@ -19,6 +19,23 @@ const VAPID_KEY_PADRAO =
  */
 export const VAPID_KEY = VAPID_KEY_PADRAO;
 
+/** iPhone/iPad (Safari) — Web Push só funciona para app adicionado à Tela de Início. */
+export const isIOS =
+  typeof navigator !== "undefined" &&
+  /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+/**
+ * O site está rodando como app instalado (aberto pela Tela de Início)?
+ * No iPhone, sem isso as notificações são negadas pelo Safari.
+ */
+export function estaInstalado(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as { standalone?: boolean }).standalone === true
+  );
+}
+
 /** Converte a chave pública VAPID (base64url) para Uint8Array (exigência da API). */
 function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
   const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
