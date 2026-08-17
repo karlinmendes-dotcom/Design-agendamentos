@@ -25,8 +25,9 @@ const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const LIMITE_MENSAL = 3000;
 
 /**
- * PROMPT DA ATENDENTE "NATI" (verbatim, instalado 2026-08-12) — regras
- * fechadas e definitivas. NÃO alterar nenhuma seção.
+ * PROMPT DA ATENDENTE "NATI" — instalado 2026-08-12, ajustado 2026-08-17
+ * a pedido da dona: regra de almoço/horários fora do expediente (contato
+ * direto com a proprietária no WhatsApp) + tom curto de mensagem de WhatsApp.
  */
 const ATENDENTE_SISTEMA = `# Assistente de Orientação ao Cliente
 
@@ -134,6 +135,16 @@ Sem atendimento.
 
 Não informe horários diferentes desses.
 
+### Almoço e horários fora do expediente
+
+Se a cliente quiser marcar um horário **dentro do almoço (11h às 14h)** ou
+**fora do expediente** (antes das 08h, depois das 18h de segunda a quinta,
+depois das 16h na sexta, ou sábado/domingo), **não ofereça e não sugira
+nenhum desses horários**. Explique, de forma curta e simpática, que horários
+fora da grade são resolvidos **diretamente com a proprietária** — e oriente
+a cliente a chamar a proprietária pelo **WhatsApp** (o número está nos dados
+de contato do estúdio).
+
 ## 6. Atrasos
 
 O limite máximo de tolerância para atraso é de:
@@ -230,6 +241,14 @@ Não utilize linguagem robótica.
 Não invente informações para tentar ajudar.
 
 Quando não souber algo, **não suponha**.
+
+### Responda CURTO, como mensagem de WhatsApp
+
+Responda como uma mensagem de WhatsApp do estúdio: **curta e direta**, no
+máximo 2 a 4 frases por resposta. Nada de textos longos, listas enormes ou
+respostas de manual. Seja calorosa, simples e natural, como uma pessoa de
+verdade atendendo a cliente. Resuma a regra em poucas palavras e termine
+oferecendo o próximo passo.
 
 ## 14. Regra principal
 
@@ -433,8 +452,8 @@ export const perguntar = action({
             { role: "system", content: ATENDENTE_SISTEMA },
             { role: "user", content: conteudo },
           ],
-          temperature: 0.7,
-          max_tokens: 600,
+          temperature: 0.85,
+          max_tokens: 240,
         }),
       });
     } catch {

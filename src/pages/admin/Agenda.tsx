@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import {
+  CalendarDays,
   CalendarX,
   ChevronLeft,
   ChevronRight,
   Hand,
+  List,
   Loader2,
   Search,
 } from "lucide-react";
@@ -13,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DetalhesAgendamento } from "@/components/admin/DetalhesAgendamento";
+import { CalendarioAgenda } from "@/components/admin/CalendarioAgenda";
 import {
   Select,
   SelectContent,
@@ -28,14 +31,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAgendamentosPorData } from "@/hooks/useAgendamentos";
+import { useAgendamentos, useAgendamentosPorData } from "@/hooks/useAgendamentos";
 import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { erroMensagem } from "@/lib/convex";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/contexts/ToastContext";
 import { formatBRL } from "@/utils/format";
-import { addDaysISO, formatDateLong, formatDateShort, todayISO } from "@/utils/date";
+import {
+  addDaysISO,
+  formatDateLong,
+  formatDateShort,
+  formatDateWeekday,
+  todayISO,
+} from "@/utils/date";
 import {
   STATUS_AGENDAMENTO,
   type Agendamento,
@@ -49,6 +59,12 @@ export function Agenda() {
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | StatusAgendamento>("todos");
   const [pagina, setPagina] = useState(1);
+  const [visao, setVisao] = useState<"lista" | "calendario">("calendario");
+  const [semana, setSemana] = useState(() => {
+    // Segunda-feira da semana atual (início da semana do calendário)
+    const hoje = new Date();
+    return addDaysISO(-((hoje.getDay() + 6) % 7));
+  });
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [cancelandoDia, setCancelandoDia] = useState(false);
   const [selecionado, setSelecionado] = useState<Agendamento | null>(null);
@@ -72,6 +88,47 @@ export function Agenda() {
       })
       .sort((a, b) => a.horario.localeCompare(b.horario));
   }, [agendamentos, busca, filtroStatus]);
+
+  // ---------- Dados do calendário semanal ----------
+  const { agendamentos: todosAgendamentos, loading: loadingTudo } = useAgendamentos();
+  const semanaDias = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) =>
+        addDaysISO(i, new Date(`${semana}T12:00:00`)),
+      ),
+    [semana],
+  );
+  const fimSemana = addDaysISO(6, new Date(`${semana}T12:00:00`));
+  const agendamentosSemana = useMemo(
+    () =>
+      todosAgendamentos.filter(
+        (a) => a.data >= semana && a.data <= fimSemana,
+      ),
+    [todosAgendamentos, semana, fimSemana],
+  );
+  const filtradosCalendario = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return agendamentosSemana
+      .filter((a) =>
+        filtroStatus === "todos" ? true : a.status === filtroStatus,
+      )
+      .filter((a) => {
+        if (!termo) return true;
+        return (
+          a.cliente?.nome?.toLowerCase().includes(termo) ||
+          a.cliente?.telefone?.toLowerCase().includes(termo) ||
+          a.servico?.nome?.toLowerCase().includes(termo)
+        );
+      });
+  }, [agendamentosSemana, busca, filtroStatus]);
+
+  const mudarSemana = (semanas: number) => {
+    setSemana((s) => addDaysISO(semanas * 7, new Date(`${s}T12:00:00`)));
+  };
+  const voltarParaHoje = () => {
+    const hoje = new Date();
+    setSemana(addDaysISO(-((hoje.getDay() + 6) % 7)));
+  };
 
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -149,58 +206,126 @@ export function Agenda() {
         </p>
       </div>
 
+      {/* Alternador: Calendário (semana) ou Lista (dia) */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-lg border border-border/70 bg-card p-0.5 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setVisao("calendario")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              visao === "calendario"
+                ? "bg-green-800 text-cream"
+                : "text-muted-foreground hover:bg-green-800/10 hover:text-green-900",
+            )}
+          >
+            <CalendarDays className="size-4" />
+            Calendário
+          </button>
+          <button
+            type="button"
+            onClick={() => setVisao("lista")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              visao === "lista"
+                ? "bg-green-800 text-cream"
+                : "text-muted-foreground hover:bg-green-800/10 hover:text-green-900",
+            )}
+          >
+            <List className="size-4" />
+            Lista
+          </button>
+        </div>
+        {visao === "calendario" && (
+          <p className="text-xs text-muted-foreground">
+            Toque em qualquer horário pintado para ver os detalhes e gerenciar.
+          </p>
+        )}
+      </div>
+
       {/* Barra de controles */}
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                setData((d) => addDaysISO(-1, new Date(`${d}T12:00:00`)));
-                setPagina(1);
-              }}
-              aria-label="Dia anterior"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Input
-              type="date"
-              value={data}
-              onChange={(e) => {
-                setData(e.target.value || todayISO());
-                setPagina(1);
-              }}
-              className="h-10 w-fit"
-              aria-label="Data da agenda"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                setData((d) => addDaysISO(1, new Date(`${d}T12:00:00`)));
-                setPagina(1);
-              }}
-              aria-label="Próximo dia"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
+          {visao === "lista" && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setData((d) => addDaysISO(-1, new Date(`${d}T12:00:00`)));
+                  setPagina(1);
+                }}
+                aria-label="Dia anterior"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Input
+                type="date"
+                value={data}
+                onChange={(e) => {
+                  setData(e.target.value || todayISO());
+                  setPagina(1);
+                }}
+                className="h-10 w-fit"
+                aria-label="Data da agenda"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setData((d) => addDaysISO(1, new Date(`${d}T12:00:00`)));
+                  setPagina(1);
+                }}
+                aria-label="Próximo dia"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          )}
 
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={cancelandoDia}
-            onClick={() => void cancelarDiaInteiro()}
-            aria-label="Cancelar todos os agendamentos do dia"
-          >
-            {cancelandoDia ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <CalendarX className="size-3.5" />
-            )}
-            Cancelar dia
-          </Button>
+          {visao === "calendario" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => mudarSemana(-1)}
+                aria-label="Semana anterior"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={voltarParaHoje}>
+                Hoje
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => mudarSemana(1)}
+                aria-label="Próxima semana"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+              <span className="text-sm font-semibold text-foreground tabular-nums">
+                {formatDateShort(semana)} a {formatDateShort(fimSemana)}
+              </span>
+            </div>
+          )}
+
+          {visao === "lista" && (
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={cancelandoDia}
+              onClick={() => void cancelarDiaInteiro()}
+              aria-label="Cancelar todos os agendamentos do dia"
+            >
+              {cancelandoDia ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <CalendarX className="size-3.5" />
+              )}
+              Cancelar dia
+            </Button>
+          )}
 
           <div className="relative min-w-0">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -235,13 +360,62 @@ export function Agenda() {
         </div>
 
         <div className="text-sm lg:text-right">
-          <p className="font-semibold text-foreground">{formatDateLong(data)}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatDateShort(data)} · {filtrados.length} agendamento(s)
-          </p>
+          {visao === "lista" ? (
+            <>
+              <p className="font-semibold text-foreground">
+                {formatDateLong(data)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDateShort(data)} · {filtrados.length} agendamento(s)
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-foreground">
+                Semana de {formatDateWeekday(semana)} a{" "}
+                {formatDateWeekday(fimSemana)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {filtradosCalendario.length} agendamento(s) nesta semana
+              </p>
+            </>
+          )}
         </div>
       </div>
 
+      {visao === "calendario" ? (
+        <div className="space-y-4">
+          {loadingTudo ? (
+            <div className="rounded-xl border border-border/80 bg-card p-5">
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : (
+            <CalendarioAgenda
+              dias={semanaDias}
+              agendamentos={filtradosCalendario}
+              onSelecionar={setSelecionado}
+            />
+          )}
+
+          {/* Legenda */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-green-600" /> Confirmado
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-gold" /> Concluído
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-muted ring-1 ring-border/60" />{" "}
+              Cancelado
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-gold/[0.18] ring-1 ring-gold/30" />{" "}
+              Almoço (11h–14h)
+            </span>
+          </div>
+        </div>
+      ) : (
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
         {loading ? (
           <div className="space-y-3 p-5">
@@ -375,6 +549,7 @@ export function Agenda() {
           </>
         )}
       </div>
+      )}
 
       {/* Modal de detalhes do agendamento (compartilhado com o Dashboard) */}
       <DetalhesAgendamento
