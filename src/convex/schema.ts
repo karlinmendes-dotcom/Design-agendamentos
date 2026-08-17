@@ -87,12 +87,15 @@ export default defineSchema({
       v.literal("banner"),
       v.literal("logo"),
     ),
-    chave: v.string(), // ex.: 'hero', 'logo'
+    chave: v.string(), // ex.: 'hero', 'logo' (ou nome do arquivo enviado)
     url: v.string(),
     poster_url: v.optional(v.string()),
     alt: v.optional(v.string()),
     ordem: v.number(),
     ativo: v.boolean(),
+    // Se a mídia foi enviada pelo painel (Convex file storage), guarda o
+    // storageId para conseguir apagar o arquivo quando a mídia for removida.
+    storage_id: v.optional(v.string()),
   }),
 
   // ---------- Administradores do painel (login /admin) ----------

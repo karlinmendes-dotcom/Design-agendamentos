@@ -4,7 +4,7 @@ Aplicativo completo de agendamento para o estúdio de nail design **Studio
 Natália Braga** (Colatina/ES): área da cliente sem login + dashboard
 administrativo em `/admin`.
 
-**Produção:** https://design-agendamentos.vercel.app
+**Produção:** https://natalia-braga.vercel.app
 **Banco (Convex):** deployment `hardy-aardvark-221` (`https://hardy-aardvark-221.convex.cloud`)
 
 ## Stack
@@ -176,7 +176,7 @@ bun run build        # build → dist/ (deploy na Vercel)
 
 ## Deploy na Vercel
 
-- Projeto `design-agendamentos` conectado ao GitHub, deploy automático por
+- Projeto `natalia-braga` conectado ao GitHub, deploy automático por
   push na branch `main`.
 - `vercel.json`: `bun install` + `bun run build` → `dist`, com rewrite SPA.
 - ⚠️ Banco e hospedagem são **separados** de outros projetos — nunca apontar

@@ -45,6 +45,9 @@ const ServicosAdmin = lazy(() =>
 const CombosAdmin = lazy(() =>
   import("@/pages/admin/CombosAdmin").then((m) => ({ default: m.CombosAdmin })),
 );
+const MidiasAdmin = lazy(() =>
+  import("@/pages/admin/MidiasAdmin").then((m) => ({ default: m.MidiasAdmin })),
+);
 const Configuracoes = lazy(() =>
   import("@/pages/admin/Configuracoes").then((m) => ({
     default: m.Configuracoes,
@@ -182,6 +185,7 @@ export default function App() {
                 <Route path="agenda" element={<Agenda />} />
                 <Route path="servicos" element={<ServicosAdmin />} />
                 <Route path="combos" element={<CombosAdmin />} />
+                <Route path="midias" element={<MidiasAdmin />} />
                 <Route path="configuracoes" element={<Configuracoes />} />
                 <Route path="equipe" element={<Equipe />} />
                 <Route path="analises" element={<Analises />} />

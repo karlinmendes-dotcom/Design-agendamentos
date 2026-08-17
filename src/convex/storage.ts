@@ -1,5 +1,15 @@
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+
+/**
+ * Gera uma URL de upload única (Convex file storage). O painel de Mídias
+ * faz POST do arquivo nessa URL e recebe o storageId de volta, que é salvo
+ * na tabela `midias` junto com nome/tipo (fluxo: dona sobe fotos/vídeos do
+ * celular e depois o agente encaixa cada um no lugar certo do site).
+ */
+export const gerarUrlUpload = mutation({
+  handler: async (ctx) => await ctx.storage.generateUploadUrl(),
+});
 
 /**
  * Utilitário de armazenamento — resolve um arquivo enviado pelo painel

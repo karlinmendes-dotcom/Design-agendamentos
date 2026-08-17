@@ -37,7 +37,7 @@ const VAPID_PUBLIC_KEY =
  * endereço do site (https://...) — o protocolo aceita, e assim não inventamos
  * um e-mail que não existe.
  */
-const VAPID_SUBJECT = "https://design-agendamentos.vercel.app";
+const VAPID_SUBJECT = "https://natalia-braga.vercel.app";
 
 /** Resultado de um envio em lote (tipado para evitar inferência circular). */
 interface ResultadoEnvio {

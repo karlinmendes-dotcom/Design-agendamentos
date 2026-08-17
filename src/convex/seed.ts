@@ -29,62 +29,64 @@ export const inicial = mutation({
     });
 
     // 3. Cardápio — serviços REAIS do estúdio (valores oficiais 2026-08).
-    // Durações padrão estimadas — ajustáveis pelo painel (Serviços → editar).
+    // Durações REAIS passadas pela cliente (17/08/2026): aplicação 2h30,
+    // manutenção 2h, esmaltação mãos 1h30, esmaltação pés 2h, banho de gel
+    // 2h, retirada 30min. Ajustáveis pelo painel (Serviços → editar).
     const servicos = [
       {
         nome: "Aplicação Esmaltada",
         descricao:
           "Aplicação completa de alongamento com esmaltação em gel — unhas impecáveis do início ao fim.",
         preco: 250,
-        duracao_minutos: 60,
+        duracao_minutos: 150,
       },
       {
         nome: "Aplicação Natural",
         descricao:
           "Aplicação completa de alongamento com acabamento natural e discreto.",
         preco: 220,
-        duracao_minutos: 60,
+        duracao_minutos: 150,
       },
       {
         nome: "Manutenção Esmaltada",
         descricao:
           "Manutenção do alongamento esmaltado — suas unhas sempre prontas.",
         preco: 185,
-        duracao_minutos: 60,
+        duracao_minutos: 120,
       },
       {
         nome: "Manutenção Natural",
         descricao:
           "Manutenção do alongamento natural com cuidado e precisão.",
         preco: 165,
-        duracao_minutos: 60,
+        duracao_minutos: 120,
       },
       {
         nome: "Banho de Gel",
         descricao:
           "Banho de gel para revitalizar e hidratar as unhas.",
         preco: 155,
-        duracao_minutos: 60,
+        duracao_minutos: 120,
       },
       {
         nome: "Esmaltação em Gel – Mãos",
         descricao:
           "Esmaltação em gel com brilho intenso e durabilidade — mãos.",
         preco: 115,
-        duracao_minutos: 60,
+        duracao_minutos: 90,
       },
       {
         nome: "Esmaltação em Gel – Pés",
         descricao:
           "Esmaltação em gel com brilho intenso e durabilidade — pés.",
         preco: 100,
-        duracao_minutos: 60,
+        duracao_minutos: 120,
       },
       {
         nome: "Retirada",
         descricao: "Retirada do procedimento em gel existente.",
         preco: 50,
-        duracao_minutos: 60,
+        duracao_minutos: 30,
       },
     ];
     for (const s of servicos) {
