@@ -15,8 +15,10 @@ import { v, ConvexError } from "convex/values";
  * Fluxo: front → action → query de contexto (só dados públicos) → GROQ.
  */
 
-/** Modelo padrão da GROQ — confirmado na API (2026-08): llama-3.3-70b-versatile. */
-const MODELO_PADRAO = "llama-3.3-70b-versatile";
+/** Modelo padrão da GROQ — confirmado na API (2026-08-17): o antigo
+ * llama-3.3-70b-versatile foi aposentado pela GROQ; o groq/compound-mini
+ * responde limpo (sem bloco de raciocínio) e segue as regras do prompt. */
+const MODELO_PADRAO = "groq/compound-mini";
 
 /** Endpoint de chat da API da GROQ (compatível com OpenAI). */
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
