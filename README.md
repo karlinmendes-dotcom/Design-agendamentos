@@ -109,8 +109,11 @@ public/
 
 ## Estado atual (validado em produção)
 
-- ✅ Notificações nativas de **confirmação** e **cancelamento** chegando no
-  celular da cliente (Android), mesmo com o site fechado.
+- ✅ Notificações nativas de **confirmação**, **cancelamento** e **lembrete
+  do dia** chegando no celular da cliente (Android), mesmo com o site fechado.
+- ✅ **Lembrete automático**: todo dia às 08:00 (fuso do estúdio) o cron
+  `lembrete-agendamentos-do-dia` avisa as clientes com horário CONFIRMADO
+  para aquele dia (1 aviso por pessoa, com todos os horários).
 - ✅ Regra de pendência bloqueando a remarcação até a dona quitar.
 - ✅ Painel: lista da frente limpa, agenda por Hoje/Semana/Mês, busca de
   cliente com histórico e análises.
@@ -160,6 +163,10 @@ bun run build        # build → dist/ (deploy na Vercel)
 - Fluxo: a cliente autoriza → o navegador devolve a inscrição → é salva
   vinculada ao telefone → a dona cancela/confirma no painel → o aviso chega
   mesmo com o app fechado.
+- **Lembrete do dia**: `src/convex/crons.ts` registra o cron diário (08:00
+  no fuso do estúdio) que chama `push.enviarLembretesDoDia` — busca os
+  agendamentos CONFIRMADOS de hoje, agrupa por telefone e envia 1 aviso por
+  cliente usando o mesmo motor (`enviarParaTelefones`). Zero custo extra.
 - A ativação tem diagnóstico na tela: se estiver bloqueada ou em aba anônima,
   o site explica o motivo exato (cadeado 🔒, abrir no navegador normal).
 

@@ -276,13 +276,14 @@ Se uma informação não estiver definida neste documento, não invente.
 
 **É melhor informar que a informação não está disponível do que fornecer uma resposta incorreta.**`;
 
-/** Dia corrente (YYYY-MM-DD) no fuso local — base da cota DIÁRIA. */
+/** Dia corrente (YYYY-MM-DD) no fuso do estúdio (America/Sao_Paulo) — base da cota DIÁRIA. */
 function diaAtual(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const dia = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${dia}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 /**

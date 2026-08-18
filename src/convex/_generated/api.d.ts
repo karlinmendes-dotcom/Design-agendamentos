@@ -15,6 +15,7 @@ import type * as barbearias from "../barbearias.js";
 import type * as barbeiros from "../barbeiros.js";
 import type * as clientes from "../clientes.js";
 import type * as configuracoes from "../configuracoes.js";
+import type * as crons from "../crons.js";
 import type * as datasBloqueadas from "../datasBloqueadas.js";
 import type * as gemini from "../gemini.js";
 import type * as horarios from "../horarios.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   barbeiros: typeof barbeiros;
   clientes: typeof clientes;
   configuracoes: typeof configuracoes;
+  crons: typeof crons;
   datasBloqueadas: typeof datasBloqueadas;
   gemini: typeof gemini;
   horarios: typeof horarios;

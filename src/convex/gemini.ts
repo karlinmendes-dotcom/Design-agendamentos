@@ -226,13 +226,14 @@ function montarRespostaCancelamento(resultado: {
   return `${base}\n💌 ${resultado.push?.enviados ?? 0} cliente(s) avisado(s) por notificação.`;
 }
 
-/** Dia corrente (YYYY-MM-DD) no fuso local — base da cota DIÁRIA. */
+/** Dia corrente (YYYY-MM-DD) no fuso do estúdio (America/Sao_Paulo) — base da cota DIÁRIA. */
 function diaAtual(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const dia = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${dia}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 /** Data de corte: hoje menos N meses (YYYY-MM-DD, fuso local). */

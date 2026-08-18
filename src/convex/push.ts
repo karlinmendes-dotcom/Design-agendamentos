@@ -261,3 +261,88 @@ export const cancelarDiaCompleto = action({
     return { ...cancelado, push };
   },
 });
+
+/** Data de HOJE no fuso do estúdio (America/Sao_Paulo) — YYYY-MM-DD. */
+function dataLocalBR(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/**
+ * LEMBRETE DIÁRIO (disparado pelo cron): de manhã, avisa as clientes com
+ * horário CONFIRMADO para HOJE. Usa o mesmo motor de envio
+ * (enviarParaTelefones) — zero custo extra: aproveita as inscrições Web
+ * Push já cadastradas. Um aviso por cliente (se ela tiver 2 horários no
+ * dia, vêm juntos na mesma notificação).
+ */
+export const enviarLembretesDoDia = action({
+  args: {
+    // Sobrescreve a data (usado em testes). Padrão: hoje no fuso do estúdio.
+    data: v.optional(v.string()),
+  },
+  handler: async (ctx, { data }): Promise<{
+    data: string;
+    agendamentos: number;
+    telefones_avisados: number;
+    sem_token: number;
+    erros: string[];
+  }> => {
+    const hoje = data ?? dataLocalBR();
+    const docs = await ctx.runQuery(api.agendamentos.listPorData, { data: hoje });
+    const ativos = docs.filter((a) => a.status === "confirmado");
+    if (ativos.length === 0) {
+      return {
+        data: hoje,
+        agendamentos: 0,
+        telefones_avisados: 0,
+        sem_token: 0,
+        erros: [],
+      };
+    }
+
+    // Agrupa por telefone da cliente (1 aviso por pessoa, com todos os horários)
+    const porTelefone = new Map<string, { nome: string; horarios: string[] }>();
+    for (const a of ativos) {
+      const tel = (a.cliente?.telefone ?? "").replace(/\D/g, "");
+      if (tel.length < 8) continue;
+      const atual = porTelefone.get(tel) ?? {
+        nome: a.cliente?.nome ?? "",
+        horarios: [],
+      };
+      atual.horarios.push(a.horario);
+      porTelefone.set(tel, atual);
+    }
+
+    let telefonesAvisados = 0;
+    let semToken = 0;
+    const erros: string[] = [];
+    for (const [tel, info] of porTelefone) {
+      const primeiroNome = info.nome.split(" ")[0];
+      const mensagem =
+        info.horarios.length === 1
+          ? `Olá ${primeiroNome}! Seu horário é hoje às ${info.horarios[0]}. Te esperamos! 💛`
+          : `Olá ${primeiroNome}! Você tem ${info.horarios.length} horários hoje: ${info.horarios.join(", ")}. Te esperamos! 💛`;
+      const r = await ctx.runAction(api.push.enviarParaTelefones, {
+        telefones: [tel],
+        titulo: "💅 Lembrete do seu horário",
+        mensagem,
+        url: "/",
+      });
+      if (r.enviados > 0) telefonesAvisados++;
+      if (r.sem_configuracao) erros.push(...r.erros);
+      if (r.erros.some((e) => e.includes("Nenhuma inscrição"))) semToken++;
+    }
+
+    return {
+      data: hoje,
+      agendamentos: ativos.length,
+      telefones_avisados: telefonesAvisados,
+      sem_token: semToken,
+      erros,
+    };
+  },
+});
