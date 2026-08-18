@@ -92,6 +92,18 @@ export const listarPorTelefones = query({
   },
 });
 
+/**
+ * Telefones com pelo menos uma inscrição push ativa — os destinatários dos
+ * COMUNICADOS em massa do painel ("Comunicados"). Só quem autorizou os
+ * avisos aparece aqui; telefone sem push nunca é listado.
+ */
+export const listarTelefones = query({
+  handler: async (ctx) => {
+    const docs = await ctx.db.query("pushTokens").collect();
+    return [...new Set(docs.map((d) => d.telefone).filter(Boolean))];
+  },
+});
+
 /** Remove um token inválido (ex.: navegador revogou a permissão). */
 export const remover = mutation({
   args: { token: v.string() },

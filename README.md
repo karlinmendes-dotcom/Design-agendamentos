@@ -114,6 +114,10 @@ public/
 - ✅ **Lembrete automático**: todo dia às 08:00 (fuso do estúdio) o cron
   `lembrete-agendamentos-do-dia` avisa as clientes com horário CONFIRMADO
   para aquele dia (1 aviso por pessoa, com todos os horários).
+- ✅ **Comunicados em massa** (painel → Comunicados): a dona escreve uma
+  mensagem e envia por Web Push para todas as clientes que autorizaram os
+  avisos (ex.: Dia das Mães, promoções) — usa `pushTokens.listarTelefones`
+  + o mesmo motor `push.enviarParaTelefones`.
 - ✅ Regra de pendência bloqueando a remarcação até a dona quitar.
 - ✅ Painel: lista da frente limpa, agenda por Hoje/Semana/Mês, busca de
   cliente com histórico e análises.
