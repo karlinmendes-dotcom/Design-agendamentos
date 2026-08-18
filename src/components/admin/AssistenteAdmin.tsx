@@ -110,7 +110,7 @@ export function AssistenteAdmin() {
               <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <Sparkles className="size-3 shrink-0 text-gold" />
-                  <span className="truncate">Assistente pessoal · este mês</span>
+                  <span className="truncate">Assistente pessoal · hoje</span>
                 </span>
                 <span className="shrink-0 font-semibold text-charcoal">
                   {restantes} de {uso.limite} restantes
@@ -127,7 +127,7 @@ export function AssistenteAdmin() {
               </div>
               {restantes === 0 && (
                 <p className="mt-1 text-[10px] text-destructive">
-                  Cota do mês esgotada — renova no próximo mês. 💛
+                  Cota de hoje esgotada — renova amanhã. 💛
                 </p>
               )}
             </div>

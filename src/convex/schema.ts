@@ -111,13 +111,13 @@ export default defineSchema({
   // ---------- Uso da assistente Gemini (cota mensal do dashboard) ----------
   gemini_uso: defineTable({
     mes: v.string(), // YYYY-MM
-    usos: v.number(), // perguntas respondidas no mês
+    usos: v.number(), // perguntas respondidas hoje (cota DIÁRIA)
   }).index("por_mes", ["mes"]),
 
   // ---------- Uso da atendente GROQ (Q&A das clientes, cota mensal) ----------
   atendente_uso: defineTable({
     mes: v.string(), // YYYY-MM
-    usos: v.number(), // perguntas respondidas no mês
+    usos: v.number(), // perguntas respondidas hoje (cota DIÁRIA)
   }).index("por_mes", ["mes"]),
 
   // ---------- Inscrições de Web Push dos navegadores das clientes ----------

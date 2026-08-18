@@ -23,8 +23,8 @@ const MODELO_PADRAO = "groq/compound-mini";
 /** Endpoint de chat da API da GROQ (compatível com OpenAI). */
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 
-/** Cota mensal de perguntas da atendente (todas as clientes juntas). */
-const LIMITE_MENSAL = 3000;
+/** Cota DIÁRIA de perguntas da atendente (todas as clientes juntas) — renova todo dia às 00h. */
+const LIMITE_DIARIO = 500;
 
 /**
  * PROMPT DA ATENDENTE "NATI" — instalado 2026-08-12, ajustado 2026-08-17
@@ -276,12 +276,13 @@ Se uma informação não estiver definida neste documento, não invente.
 
 **É melhor informar que a informação não está disponível do que fornecer uma resposta incorreta.**`;
 
-/** Mês corrente (YYYY-MM) no fuso local — base da cota. */
-function mesAtual(): string {
+/** Dia corrente (YYYY-MM-DD) no fuso local — base da cota DIÁRIA. */
+function diaAtual(): string {
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dia}`;
 }
 
 /**
@@ -342,31 +343,31 @@ function montarBlocoDados(dados: DadosContexto): string {
   return linhas.join("\n");
 }
 
-/** Uso da atendente no mês corrente. */
+/** Uso da atendente HOJE. */
 export const uso = query({
   args: {},
   handler: async (ctx) => {
-    const mes = mesAtual();
+    const dia = diaAtual();
     const doc = await ctx.db
       .query("atendente_uso")
-      .withIndex("por_mes", (q) => q.eq("mes", mes))
+      .withIndex("por_mes", (q) => q.eq("mes", dia))
       .first();
-    return { mes, usados: doc?.usos ?? 0, limite: LIMITE_MENSAL };
+    return { dia, usados: doc?.usos ?? 0, limite: LIMITE_DIARIO };
   },
 });
 
-/** Contabiliza mais uma pergunta respondida no mês corrente. */
+/** Contabiliza mais uma pergunta respondida hoje. */
 export const registrarUso = mutation({
   handler: async (ctx) => {
-    const mes = mesAtual();
+    const dia = diaAtual();
     const doc = await ctx.db
       .query("atendente_uso")
-      .withIndex("por_mes", (q) => q.eq("mes", mes))
+      .withIndex("por_mes", (q) => q.eq("mes", dia))
       .first();
     if (doc) {
       await ctx.db.patch(doc._id, { usos: doc.usos + 1 });
     } else {
-      await ctx.db.insert("atendente_uso", { mes, usos: 1 });
+      await ctx.db.insert("atendente_uso", { mes: dia, usos: 1 });
     }
   },
 });
@@ -408,7 +409,7 @@ export const perguntar = action({
     const { usados, limite } = await ctx.runQuery(api.atendente.uso);
     if (usados >= limite) {
       throw new ConvexError(
-        `A cota da atendente deste mês (${limite} perguntas) chegou ao fim. Ela renova no próximo mês. 💛`,
+        `A cota da atendente de hoje (${limite} perguntas) chegou ao fim. Ela renova amanhã. 💛`,
       );
     }
 
