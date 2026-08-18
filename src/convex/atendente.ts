@@ -7,7 +7,7 @@ import { v, ConvexError } from "convex/values";
  * VISUALIZAÇÃO do site (páginas do cliente), totalmente separada da
  * assistente do dashboard.
  *
- * - Modelo: llama-3.3-70b-versatile via GROQ (chave GROQ_API_KEY no servidor).
+ * - Modelo: groq/compound-mini via GROQ (chave GROQ_API_KEY no servidor).
  * - Papel: orientar as clientes sobre regras, políticas, horários e
  *   funcionamento do atendimento. NÃO executa nenhuma ação no sistema.
  * - O prompt da dona (verbatim, instalado 2026-08-12) está em ATENDENTE_SISTEMA.
@@ -372,7 +372,7 @@ export const registrarUso = mutation({
 });
 
 /**
- * Pergunta da cliente → GROQ (llama-3.3-70b-versatile).
+ * Pergunta da cliente → GROQ (groq/compound-mini).
  * A chave fica no servidor (process.env.GROQ_API_KEY) — nunca no navegador.
  */
 export const perguntar = action({
